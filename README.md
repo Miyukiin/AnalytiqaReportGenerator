@@ -34,10 +34,10 @@
     <img src="images/logo.png" alt="Logo" width="80" height="80">
   </a>
 
-<h3 align="center">project_title</h3>
+<h3 align="center">Analytiqa Report Generator</h3>
 
   <p align="center">
-    project_description
+    BSCS 4-3 | Data Analytics | A.Y 2024-2025
     <br />
     <a href="https://github.com/Miyukiin/AnalytiqaReportGenerator"><strong>Explore the docs »</strong></a>
     <br />
