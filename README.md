@@ -250,5 +250,5 @@ Project Link: [https://github.com/github_username/repo_name](https://github.com/
 [Bootstrap-url]: https://getbootstrap.com
 [JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
 [JQuery-url]: https://jquery.com 
-[Django.com]: https://img.shields.io/badge/Django-%23092E20?style=for-the-badge&logo=django&logoColor=white&label=Django
+[Django.com]: https://img.shields.io/badge/Django-%23092E20?style=for-the-badge&logo=django&logoColor=white
 [Django-url]: https://www.djangoproject.com/
