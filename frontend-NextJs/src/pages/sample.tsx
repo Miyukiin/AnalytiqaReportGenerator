@@ -1,28 +1,37 @@
-// frontend/src/pages/sample.tsx
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 
 interface SampleData {
-    message: string;
+  message: string;
 }
 
 export default function SamplePage() {
-    const [data, setData] = useState<SampleData | null>(null); // Specify the type of state
+  const [data, setData] = useState<SampleData | null>(null);
 
-    useEffect(() => {
-        axios.get<SampleData>('http://127.0.0.1:8000/api/sample/') // Specify the type of API response
-            .then(response => {
-                setData(response.data);
-            })
-            .catch(error => {
-                console.error('Error fetching data:', error);
-            });
-    }, []);
+  useEffect(() => {
+    axios
+      .get<SampleData>('http://127.0.0.1:8000/api/sample/')
+      .then((response) => {
+        setData(response.data);
+      })
+      .catch((error) => {
+        console.error('Error fetching data:', error);
+      });
+  }, []);
 
-    return (
-        <div>
-            <h1>Sample Page</h1>
-            <p>Data from API: {data ? data.message : 'Loading...'}</p>
-        </div>
-    );
+  return (
+    <div className="min-h-screen bg-teal-500 text-gray-300 flex items-center justify-center">
+      <div className="bg-white text-teal-700 shadow-lg rounded-lg p-8 max-w-md">
+        <h1 className="text-xl font-bold mb-6">
+          Tailwind CSS + API Integration
+        </h1>
+        <p className="text-3xl mb-4">
+          {data ? `Message from API: ${data.message}` : 'Loading...'}
+        </p>
+        <button className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-teal-700 transition ease-in-out duration-200">
+          Click Me
+        </button>
+      </div>
+    </div>
+  );
 }
