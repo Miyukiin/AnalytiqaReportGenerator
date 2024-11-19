@@ -104,7 +104,7 @@ export default function DataReportGenerator() {
         {status.success && <p className="text-green-500 text-sm mt-2">{status.success}</p>}
       </div>
 
-      <ul className="mt-8 text-left md:text-center text-black space-y-2 text-sm">
+      <ul className="mt-8 text-[11px] ml-4 md:ml text-left md:text-center text-black space-y-2 md:text-[13px]">
         {[
           "Create dynamic, visually engaging dashboards and reports",
           "Supporting data-driven decision-making with customizable visualization options",
