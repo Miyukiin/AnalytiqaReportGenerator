@@ -5,8 +5,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <html lang="en">
       <head>
         <title>Analytiqa</title>
+        {/* Import Wix Madefor Text font */}
+        <link
+          href="https://fonts.googleapis.com/css2?family=Wix+Madefor+Text:wght@400;500;700&display=swap"
+          rel="stylesheet"
+        />
       </head>
-      <body className="min-h-screen flex flex-col">
+      <body className="min-h-screen flex flex-col font-wixmadefortext bg-white">
         {/* Header */}
         <header className="bg-white shadow-md rounded-2xl">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center py-4">
@@ -21,9 +26,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Main Content */}
         <main className="flex-grow flex items-center justify-center">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            {children}
-          </div>
+          <div className="w-full">{children}</div>
         </main>
 
         {/* Footer */}

@@ -5,3 +5,26 @@
 body {
   @apply bg-gray-100 text-gray-800 font-sans;
 }
+
+.modern-loader {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 6px solid #50727F; /* Primary color */
+  border-top: 6px solid #f3f3f3; /* Lighter color for contrast */
+  border-right: 6px solid transparent; /* Adds a modern multi-color effect */
+  animation: spin 1.25s cubic-bezier(0.4, 0, 0.2, 1) infinite; /* Smooth animation */
+  box-shadow: 0 0 10px #50727F; /* Adds a subtle glow effect */
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.15); /* Subtle scale for more depth */
+  }
+  100% {
+    transform: rotate(360deg) scale(1); /* Reset scale for smooth looping */
+  }
+}
