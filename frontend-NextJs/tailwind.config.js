@@ -16,12 +16,13 @@ module.exports = {
         },
         gray: {
           300: "#D9D9D9",
+          400: "#DDDFE5",
         },
         mainblue: {
           default: "#50727F",
         },
         maingreen: {
-          defaut: "#65974F",
+          default: "#65974F",
         },
       },
       fontFamily: {
