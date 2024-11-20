@@ -23,6 +23,12 @@ export default function SamplePage() {
 
   return (
     <div className="min-h-screen bg-teal-500 text-gray-300 flex items-center justify-center">
+      <Head>
+        {/* Set the favicon for the tab */}
+        <link rel="icon" href="/TabIcon.png" />
+        <title>Sample Page</title> {/* You can also set the title here */}
+      </Head>
+            
       <div className="bg-white text-teal-700 shadow-lg rounded-lg p-8 max-w-md">
         <h1 className="text-xl font-bold mb-6">Tailwind CSS + API Integration</h1>
         <p className="text-3xl mb-4">

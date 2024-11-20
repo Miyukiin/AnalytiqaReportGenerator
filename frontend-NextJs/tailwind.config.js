@@ -26,9 +26,7 @@ module.exports = {
         },
       },
       fontFamily: {
-        inter: ["Inter", "sans-serif"], // Existing fonts
-        geist: ["Geist", "sans-serif"], // New custom font
-        geistmono: ["GeistMono", "monospace"], // New custom font
+        'wix': ['Wix Madefor Text', 'sans-serif'],
       },
     },
   },

@@ -4,7 +4,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
-        <title>Analytiqa</title>
+        <title>ANALYTIQA</title>
         {/* Import Wix Madefor Text font */}
         <link
           href="https://fonts.googleapis.com/css2?family=Wix+Madefor+Text:wght@400;500;700&display=swap"

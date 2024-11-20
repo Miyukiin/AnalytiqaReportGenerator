@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Head from "next/head";
 import { useRouter } from "next/navigation"; // Import useRouter
 import BadgeCheckIcon from "../components/icons/BadgeCheckIcon";
 import FilePlusIcon from "../components/icons/FilePlusIcon";
@@ -51,21 +52,29 @@ export default function DataReportGenerator() {
 
   return (
     <div className="relative flex flex-col items-center text-center px-4 w-full">
-      <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 my-6">Data Report Generator</h2>
+      <Head>
+        {/* Set the favicon for the tab */}
+        <link rel="icon" href="TabIcon.png" />
+        <title>Data Report Generator</title> {/* Optional: You can also set the title */}
+      </Head>
+
+      <h2 className="text-5xl sm:text-5xl font-bold text-gray-600 my-6">Data Report Generator</h2>
 
       {/* Full-screen Loading Overlay */}
       {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="relative flex flex-col items-center">
-            {/* Modern Custom Loading Spinner */}
-            <div className="relative flex items-center justify-center">
-              <div className="modern-loader"></div>
+            {/* Spoke Spinner */}
+            <div className="spinner">
+              {Array.from({ length: 12 }).map((_, index) => (
+                <div key={index}></div> // Each spoke of the spinner
+              ))}
             </div>
-            <p className="text-white text-lg font-medium mt-4">Uploading...</p>
+            <p className="text-white text-5xl font-large mt-4">Uploading...</p>
           </div>
         </div>
       )}
-
+      
       <div
         className={`w-full max-w-lg border-2 ${
           isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 bg-gray-50"
@@ -98,8 +107,8 @@ export default function DataReportGenerator() {
           </div>
         </label>
         <p className="text-gray-500 text-sm">or drag file here</p>
-        <p className="text-gray-400 text-xs">Max file size 1GB. <br /> File must only be in .csv format.</p>
-        {fileData.size && <p className="text-gray-500 text-xs">File size: {(fileData.size / 1024 ** 2).toFixed(2)} MB</p>}
+        <p className="text-gray-500 text-sm">Max file size 1GB. <br /> File must only be in .csv format.</p>
+        {fileData.size && <p className="text-gray-500 text-sm">File size: {(fileData.size / 1024 ** 2).toFixed(2)} MB</p>}
         {status.error && <p className="text-red-500 text-sm mt-2">{status.error}</p>}
         {status.success && <p className="text-green-500 text-sm mt-2">{status.success}</p>}
       </div>
@@ -116,7 +125,7 @@ export default function DataReportGenerator() {
           </li>
         ))}
       </ul>
-      <span className="mt-8 text-gray-600 font-bold mb-12 text-sm md:text-md">
+      <span className="mt-10 text-gray-600 font-bold mb-12 text-sm md:text-xl">
         ANALYTIQA is a comprehensive data visualization and reporting tool designed to transform complex data into clear, actionable insights.
       </span>
     </div>
