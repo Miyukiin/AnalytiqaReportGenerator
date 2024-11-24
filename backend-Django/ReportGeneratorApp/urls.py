@@ -1,6 +1,8 @@
 from django.urls import path
-from .views import sample_api
+from .views import *
 
 urlpatterns = [
-    path('api/sample/', sample_api),
+    path('api/sample/', sample_api, name="sample"),
+    path('api/upload/', gather_file_data, name="upload"),
+    path("api/csrf-token/", csrf_token_view, name="csrf_token"),
 ]

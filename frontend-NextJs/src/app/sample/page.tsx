@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import Head from 'next/head';
 
 interface SampleData {
   message: string;

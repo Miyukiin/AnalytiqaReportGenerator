@@ -1,67 +1,143 @@
 "use client";
 
+import { useGlobalContext } from "@/context/GlobalContext";
+import { useEffect } from "react";
+import { redirect, useRouter } from 'next/navigation';
+import StatRow from "@/components/StatRow";
+import Paper from '@mui/material/Paper';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TablePagination from '@mui/material/TablePagination';
+import TableRow from '@mui/material/TableRow';
+import React from "react";
+
+
 export default function SummaryPage() {
+  const { fileData, setFileData } = useGlobalContext();
+  const router = useRouter();
+  
+  interface Column {
+    id: string;
+    label: string;
+    minWidth?: number;
+    align?: 'left';
+    format?: (value: number) => string;
+  }
+  
+  // Mapping to Column array
+  const columns: Column[] = Object.entries(fileData.headers_types).map(([key, type]) => {
+    const column: Column = {
+      id: key, 
+      label: key, 
+      minWidth: 170,
+      align: 'left'
+    };
+  
+    // Add alignment and format based on type
+    if (type === "number") {
+      column.format = (value: number) => value.toLocaleString(); // Format numbers with commas
+    }
+  
+    return column;
+  });
+
+  const stats = [
+    { label: "Number of Rows", value: fileData?.row_count },
+    { label: "Number of Columns", value: fileData?.column_count },
+    { label: "Number of Duplicate Values", value: fileData?.duplicate_count },
+    { label: "Number of Unique Values", value: fileData?.unique_count },
+    { label: "Number of Blank Cells", value: fileData?.total_number_blank_cells },
+  ]; // Does not include numeric data, because each numeric column can have different set of numeric data mean median mode etc.
+
+  // Redirect to home, if filename is not set, meaning there is no filedata
+  useEffect(() => {
+    if (!fileData.name) {
+      router.push("/home"); 
+    }
+  }, [fileData, router]);
+
+  // Prevent rendering if no file name is set
+  if (!fileData.name) {
+    return null; // Do not render anything until redirection
+  }
+
+
+  const [page, setPage] = React.useState(0);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(+event.target.value);
+    setPage(0);
+  };
+
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
       {/* Left Panel */}
       <div className="flex-1 p-6 lg:p-12 bg-gray-100">
-        <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-6">Summarization</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-6">Summary</h1>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-y-4 gap-x-8">
           {/* Rows */}
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Number of Rows:</span>
-            <span className="bg-gray-300 text-center align-middle w-16 h-6 rounded"> <p> x </p> </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Number of Columns:</span>
-            <span className="bg-gray-300 text-center align-middle w-16 h-6 rounded"> <p> x </p> </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Number of Duplicate Values:</span>
-            <span className="bg-gray-300 text-center align-middle w-16 h-6 rounded"> <p> x </p> </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Number of Unique Values:</span>
-            <span className="bg-gray-300 text-center align-middle w-16 h-6 rounded"> <p> x </p> </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Number of Blank Cells:</span>
-            <span className="bg-gray-300 text-center align-middle w-16 h-6 rounded"> <p> x </p> </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Min & Max Values:</span>
-            <span className="bg-gray-300 text-center align-middle w-16 h-6 rounded"> <p> x </p> </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Standard Deviation:</span>
-            <span className="bg-gray-300 text-center align-middle w-16 h-6 rounded"> <p> x </p> </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Variance:</span>
-            <span className="bg-gray-300 text-center align-middle w-16 h-6 rounded"> <p> x </p> </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Mean:</span>
-            <span className="bg-gray-300 text-center align-middle w-16 h-6 rounded"> <p> x </p> </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Median:</span>
-            <span className="bg-gray-300 text-center align-middle w-16 h-6 rounded"> <p> x </p> </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Mode:</span>
-            <span className="bg-gray-300 text-center align-middle w-16 h-6 rounded"> <p> x </p> </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Quartiles:</span>
-            <span className="bg-gray-300 text-center align-middle w-16 h-6 rounded"> <p> x </p> </span>
-          </div>
+          {stats.map((stat, idx) => (
+            <StatRow key={idx} label={stat.label} value={stat.value} />
+          ))}
         </div>
         <div className="mt-8 flex flex-col items-start">
           <h2 className="text-gray-800 font-bold text-lg mb-2 text-center">
-            &lt;FileName&gt; Data Table | &lt;Sheet Name&gt;
+             Previewing "{fileData.name}" 
           </h2>
-          <div className="bg-white rounded-lg p-4 h-64 w-full lg:w-full shadow-sm"></div>
+          <div className="rounded-lg h-64 w-full lg:w-full shadow-sm">
+            <Paper sx={{ width: '100%', overflowX: 'auto', flexGrow: 1 }}>
+              <TableContainer sx={{ maxHeight: 440}}>
+                <Table stickyHeader aria-label="sticky table">
+                  <TableHead>
+                    <TableRow>
+                      {columns.map((column) => (
+                        <TableCell
+                          key={column.id}
+                          align={column.align}
+                          style={{ minWidth: column.minWidth }}
+                        >
+                          {column.label}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {fileData.data
+                      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                      .map((row, rowIndex) => (
+                        <TableRow hover role="checkbox" tabIndex={-1} key={rowIndex}>
+                          {columns.map((column, colIndex) => {
+                            const value = row[column.id];
+                            return (
+                              <TableCell key={`${rowIndex}-${colIndex}`} align={column.align}>
+                                {column.format && typeof value === 'number' ? column.format(value) : value || ""}
+                              </TableCell>
+                            );
+                          })}
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                rowsPerPageOptions={[10, 25, 100]}
+                component="div"
+                count={fileData.data.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
+            </Paper>
+          </div>
         </div>
       </div>
 
