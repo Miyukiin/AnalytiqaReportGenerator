@@ -20,3 +20,6 @@ backend-Django/media/
 .DS_Store
 Thumbs.db
 *.log
+
+# .gitignore
+myenv/
