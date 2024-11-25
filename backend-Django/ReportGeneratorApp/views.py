@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view
 from django.http import HttpRequest, JsonResponse
 from django.middleware.csrf import get_token
 import pandas as pd
+from .models import Visitors
 
 import logging
 logger = logging.getLogger(__name__)
@@ -18,6 +19,19 @@ def sample_api(request:HttpRequest):
 @api_view(['POST'])
 def upload_csv(request:HttpRequest):
     if request.method =="POST":
+        csv_file = request.FILES.get("file")
+        user_uuid = request.POST.get("uuid")
+        
+        if not csv_file or user_uuid is None:
+            return JsonResponse({"error": f"File: {csv_file}, UUID: {user_uuid}"}, status=400)
+        
+        logger.info(user_uuid)
+        
+        entry = Visitors(uuid = user_uuid, orig_csv_file = csv_file)
+        entry.save()
+            
+        
+
         
         return JsonResponse({"message": "All Good"}, status=200)
     else:

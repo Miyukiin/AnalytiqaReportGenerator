@@ -8,18 +8,20 @@ class Visitors(models.Model):
                             unique=True, 
                             blank=False, 
                             null=False, 
-                            verbose_name="Universally Unique Identifier"),
+                            verbose_name="Universally Unique Identifier")
     
     orig_csv_file = models.FileField(upload_to='visitors/csv_files/original',
                                 verbose_name="Original CSV FILE", 
                                 unique=False,
                                 blank=False,
+                                null=True
                                 )
     
     clean_csv_file = models.FileField(upload_to='visitors/csv_files/clean',
                                 verbose_name="Cleaned CSV FILE", 
                                 unique=False,
                                 blank=False,
+                                null=True
                                 )
     
     updated_at = models.DateTimeField(auto_now=True)

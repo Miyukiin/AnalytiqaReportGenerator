@@ -19,16 +19,17 @@ export default function DataReportGenerator() {
   const [status, setStatus] = useState({ error: "", success: "" });
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  let visitorId: string | null;
+  const [visitorId, setVisitorId] = useState<string>("");
 
   // Visitor ID Check | Generation and Storage
   useEffect(() => {
-    visitorId = localStorage.getItem("visitorId");
-    if (!visitorId) {
-      visitorId = crypto.randomUUID(); 
-      localStorage.setItem("visitorId", visitorId); 
+    let storedVisitorId = localStorage.getItem("visitorId");
+    if (!storedVisitorId) {
+      storedVisitorId = crypto.randomUUID(); 
+      localStorage.setItem("visitorId", storedVisitorId); 
     } else {
-      console.log("Existing Visitor ID:", visitorId);
+      console.log("Existing Visitor ID:", storedVisitorId);
+      setVisitorId(storedVisitorId);
       // Future Logic here for restoring session.
     }
   }, []);
@@ -43,7 +44,7 @@ export default function DataReportGenerator() {
     return ""; // No Error
   };
 
-  const handleFileUpload = (uuid: string | null, file: File | null) => {
+  const handleFileUpload = (uuid: string, file: File | null) => {
     if (!file) return;
     const error = validateFile(file);
 
@@ -73,7 +74,8 @@ export default function DataReportGenerator() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("uuid", uuid);     
+      formData.append("uuid", uuid);
+      console.log(formData.get("uuid"))     
 
       const response = await fetch("http://127.0.0.1:8000/api/csv-upload/", { // pass to api
         method: "POST",
@@ -147,7 +149,7 @@ export default function DataReportGenerator() {
         } border-dashed rounded-lg p-6 flex flex-col items-center space-y-3 transition-all`}
         onDrop={(e) => {
           handleDrag(e, false);
-          handleFileUpload(visitorId, e.dataTransfer.files?.[0] || null);
+          handleFileUpload(visitorId,e.dataTransfer.files?.[0] || null);
         }}
         onDragOver={(e) => handleDrag(e, true)}
         onDragLeave={(e) => handleDrag(e, false)}
@@ -158,7 +160,7 @@ export default function DataReportGenerator() {
             type="file"
             accept=".csv"
             id="file-upload"
-            onChange={(e) => handleFileUpload(visitorId, e.target.files?.[0] || null)}
+            onChange={(e) => handleFileUpload(visitorId,e.target.files?.[0] || null)}
             className="hidden"
             aria-label="File upload input"
           />
