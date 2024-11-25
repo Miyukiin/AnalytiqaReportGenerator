@@ -1,5 +1,13 @@
+// src/app/layout.tsx
+
+"use client"; // Ensure this is a Client Component
+
+import React from "react";
 import './globals.css';
 import { GlobalProvider } from "../context/GlobalContext";
+import { ThemeProvider } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import theme from "../theme"; // Adjust the path based on your project structure
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -12,7 +20,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-screen flex flex-col font-wixmadefortext bg-white">
+      <body className="min-h-screen flex flex-col font-wix bg-white">
         {/* Header */}
         <header className="bg-white shadow-md rounded-2xl">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center py-4">
@@ -27,7 +35,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Main Content */}
         <main className="flex-grow flex items-center justify-center">
-          <div className="w-full"><GlobalProvider>{children}</GlobalProvider></div>
+          <div className="w-full">
+            <ThemeProvider theme={theme}>
+              {/* CssBaseline provides a consistent baseline for styling */}
+              <CssBaseline />
+              <GlobalProvider>{children}</GlobalProvider>
+            </ThemeProvider>
+          </div>
         </main>
 
         {/* Footer */}
