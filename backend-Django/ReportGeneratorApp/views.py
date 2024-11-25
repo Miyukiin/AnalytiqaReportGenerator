@@ -14,6 +14,16 @@ logger = logging.getLogger(__name__)
 def sample_api(request:HttpRequest):
     return Response({'message': 'Testing from Django Backend'})
 
+
+@api_view(['POST'])
+def upload_csv(request:HttpRequest):
+    if request.method =="POST":
+        
+        return JsonResponse({"message": "All Good"}, status=200)
+    else:
+        return JsonResponse({"error": "Invalid request method"}, status=400)
+
+
 @api_view(['POST'])
 def gather_file_data(request:HttpRequest):
     if request.method == "POST":
