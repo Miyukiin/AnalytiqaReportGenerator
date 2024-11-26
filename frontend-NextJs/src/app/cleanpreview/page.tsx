@@ -36,6 +36,7 @@ export default function CleanPreviewPage() {
               color: "grey.800", // Uses theme's grey.800
               textTransform: "uppercase",
               marginBottom: 2,
+              fontSize: "1.75rem",
             }}
           >
             Original Data
@@ -75,9 +76,10 @@ export default function CleanPreviewPage() {
             align="center"
             sx={{
               fontWeight: "bold",
-              color: "grey.800", // Uses theme's grey.800
+              color: "grey.700", // Uses theme's grey.800
               textTransform: "uppercase",
               marginBottom: 2,
+              fontSize: "1.75rem",
             }}
           >
             Cleaned Data
@@ -118,14 +120,15 @@ export default function CleanPreviewPage() {
               fontWeight: "bold",
               color: "grey.800", // Uses theme's grey.800
               marginBottom: 2,
+              fontSize: "1.75rem",
             }}
           >
-            Summary of Changes:
+            SUMMARY OF CHANGES:
           </Typography>
           <Typography
             variant="body1"
             sx={{
-              color: "grey.700", // Uses theme's grey.700
+              color: "grey.800", // Uses theme's grey.700
               marginBottom: 2,
               lineHeight: "1.8",
             }}
@@ -159,17 +162,39 @@ export default function CleanPreviewPage() {
         >
           <Button
             disableElevation
-            variant="contained"
+            variant="outlined"
             sx={{
-              backgroundColor: "grey.700", // Uses theme's primary.main
-              "&:hover": { backgroundColor: "primary.main" }, // Uses theme's primary.dark
-              color: "white",
+              borderColor: "primary.main", // Custom border color
+              color: "grey.800", // Custom text color
+              "&:hover": {
+                backgroundColor: "primary.main", // Custom hover border color
+                color: "white", // Custom hover text color
+                borderColor: "primary.main",
+              },
               fontWeight: "bold",
-              padding: "10px 20px",
+              padding: "5px 15px",
               width: { xs: "100%", sm: "auto" }, // Full width on mobile
             }}
           >
-            Save as CSV
+            Go Back
+          </Button>
+          <Button
+            disableElevation
+            variant="outlined"
+            sx={{
+              borderColor: "primary.main", // Custom border color
+              color: "grey.800", // Custom text color
+              "&:hover": {
+                backgroundColor: "primary.main", // Custom hover border color
+                color: "white", // Custom hover text color
+                borderColor: "primary.main",
+              },
+              fontWeight: "bold",
+              padding: "5px 15px",
+              width: { xs: "100%", sm: "auto" }, // Full width on mobile
+            }}
+          >
+            Save as CSV File
           </Button>
           <Button
             disableElevation
@@ -184,23 +209,6 @@ export default function CleanPreviewPage() {
             }}
           >
             Proceed to Report Creation
-          </Button>
-          <Button
-            disableElevation
-            variant="outlined"
-            sx={{
-              borderColor: "grey.800", // Custom border color
-              color: "grey.800", // Custom text color
-              "&:hover": {
-                borderColor: "grey.900", // Custom hover border color
-                color: "grey.900", // Custom hover text color
-              },
-              fontWeight: "bold",
-              padding: "10px 20px",
-              width: { xs: "100%", sm: "auto" }, // Full width on mobile
-            }}
-          >
-            Go Back
           </Button>
         </Box>
       </Box>

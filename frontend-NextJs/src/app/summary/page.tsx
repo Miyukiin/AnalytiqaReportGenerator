@@ -180,17 +180,24 @@ export default function SummaryPage() {
         <div className="mt-8 flex flex-col items-start">
           <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4 space-y-4 md:space-y-0">
             <h2 className="text-gray-800 font-bold text-lg text-center">
-              Previewing "{fileData.name}"
+              Preview of "{fileData.name}"
             </h2>
             <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 space-y-2 sm:space-y-0 w-full sm:w-auto">
               {/* Manage Columns Button */}
               <Button
                 variant="outlined"
                 onClick={handleManageColumnsOpen}
-                className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                 aria-controls={isManageColumnsOpen ? 'manage-columns-dialog' : undefined}
                 aria-haspopup="true"
                 aria-expanded={isManageColumnsOpen ? 'true' : undefined}
+                sx={{
+                  backgroundColor: "grey.700", // Uses theme's primary.main
+                  "&:hover": { backgroundColor: "primary.main" }, // Uses theme's primary.dark
+                  color: "white",
+                  fontWeight: "bold",
+                  padding: "5px 12px",
+                  width: { xs: "100%", sm: "auto" }, // Full width on mobile
+                }}
               >
                 Manage Columns
               </Button>
@@ -199,8 +206,15 @@ export default function SummaryPage() {
               <Button
                 variant="outlined"
                 onClick={toggleFullscreen}
-                className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                 aria-label={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                sx={{
+                  backgroundColor: "grey.700", // Uses theme's primary.main
+                  "&:hover": { backgroundColor: "primary.main" }, // Uses theme's primary.dark
+                  color: "white",
+                  fontWeight: "bold",
+                  padding: "5px 12px",
+                  width: { xs: "100%", sm: "auto" }, // Full width on mobile
+                }}
               >
                 {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
               </Button>
@@ -227,7 +241,7 @@ export default function SummaryPage() {
 
       {/* Right Panel */}
       <div className="w-full lg:w-96 p-6 lg:p-12 bg-gray-200 flex-shrink-0">
-        <h2 className="text-2xl font-bold text-gray-800 mb-8 text-center">Next Steps</h2>
+        <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">NEXT STEPS</h2>
         <NextStepSection
           title="Data Cleaning"
           description="Data cleaning is the process of fixing or removing incorrect, corrupted, incorrectly formatted, duplicate, or incomplete data within a dataset. When combining multiple data sources, there are many opportunities for data to be duplicated or mislabeled."
@@ -331,7 +345,7 @@ const DataTable: React.FC<DataTableProps> = ({
                     {column.label}
                     {orderBy === column.id ? (
                       <span className="visually-hidden">
-                        {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
+                        {`\u00A0- Sorted ${order === 'desc' ? 'Descending' : 'Ascending'}`}
                       </span>
                     ) : null}
                   </TableSortLabel>
@@ -420,23 +434,29 @@ const FullscreenModal: React.FC<FullscreenModalProps> = ({
       fullWidth
     >
       {fullScreen ? (
-        <AppBar sx={{ position: 'relative', backgroundColor: '#000000' }}>
+        <AppBar sx={{ position: 'relative', backgroundColor: '#FFFFFF' }}>
           <Toolbar className="flex justify-between">
-            <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
-              Fullscreen Data Table
+          <Typography
+              sx={{ ml: 2, flex: 1, color: (theme) => theme.palette.grey[600] }} // Ensures theme-based gray color
+              variant="h6"
+              component="div"
+            >
+              Data Table
             </Typography>
             <button
               onClick={onClose}
               className="p-2 bg-transparent border-none cursor-pointer"
               aria-label="Close Fullscreen"
             >
-              <CloseCircleIcon className="w-6 h-6 text-white-500 hover:text-red-700" />
+              <CloseCircleIcon className="w-6 h-6 text-gray-500 hover:text-red-700" />
             </button>
           </Toolbar>
         </AppBar>
       ) : (
         <DialogTitle id="fullscreen-dialog-title" className="relative">
-          Data Table
+          <Typography sx={{ color: (theme) => theme.palette.grey[600] }}>
+            Data Table
+          </Typography>
           <button
             onClick={onClose}
             className="absolute top-2 right-2 p-2 bg-transparent border-none cursor-pointer"
