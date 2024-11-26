@@ -1,5 +1,5 @@
 import './globals.css';
-import { GlobalProvider } from "../context/GlobalContext";
+import { VisitorIdProvider } from "../context/visitorIDManager"; // Import the VisitorIdProvider
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -27,7 +27,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Main Content */}
         <main className="flex-grow flex items-center justify-center">
-          <div className="w-full"><GlobalProvider>{children}</GlobalProvider></div>
+          <div className="w-full"><VisitorIdProvider>{children}</VisitorIdProvider></div>
         </main>
 
         {/* Footer */}

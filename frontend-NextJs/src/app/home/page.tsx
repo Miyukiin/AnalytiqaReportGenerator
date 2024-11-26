@@ -2,12 +2,13 @@
 
 import { useState, createContext, useContext, use } from "react";
 import Head from "next/head";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation"; // Import useRouter
 import BadgeCheckIcon from "../../components/icons/BadgeCheckIcon";
 import FilePlusIcon from "../../components/icons/FilePlusIcon";
 import ChevronDownIcon from "../../components/icons/ChevronDownIcon";
-import { useEffect } from "react";
-import { initialFileData } from "@/context/GlobalContext";
+import { useVisitorId } from '../../context/visitorIDManager';
+import { fetchCsrfToken } from '../../components/csrfToken'
 
 export default function DataReportGenerator() {
   const [fileData, setFileData] = useState<{ name: string; size: number | null; csv_file: null | File }>({
@@ -19,21 +20,7 @@ export default function DataReportGenerator() {
   const [status, setStatus] = useState({ error: "", success: "" });
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const [visitorId, setVisitorId] = useState<string>("");
-
-  // Visitor ID Check | Generation and Storage
-  useEffect(() => {
-    let storedVisitorId = localStorage.getItem("visitorId");
-    if (!storedVisitorId) {
-      storedVisitorId = crypto.randomUUID(); 
-      localStorage.setItem("visitorId", storedVisitorId); 
-    } else {
-      console.log("Existing Visitor ID:", storedVisitorId);
-      setVisitorId(storedVisitorId);
-      // Future Logic here for restoring session.
-    }
-  }, []);
-
+  const visitorId = useVisitorId();
 
   const validateFile = (file: File) => {
     const fileType = file.name.split(".").pop()?.toLowerCase();
@@ -61,24 +48,16 @@ export default function DataReportGenerator() {
   };
 
   const simulateUpload = async (uuid: string, file: File) => {
-    async function fetchCsrfToken(): Promise<string> {
-      const response = await fetch("http://127.0.0.1:8000/api/csrf-token/", {
-        credentials: "include",
-      });
-      const data = await response.json();
-      return data.csrfToken;
-    }
-
     setLoading(true); // Set loading to true
 
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("uuid", uuid);
-      console.log(formData.get("uuid"))     
+      formData.append('file_name', fileData.name)
 
       const response = await fetch("http://127.0.0.1:8000/api/csv-upload/", { // pass to api
-        method: "POST",
+        method: "PUT",
         headers: {
           "X-CSRFToken": await fetchCsrfToken() || "", // 
         },
@@ -89,8 +68,8 @@ export default function DataReportGenerator() {
       if (response.ok) {
         setStatus({ error: "", success: "File uploaded successfully!" });
         const apiData = await response.json();
-        console.log(apiData)
-        //router.push("/summary"); 
+
+        router.push("/summary"); 
       } 
       else {
         const error = await response.json();

@@ -1,7 +1,6 @@
 "use client";
 
-import { useGlobalContext } from "@/context/GlobalContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { redirect, useRouter } from 'next/navigation';
 import StatRow from "@/components/StatRow";
 import Paper from '@mui/material/Paper';
@@ -12,12 +11,110 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
-import React from "react";
+import { useVisitorId } from "@/context/visitorIDManager";
+import { fetchCsrfToken } from '../../components/csrfToken'
+
+// Shared fetch function
+const fetchData = async (url: string, uuid: string, csrfToken: string, setStatus: React.Dispatch<any>) => {
+  try {
+    const fullUrl = new URL(url);
+    fullUrl.searchParams.append('uuid', uuid);
+    const response = await fetch(fullUrl.toString(), {
+      method: 'GET',
+      headers: {
+        'X-CSRFToken': csrfToken,
+      },
+      credentials: 'include',
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setStatus({ error: data["error"] || "Error Fetching Data", success: "" });
+      return null;
+    }
+    return data;
+
+  } 
+  catch (error) {
+    if (error instanceof Error) {
+      setStatus({ error: error.message, success: "" });
+    }
+  }
+};
 
 
 export default function SummaryPage() {
-  const { fileData, setFileData } = useGlobalContext();
   const router = useRouter();
+  const visitorId = useVisitorId();
+  const [loading, setLoading] = useState(true); 
+  const [status, setStatus] = useState({ error: "", success: "" });
+  const [previewData, setPreviewData] = useState<{
+    data: { [key: string]: any; }[];
+    headers_types: { [key:string]: any} | {};
+  }>({ data: [], headers_types: {} });
+  const [summaryData, setSummaryData] = useState<{
+    name?: string;
+    row_count?: number;
+    column_count?: number;
+    duplicate_count?: number;
+    unique_count?: number;
+    total_number_blank_cells?: number; 
+    numeric_columns_stats?: {
+      [key: string]: {
+        Min: number;
+        Max: number;
+        Standard_Deviation: number;
+        Variance: number;
+        Mean: number;
+        Median: number;
+        Mode: number | null;
+        Quartiles: {
+          Q1: number;
+          Q2: number;
+          Q3: number;
+        };
+      };
+    };
+  }
+  >();
+
+  useEffect(() => {
+    if (visitorId){
+      get_summary_statistics(visitorId);
+      get_preview_data(visitorId);
+      setLoading(false); // Visitor ID is resolved, stop loading now.
+    }
+      else if (visitorId === "") { // Wait to resolve, from initial state empty string.
+        console.log("Waiting for visitor ID...");
+    } else if (visitorId === null) { // If it is set to null, then the localstorage return nothing.
+        router.push('/home'); // Redirect if visitorId is not available, meaning it is a new user with no prior csv uploads or progress.
+    }
+  }, [visitorId]);
+
+  const get_preview_data = async (uuid: string) => {
+    setStatus({ error: '', success: '' }); 
+    const csrfToken = await fetchCsrfToken();
+    const data = await fetchData("http://127.0.0.1:8000/api/get-table-preview-data/", uuid, csrfToken, setStatus);
+    // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-table-preview-data/`, uuid, csrfToken, setStatus);
+    if (data) {
+      setPreviewData(data);
+      setStatus({ error: '', success: 'Getting Preview Data Successful' });
+    }
+  };
+
+  const get_summary_statistics = async (uuid: string) => {
+    setStatus({ error: '', success: '' });
+    const csrfToken = await fetchCsrfToken(); 
+    const data = await fetchData("http://127.0.0.1:8000/api/get-summary-statistics/", uuid, csrfToken, setStatus);
+
+    // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-summary-statistics/`, uuid, csrfToken, setStatus);
+    if (data) {
+      setSummaryData(data);
+      console.log(summaryData)
+      setStatus({ error: '', success: 'Getting Summary Statistics Successful' });
+    }
+  };
   
   interface Column {
     id: string;
@@ -28,7 +125,7 @@ export default function SummaryPage() {
   }
   
   // Mapping to Column array
-  const columns: Column[] = Object.entries(fileData.headers_types).map(([key, type]) => {
+  const columns: Column[] = Object.entries(previewData.headers_types).map(([key, type]) => {
     const column: Column = {
       id: key, 
       label: key, 
@@ -45,28 +142,16 @@ export default function SummaryPage() {
   });
 
   const stats = [
-    { label: "Number of Rows", value: fileData?.row_count },
-    { label: "Number of Columns", value: fileData?.column_count },
-    { label: "Number of Duplicate Values", value: fileData?.duplicate_count },
-    { label: "Number of Unique Values", value: fileData?.unique_count },
-    { label: "Number of Blank Cells", value: fileData?.total_number_blank_cells },
+    { label: "Number of Rows", value: summaryData?.row_count },
+    { label: "Number of Columns", value: summaryData?.column_count },
+    { label: "Number of Duplicate Values", value: summaryData?.duplicate_count },
+    { label: "Number of Unique Values", value: summaryData?.unique_count },
+    { label: "Number of Blank Cells", value: summaryData?.total_number_blank_cells },
   ]; // Does not include numeric data, because each numeric column can have different set of numeric data mean median mode etc.
 
-  // Redirect to home, if filename is not set, meaning there is no filedata
-  useEffect(() => {
-    if (!fileData.name) {
-      router.push("/home"); 
-    }
-  }, [fileData, router]);
 
-  // Prevent rendering if no file name is set
-  if (!fileData.name) {
-    return null; // Do not render anything until redirection
-  }
-
-
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -90,7 +175,7 @@ export default function SummaryPage() {
         </div>
         <div className="mt-8 flex flex-col items-start">
           <h2 className="text-gray-800 font-bold text-lg mb-2 text-center">
-             Previewing "{fileData.name}" 
+             Previewing "{summaryData?.name}" 
           </h2>
           <div className="rounded-lg h-64 w-full lg:w-full shadow-sm">
             <Paper sx={{ width: '100%', overflowX: 'auto', flexGrow: 1 }}>
@@ -109,8 +194,9 @@ export default function SummaryPage() {
                       ))}
                     </TableRow>
                   </TableHead>
-                  <TableBody>
-                    {fileData.data
+                  {previewData ? (
+                    <TableBody>
+                    {previewData.data
                       .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                       .map((row, rowIndex) => (
                         <TableRow hover role="checkbox" tabIndex={-1} key={rowIndex}>
@@ -125,12 +211,15 @@ export default function SummaryPage() {
                         </TableRow>
                       ))}
                   </TableBody>
+                  ): (
+                    <div>Unable to Display Data</div> // Temporary. Show if no data
+                  )}
                 </Table>
               </TableContainer>
               <TablePagination
                 rowsPerPageOptions={[10, 25, 100]}
                 component="div"
-                count={fileData.data.length}
+                count={previewData.data.length}
                 rowsPerPage={rowsPerPage}
                 page={page}
                 onPageChange={handleChangePage}
@@ -174,3 +263,4 @@ export default function SummaryPage() {
     </div>
   );
 }
+
