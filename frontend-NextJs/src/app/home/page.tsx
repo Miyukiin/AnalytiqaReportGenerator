@@ -130,11 +130,11 @@ export default function DataReportGenerator() {
     <div className="relative flex flex-col items-center text-center px-4 w-full">
       <Head>
         {/* Set the favicon for the tab */}
-        <link rel="icon" href="TabIcon.png" />
+        <link rel="icon" href="logo.png" />
         <title>Data Report Generator</title> {/* Optional: You can also set the title */}
       </Head>
 
-      <h2 className="text-5xl sm:text-5xl font-bold text-gray-600 my-6">Data Report Generator</h2>
+      <h2 className="text-4xl sm:text-4xl font-bold text-gray-600 my-6">DATA REPORT GENERATOR</h2>
 
       {/* Full-screen Loading Overlay */}
       {loading && (
@@ -146,7 +146,7 @@ export default function DataReportGenerator() {
                 <div key={index}></div> // Each spoke of the spinner
               ))}
             </div>
-            <p className="text-white text-5xl font-large mt-4">Uploading...</p>
+            <p className="text-white text-5xl font-medium mt-4">Uploading...</p>
           </div>
         </div>
       )}
@@ -191,8 +191,9 @@ export default function DataReportGenerator() {
 
       <ul className="mt-8 text-[11px] ml-4 md:ml text-left md:text-center text-black space-y-2 md:text-[13px]">
         {[
-          "Create dynamic, visually engaging dashboards and reports",
-          "Supporting data-driven decision-making with customizable visualization options",
+          "Create visually engaging dashboards and reports",
+          "Supporting data-driven decision-making",
+          "Customizable visualization options",
           "Allows efficient data cleaning features",
         ].map((feature, idx) => (
           <li key={idx} className="flex items-center gap-x-2">
