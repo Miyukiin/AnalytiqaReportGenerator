@@ -72,7 +72,7 @@ const FullscreenModal: React.FC<FullscreenModalProps> = ({
         <AppBar sx={{ position: 'relative', backgroundColor: '#FFFFFF' }}>
           <Toolbar className="flex justify-between">
             <Typography
-              sx={{ ml: 2, flex: 1, color: (theme) => theme.palette.grey[600] }}
+              sx={{ ml: 2, flex: 1, color: (theme) => theme.palette.grey[900] }}
               variant="h6"
               component="div"
             >
@@ -89,7 +89,7 @@ const FullscreenModal: React.FC<FullscreenModalProps> = ({
         </AppBar>
       ) : (
         <DialogTitle id="fullscreen-dialog-title" className="relative">
-          <Typography sx={{ color: (theme) => theme.palette.grey[600] }}>
+          <Typography sx={{ color: (theme) => theme.palette.grey[900] }}>
             Data Table
           </Typography>
           <button

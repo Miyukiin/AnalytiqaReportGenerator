@@ -228,12 +228,12 @@ export default function SummaryPage() {
         {/* Column Selection Dropdown */}
         <div className="mt-4 w-full">
           <FormControl fullWidth variant="outlined">
-            <InputLabel id="select-column-label">Select Column</InputLabel>
+            <InputLabel id="select-column-label">Select Column for Statistics</InputLabel>
             <Select
               labelId="select-column-label"
               id="select-column"
               value={selectedColumn}
-              label="Select Column"
+              label="Select Column for Statistics"
               onChange={(event) => setSelectedColumn(event.target.value)}
               sx={{ backgroundColor: 'white' }}
             >
