@@ -3,10 +3,17 @@
 "use client"; // Ensure this is a Client Component
 
 import React from "react";
+import { useRouter } from "next/navigation"; // Import useRouter for navigation
 import { Box, Typography, Paper, Button, IconButton } from "@mui/material";
 import ExpandIcon from "@/components/icons/ExpandIcon"; // Adjust the path as needed
 
 export default function CleanPreviewPage() {
+  const router = useRouter(); // Initialize useRouter
+
+  const handleProceedToReport = () => {
+    router.push("/report"); // Navigate to the /report page
+  };
+
   return (
     <Box
       sx={{
@@ -199,6 +206,7 @@ export default function CleanPreviewPage() {
           <Button
             disableElevation
             variant="contained"
+            onClick={handleProceedToReport} // Call the navigation function
             sx={{
               backgroundColor: "grey.700", // Uses theme's primary.main
               "&:hover": { backgroundColor: "primary.main" }, // Uses theme's primary.dark

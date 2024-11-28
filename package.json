@@ -2,9 +2,11 @@
   "dependencies": {
     "@emotion/react": "^11.13.5",
     "@emotion/styled": "^11.13.5",
-    "@mui/icons-material": "^6.1.8",
-    "@mui/material": "^6.1.8",
+    "@mui/material": "^6.1.9",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
+    "react-dom": "^18.3.1",
+    "react-draggable": "^4.4.6"
   }
 }
