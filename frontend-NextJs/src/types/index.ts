@@ -1,6 +1,6 @@
 // src/types/index.ts
 
-export type ChartType = "Scatter" | "Histogram" | "Radar" | "Stacked Line" | "Waterfall";
+export type ChartType = "Scatter" | "Histogram" | "Radar" | "Stacked Line" | "RadialBar";
 
 export interface ScatterDataPoint {
   x: number;
@@ -23,19 +23,36 @@ export interface StackedLineDataPoint {
   pv: number;
 }
 
+export interface RadialBarDataPoint {
+  name: string;
+  uv: number;
+  pv: number;
+  fill: string;
+}
+
 export type ChartData =
   | ScatterDataPoint[]
   | HistogramDataPoint[]
   | RadarDataPoint[]
   | StackedLineDataPoint[]
-  | any[]; // Replace `any[]` with a specific type for Waterfall when implemented
+  | RadialBarDataPoint[];
 
 export interface Chart {
   id: number;
   type: ChartType;
+  title?: string;
+  xAxis?: string;
+  yAxis?: string;
   data: ChartData;
   x: number;
   y: number;
   width: number;
   height: number;
+}
+
+export interface Page {
+  id: number;
+  name: string;
+  charts: Chart[];
+  remark: string;
 }

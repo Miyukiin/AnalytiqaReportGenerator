@@ -68,8 +68,8 @@ const RightSidebar: React.FC = () => {
             <ListItemIcon>
               <TableChartIcon
                 sx={{
-                  color: "rgba(0, 0, 0, 0.6)",
-                  fontSize: "1rem",
+                  color: "rgba(0, 0, 0, 0.6)", // Faint black color
+                  fontSize: "1rem", // Adjusted icon size if needed
                 }}
               />
             </ListItemIcon>
@@ -77,7 +77,7 @@ const RightSidebar: React.FC = () => {
               primary={table}
               sx={{
                 "& .MuiTypography-root": {
-                  fontSize: "0.8rem",
+                  fontSize: "0.8rem", // Further reduced font size
                 },
               }}
             />
@@ -97,7 +97,7 @@ const RightSidebar: React.FC = () => {
       <Box
         sx={{
           mt: 1,
-          p: 1,
+          p: 1, // Reduced padding for compactness
           bgcolor: "#f8f9fa",
           border: "1px solid #adb5bd",
           borderRadius: 1,

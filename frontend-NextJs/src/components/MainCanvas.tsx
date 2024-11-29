@@ -10,6 +10,8 @@ interface MainCanvasProps {
   removeChart: (id: number) => void;
   onDragStop: (id: number, x: number, y: number) => void;
   onResizeStop: (id: number, width: number, height: number) => void;
+  onSelectChart: (id: number) => void;
+  selectedChartId: number | null;
 }
 
 const MainCanvas: React.FC<MainCanvasProps> = ({
@@ -17,14 +19,16 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
   removeChart,
   onDragStop,
   onResizeStop,
+  onSelectChart,
+  selectedChartId,
 }) => {
   return (
     <Box
       sx={{
-        position: "relative",
         width: "100%",
         height: "100%",
-        bgcolor: "#ffffff",
+        position: "relative",
+        background: "#ffffff",
       }}
     >
       {charts.map((chart) => (
@@ -34,6 +38,8 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
           onRemove={removeChart}
           onDragStop={onDragStop}
           onResizeStop={onResizeStop}
+          onSelectChart={onSelectChart}
+          isSelected={selectedChartId === chart.id}
         />
       ))}
     </Box>
