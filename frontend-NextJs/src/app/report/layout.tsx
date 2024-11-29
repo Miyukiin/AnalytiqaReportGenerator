@@ -18,14 +18,14 @@ export default function ReportLayout({ children }: { children: React.ReactNode }
           <img
             src="/images/analytiqa_header2.png"
             alt="Report Header Logo"
-            className="h-10 sm:h-14 w-auto"
+            className="h-10 sm:h-11 w-auto"
           />
           {/* Optional: Add navigation links or a hamburger menu here for mobile */}
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="pt-16 flex-grow bg-gray-100 min-h-screen">
+      <main className="flex-grow bg-gray-100 min-h-screen">
         <ThemeProvider theme={theme}>
           <CssBaseline />
           {children}
@@ -33,7 +33,7 @@ export default function ReportLayout({ children }: { children: React.ReactNode }
       </main>
 
       {/* Custom Footer */}
-      <footer className="bg-gray-900 text-white py-6">
+      <footer className="bg-gray-900 text-white py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row flex-wrap justify-between items-center space-y-6 lg:space-y-0">
           
           {/* Left Section: Logo */}
