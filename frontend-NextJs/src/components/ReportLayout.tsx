@@ -1,12 +1,12 @@
-// src/app/report/page.tsx
+// components/ReportLayout.tsx
 "use client";
 
 import React, { useState } from "react";
 import { Box, Typography, Button } from "@mui/material";
 import GetAppIcon from "@mui/icons-material/GetApp";
-import LeftSidebar from "../../components/LeftSidebar";
-import MainCanvas from "../../components/MainCanvas";
-import RightSidebar from "../../components/RightSidebar";
+import LeftSidebar from "./LeftSidebar";
+import MainCanvas from "./MainCanvas";
+import RightSidebar from "./RightSidebar";
 import {
   Chart,
   ChartType,
@@ -14,9 +14,9 @@ import {
   HistogramDataPoint,
   RadarDataPoint,
   StackedLineDataPoint,
-} from "../../types"; // Ensure this path is correct
+} from "../types"; // Ensure this path is correct
 
-const ReportPage: React.FC = () => {
+const ReportLayout: React.FC = () => {
   const [charts, setCharts] = useState<Chart[]>([]); // Explicitly type the state
 
   const addChart = (type: ChartType) => { // Explicitly type the parameter
@@ -176,4 +176,4 @@ const ReportPage: React.FC = () => {
   );
 };
 
-export default ReportPage;
+export default ReportLayout;

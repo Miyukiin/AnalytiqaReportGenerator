@@ -1,15 +1,20 @@
+// src/app/report/layout.tsx
 "use client";
 
-import React from "react";
+import React, { ReactNode } from "react";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-import theme from "../../theme"; // Adjust the path as necessary
+import theme from "../../theme"; // Ensure this path is correct
 import EmailIcon from "@/components/icons/EmailIcon";
 import InstagramIcon from "@/components/icons/InstagramIcon";
 import FacebookIcon from "@/components/icons/FacebookIcon";
 import GithubIcon from "@/components/icons/GithubIcon";
 
-export default function ReportLayout({ children }: { children: React.ReactNode }) {
+interface ReportLayoutProps {
+  children: ReactNode;
+}
+
+const ReportLayout: React.FC<ReportLayoutProps> = ({ children }) => {
   return (
     <>
       {/* Custom Header */}
@@ -35,7 +40,6 @@ export default function ReportLayout({ children }: { children: React.ReactNode }
       {/* Custom Footer */}
       <footer className="bg-gray-900 text-white py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row flex-wrap justify-between items-center space-y-6 lg:space-y-0">
-          
           {/* Left Section: Logo */}
           <div className="flex items-center justify-center lg:justify-start">
             <img
@@ -64,11 +68,6 @@ export default function ReportLayout({ children }: { children: React.ReactNode }
           {/* Right Section: Contact and Icons */}
           <div className="flex flex-col items-center lg:items-end space-y-2">
             {/* Email */}
-
-            {/* Social Icons */}
-          {/* Right Section: Contact and Icons */}
-          <div className="flex flex-col items-center space-y-2 lg:items-start">
-            {/* Email */}
             <div className="flex items-center space-x-2">
               <EmailIcon className="text-gray-400 hover:text-white" />
               <span className="text-sm">info@analytiqa.com</span>
@@ -80,10 +79,10 @@ export default function ReportLayout({ children }: { children: React.ReactNode }
               <GithubIcon className="text-gray-400 hover:text-white" />
             </div>
           </div>
-          </div>
-
         </div>
       </footer>
     </>
   );
-}
+};
+
+export default ReportLayout;
