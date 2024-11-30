@@ -108,34 +108,49 @@ Here's a blank template to get started: To avoid retyping too much info. Do a se
 This is an example of how you may give instructions on setting up your project locally.
 To get a local copy up and running follow these simple example steps.
 
-### Prerequisites
-
-This is an example of how to list things you need to use the software and how to install them.
-* npm
-  ```sh
-  npm install npm@latest -g
-  ```
-
 ### Installation
 
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
+1. Clone the repo
    ```sh
-   git clone https://github.com/github_username/repo_name.git
+   git clone https://github.com/Miyukiin/AnalytiqaReportGenerator.git
    ```
-3. Install NPM packages
+3. To setup our Backend first, go to Backend directory.
    ```sh
-   npm install
+   cd Backend
    ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
-   ```
-5. Change git remote url to avoid accidental pushes to base project
+4. Create virtual environment for Python.
    ```sh
-   git remote set-url origin github_username/repo_name
-   git remote -v # confirm the changes
+   python -m venv myenv
    ```
+5. Activate venv.
+   ```sh
+   venv\Scripts\activate # Windows version
+   ```
+6. Install required dependencies as specified in requirements.txt
+   ```sh
+   pip install -r requirements.txt
+   ```
+7. Next, we setup our Frontend, navigate to Frontend directory where we have package.json.
+   ```sh
+   cd Frontend
+   ```
+8. Install the required dependencies.
+  ```sh
+  npm install
+  ```
+9. Verify that everything is working. Create a terminal for Backend and Frontend. Navigate them to:
+   ```sh
+   cd Backend
+   cd Frontend
+   ```
+10. Now, with both the Django and Next.js servers running, you should be able to:
+    ```sh
+    py manage.py runserver # In backend terminal
+    npm run dev # In frontend terminal
+    ```
+    Access the Django API via http://127.0.0.1:8000.
+    Access the Next.js frontend via http://localhost:3000.
+    Test the communication between the frontend and backend by accessing http://localhost:3000/api/sample.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
