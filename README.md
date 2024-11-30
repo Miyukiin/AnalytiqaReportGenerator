@@ -134,14 +134,14 @@ To get a local copy up and running follow these simple example steps.
    ```sh
    pip install -r requirements.txt
    ```
-8. Next, we setup our Frontend, navigate to Frontend directory where we have package.json.
+8. Next, we setup our Frontend, navigate to our root Frontend directory where we have package.json.
    ```sh
-   cd frontend
+   cd Frontend
    ```
 9. Install the required dependencies.
-    ```sh
-    npm install
-    ```
+   ```sh
+   npm install
+   ```
 10. Verify that everything is working. Create a terminal for Backend and Frontend. Navigate them to:
    ```sh
    cd Backend
