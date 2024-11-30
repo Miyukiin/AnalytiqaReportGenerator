@@ -2,9 +2,8 @@
 
 "use client";
 
-import React, { useEffect, useState, useMemo, ChangeEvent } from "react";
-import { useRouter } from 'next/navigation';
-import { useGlobalContext } from "@/context/GlobalContext";
+import { useEffect, useState } from "react";
+import { redirect, useRouter } from 'next/navigation';
 import StatRow from "@/components/StatRow";
 import DataTable from "@/components/DataTable";
 import NextStepSection from "@/components/NextStepSection";
@@ -19,14 +18,37 @@ import {
 } from '@mui/material';
 
 type Order = 'asc' | 'desc';
+import { useVisitorId } from "@/context/visitorIDManager";
+import { fetchCsrfToken } from '../../components/csrfToken'
 
-interface Column {
-  id: string;
-  label: string;
-  minWidth?: number;
-  align?: 'left' | 'right' | 'center';
-  format?: (value: any) => string;
-}
+// Shared fetch function
+const fetchData = async (url: string, uuid: string, csrfToken: string, setStatus: React.Dispatch<any>) => {
+  try {
+    const fullUrl = new URL(url);
+    fullUrl.searchParams.append('uuid', uuid);
+    const response = await fetch(fullUrl.toString(), {
+      method: 'GET',
+      headers: {
+        'X-CSRFToken': csrfToken,
+      },
+      credentials: 'include',
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setStatus({ error: data["error"] || "Error Fetching Data", success: "" });
+      return null;
+    }
+    return data;
+
+  } 
+  catch (error) {
+    if (error instanceof Error) {
+      setStatus({ error: error.message, success: "" });
+    }
+  }
+};
 
 interface FileData {
   name: string;
@@ -45,98 +67,109 @@ interface Stat {
 }
 
 export default function SummaryPage() {
-  const { fileData } = useGlobalContext() as { fileData: FileData };
   const router = useRouter();
+  const visitorId = useVisitorId();
+  const [loading, setLoading] = useState(true); 
+  const [status, setStatus] = useState({ error: "", success: "" });
+  const [previewData, setPreviewData] = useState<{
+    data: { [key: string]: any; }[];
+    headers_types: { [key:string]: any} | {};
+  }>({ data: [], headers_types: {} });
+  const [summaryData, setSummaryData] = useState<{
+    name?: string;
+    row_count?: number;
+    column_count?: number;
+    duplicate_count?: number;
+    unique_count?: number;
+    total_number_blank_cells?: number; 
+    numeric_columns_stats?: {
+      [key: string]: {
+        Min: number;
+        Max: number;
+        Standard_Deviation: number;
+        Variance: number;
+        Mean: number;
+        Median: number;
+        Mode: number | null;
+        Quartiles: {
+          Q1: number;
+          Q2: number;
+          Q3: number;
+        };
+      };
+    };
+  }
+  >();
 
-  // Redirect to home if no file data
   useEffect(() => {
-    if (!fileData.name) {
-      router.push("/home");
+    if (visitorId){
+      get_summary_statistics(visitorId);
+      get_preview_data(visitorId);
+      setLoading(false); // Visitor ID is resolved, stop loading now.
     }
-  }, [fileData, router]);
-
-  if (!fileData.name) return null;
-
-  // Define columns based on fileData headers
-  const columns: Column[] = useMemo(() => (
-    Object.entries(fileData.headers_types).map(([key, type]) => ({
-      id: key,
-      label: key,
-      minWidth: 150,
-      align: 'left' as const,
-      format: type === "number" ? (value: number) => value.toLocaleString() : undefined,
-    }))
-  ), [fileData.headers_types]);
-
-  // State for selected column
-  const [selectedColumn, setSelectedColumn] = useState<string>('');
-
-  // Compute stats including mean, median, mode if applicable
-  const stats = useMemo(() => {
-    const baseStats: Stat[] = [
-      { label: "Number of Rows", value: fileData.row_count },
-      { label: "Number of Columns", value: fileData.column_count },
-      { label: "Number of Duplicate Values", value: fileData.duplicate_count },
-      { label: "Number of Unique Values", value: fileData.unique_count },
-      { label: "Number of Blank Cells", value: fileData.total_number_blank_cells },
-    ];
-
-    if (selectedColumn) {
-      const columnType = fileData.headers_types[selectedColumn];
-      const columnData = fileData.data
-        .map(row => row[selectedColumn])
-        .filter(value => value !== null && value !== undefined && value !== 0);
-    
-      if (columnData.length > 0) {
-        if (columnType === 'number') {
-          // Compute numerical stats (mean, median, mode)
-          const numericData = columnData.map(Number).filter(value => !isNaN(value) && value !== 0);
-          const mean = numericData.reduce((sum, val) => sum + val, 0) / numericData.length;
-          const sortedData = [...numericData].sort((a, b) => a - b);
-          const mid = Math.floor(sortedData.length / 2);
-          const median = sortedData.length % 2 === 0 ? (sortedData[mid - 1] + sortedData[mid]) / 2 : sortedData[mid];
-    
-          const frequencyMap: { [key: number]: number } = {};
-          let maxFreq = 0;
-          numericData.forEach(num => {
-            frequencyMap[num] = (frequencyMap[num] || 0) + 1;
-            maxFreq = Math.max(maxFreq, frequencyMap[num]);
-          });
-          const numericModes = Object.keys(frequencyMap)
-            .filter(num => frequencyMap[Number(num)] === maxFreq && Number(num) !== 0)
-            .map(Number);
-          const formattedMode = maxFreq === 1 ? "No mode" : numericModes.join(', ');
-    
-          baseStats.push(
-            { label: "Mean", value: mean.toFixed(2) },
-            { label: "Median", value: median.toFixed(2) },
-            { label: "Mode", value: formattedMode }
-          );
-        } else {
-          // Compute qualitative mode
-          const frequencyMap: { [key: string]: number } = {};
-          let maxFreq = 0;
-    
-          columnData.forEach(value => {
-            const stringValue = String(value);
-            frequencyMap[stringValue] = (frequencyMap[stringValue] || 0) + 1;
-            maxFreq = Math.max(maxFreq, frequencyMap[stringValue]);
-          });
-    
-          const modes = Object.keys(frequencyMap)
-            .filter(value => frequencyMap[value] === maxFreq && value !== '0' && value !== '');
-    
-          const formattedMode = maxFreq === 1 ? "No Mode" : modes.join(', ');
-    
-          baseStats.push(
-            { label: "Mode", value: formattedMode }
-          );
-        }
-      }
+      else if (visitorId === "") { // Wait to resolve, from initial state empty string.
+        console.log("Waiting for visitor ID...");
+    } else if (visitorId === null) { // If it is set to null, then the localstorage return nothing.
+        router.push('/home'); // Redirect if visitorId is not available, meaning it is a new user with no prior csv uploads or progress.
     }
-    
-    return baseStats;
-  }, [fileData, selectedColumn]);
+  }, [visitorId]);
+
+  const get_preview_data = async (uuid: string) => {
+    setStatus({ error: '', success: '' }); 
+    const csrfToken = await fetchCsrfToken();
+    const data = await fetchData("http://127.0.0.1:8000/api/get-table-preview-data/", uuid, csrfToken, setStatus);
+    // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-table-preview-data/`, uuid, csrfToken, setStatus);
+    if (data) {
+      setPreviewData(data);
+      setStatus({ error: '', success: 'Getting Preview Data Successful' });
+    }
+  };
+
+  const get_summary_statistics = async (uuid: string) => {
+    setStatus({ error: '', success: '' });
+    const csrfToken = await fetchCsrfToken(); 
+    const data = await fetchData("http://127.0.0.1:8000/api/get-summary-statistics/", uuid, csrfToken, setStatus);
+
+    // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-summary-statistics/`, uuid, csrfToken, setStatus);
+    if (data) {
+      setSummaryData(data);
+      console.log(summaryData)
+      setStatus({ error: '', success: 'Getting Summary Statistics Successful' });
+    }
+  };
+  
+  interface Column {
+    id: string;
+    label: string;
+    minWidth?: number;
+    align?: 'left';
+    format?: (value: number) => string;
+  }
+  
+  // Mapping to Column array
+  const columns: Column[] = Object.entries(previewData.headers_types).map(([key, type]) => {
+    const column: Column = {
+      id: key, 
+      label: key, 
+      minWidth: 170,
+      align: 'left'
+    };
+  
+    // Add alignment and format based on type
+    if (type === "number") {
+      column.format = (value: number) => value.toLocaleString(); // Format numbers with commas
+    }
+  
+    return column;
+  });
+
+  const stats = [
+    { label: "Number of Rows", value: summaryData?.row_count },
+    { label: "Number of Columns", value: summaryData?.column_count },
+    { label: "Number of Duplicate Values", value: summaryData?.duplicate_count },
+    { label: "Number of Unique Values", value: summaryData?.unique_count },
+    { label: "Number of Blank Cells", value: summaryData?.total_number_blank_cells },
+  ]; // Does not include numeric data, because each numeric column can have different set of numeric data mean median mode etc.
 
   // Pagination state
   const [page, setPage] = useState(0);
@@ -365,3 +398,4 @@ export default function SummaryPage() {
     </div>
   );
 }
+
