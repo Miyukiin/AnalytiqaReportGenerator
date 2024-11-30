@@ -218,7 +218,7 @@ export default function SummaryPage() {
     <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
       {/* Left Panel */}
       <div className="flex-1 p-6 lg:p-12 bg-gray-100 overflow-hidden">
-        <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-6">Summary</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-6">SUMMARY:</h1>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-y-4 gap-x-8">
           {stats.map((stat, idx) => (
             <StatRow key={idx} label={stat.label} value={stat.value} />
