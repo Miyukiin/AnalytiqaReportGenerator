@@ -15,8 +15,8 @@ backend-Django/static/
 backend-Django/media/
 
 # Ignore Python bytecode files
-__pycache__/
 *.pyc
+__pycache__/
 
 # Shared ignores
 .env
