@@ -118,36 +118,36 @@ To get a local copy up and running follow these simple example steps.
    ```sh
    cd .../AnalytiqaReportGenerator
    ```
-4. Create virtual environment for Python.
+3. Create virtual environment for Python.
    ```sh
    python -m venv myenv
    ```
-5. To setup our Backend first, go to Backend directory.
+4. To setup our Backend first, go to Backend directory.
    ```sh
    cd Backend
    ```
-6. Activate venv.
+5. Activate venv.
    ```sh
    venv\Scripts\activate # Windows version
    ```
-7. Install required dependencies as specified in requirements.txt
+6. Install required dependencies as specified in requirements.txt
    ```sh
    pip install -r requirements.txt
    ```
-8. Next, we setup our Frontend, navigate to our root Frontend directory where we have package.json.
+7. Next, we setup our Frontend, navigate to our root Frontend directory where we have package.json.
    ```sh
    cd Frontend
    ```
-9. Install the required dependencies.
+8. Install the required dependencies.
    ```sh
    npm install
    ```
-10. Verify that everything is working. Create a terminal for Backend and Frontend. Navigate them to:
+9. Verify that everything is working. Create a terminal for Backend and Frontend. Navigate them to:
    ```sh
    cd Backend
    cd Frontend
    ```
-11. Now, with both the Django and Next.js servers running, you should be able to:
+10. Now, with both the Django and Next.js servers running, you should be able to:
     ```sh
     py manage.py runserver # In backend terminal
     npm run dev # In frontend terminal
