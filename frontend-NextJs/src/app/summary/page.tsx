@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { redirect, useRouter } from 'next/navigation';
 import StatRow from "@/components/StatRow";
 import DataTable from "@/components/DataTable";
@@ -50,30 +50,14 @@ const fetchData = async (url: string, uuid: string, csrfToken: string, setStatus
   }
 };
 
-interface FileData {
-  name: string;
-  headers_types: { [key: string]: string };
-  row_count: number;
-  column_count: number;
-  duplicate_count: number;
-  unique_count: number;
-  total_number_blank_cells: number;
-  data: Array<{ [key: string]: any }>;
-}
-
-interface Stat {
-  label: string;
-  value: number | string;
-}
-
 export default function SummaryPage() {
   const router = useRouter();
   const visitorId = useVisitorId();
   const [loading, setLoading] = useState(true); 
   const [status, setStatus] = useState({ error: "", success: "" });
   const [previewData, setPreviewData] = useState<{
-    data: { [key: string]: any; }[];
-    headers_types: { [key:string]: any} | {};
+    data: { [key: string]: string | number | null | boolean; }[];
+    headers_types: { [key:string]: string | number | null | boolean} | {};
   }>({ data: [], headers_types: {} });
   const [summaryData, setSummaryData] = useState<{
     name?: string;
@@ -133,43 +117,10 @@ export default function SummaryPage() {
     // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-summary-statistics/`, uuid, csrfToken, setStatus);
     if (data) {
       setSummaryData(data);
-      console.log(summaryData)
+      console.log(data)
       setStatus({ error: '', success: 'Getting Summary Statistics Successful' });
     }
   };
-  
-  interface Column {
-    id: string;
-    label: string;
-    minWidth?: number;
-    align?: 'left';
-    format?: (value: number) => string;
-  }
-  
-  // Mapping to Column array
-  const columns: Column[] = Object.entries(previewData.headers_types).map(([key, type]) => {
-    const column: Column = {
-      id: key, 
-      label: key, 
-      minWidth: 170,
-      align: 'left'
-    };
-  
-    // Add alignment and format based on type
-    if (type === "number") {
-      column.format = (value: number) => value.toLocaleString(); // Format numbers with commas
-    }
-  
-    return column;
-  });
-
-  const stats = [
-    { label: "Number of Rows", value: summaryData?.row_count },
-    { label: "Number of Columns", value: summaryData?.column_count },
-    { label: "Number of Duplicate Values", value: summaryData?.duplicate_count },
-    { label: "Number of Unique Values", value: summaryData?.unique_count },
-    { label: "Number of Blank Cells", value: summaryData?.total_number_blank_cells },
-  ]; // Does not include numeric data, because each numeric column can have different set of numeric data mean median mode etc.
 
   // Pagination state
   const [page, setPage] = useState(0);
@@ -179,6 +130,60 @@ export default function SummaryPage() {
   const handleChangeRowsPerPage = (event: ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(+event.target.value);
     setPage(0);
+  };
+
+  // Initialization of Columns
+  const [columns, setColumns] = useState<Column[]>([]); 
+  const [visibleColumns, setVisibleColumns] = useState<string[]>([]); // Initially empty, because first render of this component does not have previewData yet.
+
+  interface Column {
+    id: string;
+    label: string;
+    minWidth?: number;
+    align?: 'left';
+    format?: (value: number) => string;
+  }
+  
+  // Hook for column mapping, and setting visible columns to all columns of passed API Data.
+  useEffect(() => {
+    if (previewData.headers_types) {
+      // For each column in passed API data, we create a Column object.
+      const RenderedColumns: Column[] = Object.entries(previewData.headers_types).map(([key, type]) => {
+        const column: Column = {
+          id: key, 
+          label: key, 
+          minWidth: 170,
+          align: 'left',
+        };
+        if (type === "number") {
+          column.format = (value: number) => value.toLocaleString(); // Format numbers
+        }
+        return column;
+      });
+      setColumns(RenderedColumns); // Then we set our columns after creating the Column Objects we need.
+      setVisibleColumns(RenderedColumns.map(col => col.id)); // Here we set all Column Objects as our visible columns. Initial state if passed API data contains columns.
+    }
+  }, [previewData]); // When previewData changes, run this hook. Ensures that columns are visible when previewData is loaded.
+
+  // State handling column management.
+  const [isManageColumnsOpen, setIsManageColumnsOpen] = useState(false);
+
+  const handleManageColumnsOpen = () => setIsManageColumnsOpen(true);
+  const handleManageColumnsClose = () => setIsManageColumnsOpen(false);
+  const toggleColumn = (columnId: string) => {
+    setVisibleColumns(prev =>
+      prev.includes(columnId) ? prev.filter(id => id !== columnId) : [...prev, columnId]
+    );
+  };
+
+  // Select All functionality
+  const allSelected = visibleColumns.length === columns.length; // If the number of visible columns is equal to the full length of columns, it means that all columns are visible.
+  const handleSelectAll = () => {
+    if (allSelected) {
+      setVisibleColumns([]);
+    } else {
+      setVisibleColumns(columns.map(col => col.id));
+    }
   };
 
   // Sorting state
@@ -200,30 +205,8 @@ export default function SummaryPage() {
   ), [order, orderBy]);
 
   const sortedData = useMemo(() => (
-    [...fileData.data].sort(comparator)
-  ), [fileData.data, comparator]);
-
-  // Manage Columns state
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(columns.map(col => col.id));
-  const [isManageColumnsOpen, setIsManageColumnsOpen] = useState(false);
-
-  const handleManageColumnsOpen = () => setIsManageColumnsOpen(true);
-  const handleManageColumnsClose = () => setIsManageColumnsOpen(false);
-  const toggleColumn = (columnId: string) => {
-    setVisibleColumns(prev =>
-      prev.includes(columnId) ? prev.filter(id => id !== columnId) : [...prev, columnId]
-    );
-  };
-
-  // Select All functionality
-  const allSelected = visibleColumns.length === columns.length;
-  const handleSelectAll = () => {
-    if (allSelected) {
-      setVisibleColumns([]);
-    } else {
-      setVisibleColumns(columns.map(col => col.id));
-    }
-  };
+    [...previewData.data].sort(comparator)
+  ), [previewData.data, comparator]);
 
   // Fullscreen state
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -238,6 +221,8 @@ export default function SummaryPage() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isFullscreen]);
 
+  
+
   // Handlers for navigation
   const handleCleanData = () => {
     router.push("/cleanpreview");
@@ -247,21 +232,68 @@ export default function SummaryPage() {
     router.push("/report");
   };
 
+  // Dropdown Selected Column Stats Management
+  const [selectedColumn, setSelectedColumn] = useState<string>('');
+
+  // Handle Summary Statistics
+  const GenStats = [
+    { label: "Number of Rows", value: summaryData?.row_count },
+    { label: "Number of Columns", value: summaryData?.column_count },
+    { label: "Number of Duplicate Values", value: summaryData?.duplicate_count },
+    { label: "Number of Unique Values", value: summaryData?.unique_count },
+    { label: "Number of Blank Cells", value: summaryData?.total_number_blank_cells },
+  ];
+  
+  const NumStats = useMemo(() => {
+    // Quantitative stats handling
+    const stats = []
+    if (selectedColumn) {
+      // Type-checking. get columntype of currently selected column only if its structure follows as defined.
+      const columnType = (previewData.headers_types as { [key: string]: string | number | boolean | null })[selectedColumn]
+      const columnData = previewData.data
+        .map(row => row[selectedColumn])
+        .filter(value => value !== null && value !== undefined && value !== 0);
+    
+      if (columnData.length > 0 && (columnType === 'number' && (summaryData && summaryData.numeric_columns_stats))) {
+        // If columnData has more than zero rows, columnType is number, and summaryData is not empty. 
+          // Get the selectedColumn's numerical statistics
+          stats.push(
+            { label: "Min", value: summaryData.numeric_columns_stats[selectedColumn]['Min'] },
+            { label: "Max", value: summaryData.numeric_columns_stats[selectedColumn]['Max'] },
+            { label: "Standard Deviation", value: summaryData.numeric_columns_stats[selectedColumn]['Standard_Deviation'] },
+            { label: "Variance", value: summaryData.numeric_columns_stats[selectedColumn]['Variance'] },
+            { label: "Mean", value: summaryData.numeric_columns_stats[selectedColumn]['Mean'] },
+            { label: "Median", value: summaryData.numeric_columns_stats[selectedColumn]['Median'] },
+            { label: "Mode", value: summaryData?.numeric_columns_stats[selectedColumn]['Mode'] || undefined},
+            { label: "Quartiles (1)", value: summaryData.numeric_columns_stats[selectedColumn]['Quartiles']['Q1'] },
+            { label: "Quartiles (2)", value: summaryData.numeric_columns_stats[selectedColumn]['Quartiles']['Q2'] },
+            { label: "Quartiles (3)", value: summaryData.numeric_columns_stats[selectedColumn]['Quartiles']['Q3'] },
+          );
+        }
+      }
+    
+    return stats;
+  }, [previewData, summaryData, selectedColumn]);
+  
+
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
       {/* Left Panel */}
       <div className="flex-1 p-6 lg:p-12 bg-gray-100 overflow-hidden">
         <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-6">Summary</h1>
+        {/* Gen Stats */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-y-4 gap-x-8">
-          {stats.map((stat, idx) => (
+          {GenStats.map((stat, idx) => (
             <StatRow key={idx} label={stat.label} value={stat.value} />
           ))}
         </div>
 
         {/* Column Selection Dropdown */}
-        <div className="mt-4 w-full">
+        <div className="mt-5 w-full">
           <FormControl fullWidth variant="outlined">
-            <InputLabel id="select-column-label">Select Column for Statistics</InputLabel>
+            <InputLabel id="select-column-label">
+              Select A Numeric Column
+            </InputLabel>
             <Select
               labelId="select-column-label"
               id="select-column"
@@ -270,19 +302,28 @@ export default function SummaryPage() {
               onChange={(event) => setSelectedColumn(event.target.value)}
               sx={{ backgroundColor: 'white' }}
             >
-              {columns.map((column) => (
-                <MenuItem key={column.id} value={column.id}>
-                  {column.label}
-                </MenuItem>
-              ))}
+              {/* Filter columns where headers_types is "number" */}
+              {columns
+                .filter((column) => (previewData.headers_types as { [key: string]: string | number | boolean | null })[column.id] === 'number') // Filter numeric columns
+                .map((column) => (
+                  <MenuItem key={column.id} value={column.id}>
+                    {column.label}
+                  </MenuItem>
+                ))}
             </Select>
           </FormControl>
         </div>
+        {/* Num Stats */}
+        <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-y-4 gap-x-8">
+          {NumStats.map((stat, idx) => (
+            <StatRow key={idx} label={stat.label} value={stat.value} />
+          ))}
+        </div>
 
-        <div className="mt-8 flex flex-col items-start">
+        <div className="mt-7 flex flex-col items-start">
           <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4 space-y-4 md:space-y-0">
             <h2 className="text-gray-800 font-bold text-lg text-center">
-              Preview of "{fileData.name}"
+              Preview of "{summaryData?.name}"
             </h2>
             <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 space-y-2 sm:space-y-0 w-full sm:w-auto">
               {/* Manage Columns Button */}

@@ -80,14 +80,14 @@ def get_summary_data(csv_file_of_uuid_path: str) -> dict | JsonResponse:
                 temp_dict = {
                     "Min": int(column.min()),
                     "Max": int(column.max()),
-                    "Standard Deviation": int(column.std()),
+                    "Standard_Deviation": int(column.std()),
                     "Variance": int(column.var()),
                     "Mean": int(column.mean()),
                     "Median": int(column.median()),
                     "Mode": int(column.mode().iloc[0]) if not column.mode().empty else None,  # Handle empty mode
                     "Quartiles": {
                         "Q1": int(column.quantile(0.25)),
-                        "Q2 (Median)": int(column.quantile(0.5)),
+                        "Q2": int(column.quantile(0.5)),
                         "Q3": int(column.quantile(0.75)),
                     },
                 }

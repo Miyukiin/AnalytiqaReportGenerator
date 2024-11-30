@@ -5,7 +5,6 @@
 import React from "react";
 import './globals.css';
 
-import { GlobalProvider } from "../context/GlobalContext";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import theme from "../theme"; // Adjust the path based on your project structure
@@ -54,11 +53,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <ThemeProvider theme={theme}>
               {/* CssBaseline provides a consistent baseline for styling */}
               <CssBaseline />
-              <GlobalProvider>
                 <VisitorIdProvider>
                   {children}
                 </VisitorIdProvider>
-              </GlobalProvider>
             </ThemeProvider>
           </div>    
         </main>
