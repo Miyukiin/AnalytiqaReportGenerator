@@ -1,3 +1,5 @@
+// src/utils/chartUtils.ts
+
 import { ChartType } from "../types";
 
 export const generateSampleData = (type: ChartType): any[] => {

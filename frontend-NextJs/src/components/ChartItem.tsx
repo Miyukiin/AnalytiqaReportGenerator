@@ -1,6 +1,6 @@
-// components/ChartItem.tsx
+// src/components/charts/ChartItem.tsx
 
-import React from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Rnd } from "react-rnd";
 import {
   ScatterChart,
@@ -25,17 +25,34 @@ import {
 } from "recharts";
 import { IconButton, Typography, Box } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { Chart, ScatterDataPoint, HistogramDataPoint, RadarDataPoint, StackedLineDataPoint, RadialBarDataPoint } from "../types";
+import {
+  Chart,
+  ScatterDataPoint,
+  HistogramDataPoint,
+  RadarDataPoint,
+  StackedLineDataPoint,
+  RadialBarDataPoint,
+} from "../types";
 
 interface ChartItemProps extends Chart {
   onRemove: (id: number) => void;
   onDragStop: (id: number, x: number, y: number) => void;
-  onResizeStop: (id: number, width: number, height: number) => void;
+  onResizeStop: (
+    id: number,
+    width: number,
+    height: number,
+    x: number,
+    y: number
+  ) => void;
   onSelectChart: (id: number) => void;
-  isSelected: boolean; // Determines if the chart is selected
+  isSelected: boolean;
 }
 
-const ChartItem: React.FC<ChartItemProps> = ({
+const baseWidth = 400;
+const baseHeight = 300;
+const baseFontSize = 12;
+
+const ChartItem: React.FC<ChartItemProps> = React.memo(({
   id,
   type,
   data,
@@ -52,21 +69,53 @@ const ChartItem: React.FC<ChartItemProps> = ({
   yAxis,
   isSelected,
 }) => {
+  const [currentWidth, setCurrentWidth] = useState(width);
+  const [currentHeight, setCurrentHeight] = useState(height);
+
+  useEffect(() => {
+    setCurrentWidth(width);
+    setCurrentHeight(height);
+  }, [width, height]);
+
+  const scalingFactor = useMemo(
+    () => Math.min(currentWidth / baseWidth, currentHeight / baseHeight),
+    [currentWidth, currentHeight]
+  );
+  const marginSize = 20 * scalingFactor;
+
+  const commonChartProps = {
+    margin: {
+      top: marginSize,
+      right: marginSize,
+      bottom: marginSize,
+      left: marginSize,
+    },
+    style: { backgroundColor: "transparent" },
+    fontSize: baseFontSize * scalingFactor,
+  };
+
   const renderChart = () => {
-    let chartComponent;
+    const tooltipStyle = {
+      contentStyle: { fontSize: baseFontSize * scalingFactor },
+      itemStyle: { fontSize: baseFontSize * scalingFactor },
+      labelStyle: { fontSize: baseFontSize * scalingFactor },
+    };
+
+    const legendStyle = { fontSize: baseFontSize * scalingFactor };
 
     switch (type) {
       case "Scatter":
-        chartComponent = (
-          <ScatterChart>
-            <CartesianGrid />
+        return (
+          <ScatterChart {...commonChartProps}>
+            <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey={xAxis || "x"}
               label={{
                 value: xAxis || "X-axis",
                 position: "insideBottomRight",
-                offset: 0,
+                style: { fontSize: commonChartProps.fontSize },
               }}
+              tick={{ fontSize: commonChartProps.fontSize }}
             />
             <YAxis
               dataKey={yAxis || "y"}
@@ -74,45 +123,75 @@ const ChartItem: React.FC<ChartItemProps> = ({
                 value: yAxis || "Y-axis",
                 angle: -90,
                 position: "insideLeft",
+                style: { fontSize: commonChartProps.fontSize },
               }}
+              tick={{ fontSize: commonChartProps.fontSize }}
             />
-            <Tooltip />
-            <Scatter name={title || "Scatter"} data={data as ScatterDataPoint[]} fill="#8884d8" />
-            <Legend />
+            <Tooltip {...tooltipStyle} />
+            <Scatter
+              name={title || "Scatter"}
+              data={data as ScatterDataPoint[]}
+              fill="#8884d8"
+            />
+            <Legend wrapperStyle={legendStyle} />
           </ScatterChart>
         );
-        break;
+
       case "Histogram":
-        chartComponent = (
-          <BarChart data={data as HistogramDataPoint[]}>
-            <CartesianGrid />
+        return (
+          <BarChart {...commonChartProps} data={data as HistogramDataPoint[]}>
+            <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey={xAxis || "name"}
               label={{
                 value: xAxis || "X-axis",
                 position: "insideBottomRight",
-                offset: 0,
+                style: { fontSize: commonChartProps.fontSize },
               }}
+              tick={{ fontSize: commonChartProps.fontSize }}
             />
             <YAxis
               label={{
                 value: yAxis || "Y-axis",
                 angle: -90,
                 position: "insideLeft",
+                style: { fontSize: commonChartProps.fontSize },
               }}
+              tick={{ fontSize: commonChartProps.fontSize }}
             />
-            <Tooltip />
-            <Bar dataKey="value" fill="#82ca9d" />
-            <Legend />
+            <Tooltip {...tooltipStyle} />
+            <Bar
+              dataKey="value"
+              fill="#82ca9d"
+              barSize={30 * scalingFactor}
+            />
+            <Legend wrapperStyle={legendStyle} />
           </BarChart>
         );
-        break;
+
       case "Radar":
-        chartComponent = (
-          <RadarChart outerRadius="80%" data={data as RadarDataPoint[]}>
+        const radarOuterRadius =
+          ((Math.min(currentWidth, currentHeight) - marginSize * 2) / 2) * 0.8;
+        return (
+          <RadarChart
+            {...commonChartProps}
+            data={data as RadarDataPoint[]}
+            cx="50%"
+            cy="50%"
+            outerRadius={radarOuterRadius}
+            margin={{
+              ...commonChartProps.margin,
+              bottom: marginSize + 30 * scalingFactor,
+            }}
+          >
             <PolarGrid />
-            <PolarAngleAxis dataKey={xAxis || "subject"} />
-            <PolarRadiusAxis />
+            <PolarAngleAxis
+              dataKey={xAxis || "subject"}
+              tick={{ fontSize: commonChartProps.fontSize }}
+            />
+            <PolarRadiusAxis
+              tick={{ fontSize: commonChartProps.fontSize }}
+            />
             <Radar
               name={title || "Radar"}
               dataKey="value"
@@ -120,89 +199,147 @@ const ChartItem: React.FC<ChartItemProps> = ({
               fill="#8884d8"
               fillOpacity={0.6}
             />
-            <Legend />
+            <Tooltip {...tooltipStyle} />
           </RadarChart>
         );
-        break;
+
       case "Stacked Line":
-        chartComponent = (
-          <LineChart data={data as StackedLineDataPoint[]}>
-            <CartesianGrid />
+        return (
+          <LineChart {...commonChartProps} data={data as StackedLineDataPoint[]}>
+            <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey={xAxis || "name"}
               label={{
                 value: xAxis || "X-axis",
                 position: "insideBottomRight",
-                offset: 0,
+                style: { fontSize: commonChartProps.fontSize },
               }}
+              tick={{ fontSize: commonChartProps.fontSize }}
             />
             <YAxis
               label={{
                 value: yAxis || "Y-axis",
                 angle: -90,
                 position: "insideLeft",
+                style: { fontSize: commonChartProps.fontSize },
               }}
+              tick={{ fontSize: commonChartProps.fontSize }}
             />
-            <Tooltip />
+            <Tooltip {...tooltipStyle} />
             <Line type="monotone" dataKey="pv" stroke="#8884d8" />
             <Line type="monotone" dataKey="uv" stroke="#82ca9d" />
-            <Legend />
+            <Legend wrapperStyle={legendStyle} />
           </LineChart>
         );
-        break;
+
       case "RadialBar":
-        const radialBarStyle = {
-          top: '50%',
-          right: 0,
-          transform: 'translate(0, -50%)',
-          lineHeight: '24px',
-        };
-        chartComponent = (
-          <RadialBarChart cx="50%" cy="50%" innerRadius="10%" outerRadius="80%" barSize={10} data={data as RadialBarDataPoint[]}>
+        const radialOuterRadius =
+          ((Math.min(currentWidth, currentHeight) - marginSize * 2) / 2) * 0.8;
+        const radialInnerRadius = radialOuterRadius * 0.5;
+        return (
+          <RadialBarChart
+            {...commonChartProps}
+            width={730} 
+            height={250} 
+            innerRadius="20%" 
+            outerRadius="120%" 
+            data={data as RadialBarDataPoint[]} 
+            startAngle={180} 
+            endAngle={0}
+          >
             <RadialBar
-              minPointSize={15} // Replaced 'minAngle' with 'minPointSize'
-              label={{ position: 'insideStart', fill: '#fff' }}
+              minPointSize={15}
+              label={{
+                position: "insideStart",
+                fill: "#fff",
+                fontSize: commonChartProps.fontSize,
+              }}
               background
               dataKey="uv"
             />
-            <Legend iconSize={10} layout="vertical" verticalAlign="middle" wrapperStyle={radialBarStyle} />
+            <Tooltip {...tooltipStyle} />
+            <Legend
+              iconSize={12 * scalingFactor}
+              layout="horizontal"
+              align="center"
+              verticalAlign="bottom"
+              wrapperStyle={{
+                fontSize: commonChartProps.fontSize,
+                right: 0,
+                transform: "translate(0, -20px)",
+              }}
+            />
           </RadialBarChart>
         );
-        break;
-      default:
-        chartComponent = <div>Unsupported Chart Type</div>;
-    }
 
-    return chartComponent;
+      default:
+        return (
+          <Typography variant="body2" color="error">
+            Unsupported Chart Type
+          </Typography>
+        );
+    }
+  };
+
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    onSelectChart(id);
   };
 
   return (
     <Rnd
-      size={{ width, height }}
+      size={{ width: currentWidth, height: currentHeight }}
       position={{ x, y }}
       bounds="parent"
       minWidth={200}
       minHeight={200}
-      onDragStop={(e, d) => onDragStop(id, d.x, d.y)}
-      onResizeStop={(e, direction, ref, delta, position) => {
-        onResizeStop(id, ref.offsetWidth, ref.offsetHeight);
+      onDragStop={(e: any, d: { x: number; y: number }) => onDragStop(id, d.x, d.y)}
+      onResize={(e: any, direction: any, ref: HTMLElement) => {
+        setCurrentWidth(ref.offsetWidth);
+        setCurrentHeight(ref.offsetHeight);
+      }}
+      onResizeStop={(e: any, direction: any, ref: HTMLElement, delta: any, position: { x: number; y: number }) => {
+        onResizeStop(
+          id,
+          ref.offsetWidth,
+          ref.offsetHeight,
+          position.x,
+          position.y
+        );
       }}
       style={{
-        border: isSelected ? "2px solid #1976d2" : "1px solid #ccc", // Highlight border if selected
-        background: "#fff",
+        border: isSelected ? "2px solid #1976d2" : "none",
+        background: "transparent",
         padding: "8px",
         boxSizing: "border-box",
         borderRadius: "4px",
         position: "absolute",
-        zIndex: 2, // Higher z-index for better visibility
+        zIndex: 2,
         cursor: "move",
       }}
-      onClick={(e: React.MouseEvent<HTMLDivElement>) => { // Explicitly type 'e'
-        e.stopPropagation(); // Prevent parent click
-        onSelectChart(id);
-      }} // Select chart on click
+      onClick={handleClick}
+      enableResizing={{
+        top: true,
+        right: true,
+        bottom: true,
+        left: true,
+        topRight: true,
+        bottomRight: true,
+        bottomLeft: true,
+        topLeft: true,
+      }}
     >
-      <Box sx={{ width: "100%", height: "100%", position: "relative", display: "flex", flexDirection: "column" }}>
+      <Box
+        className="chart-item" // Added className for exporting
+        sx={{
+          width: "100%",
+          height: "100%",
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          backgroundColor: "transparent",
+        }}
+      >
         {isSelected && (
           <IconButton
             size="small"
@@ -220,7 +357,15 @@ const ChartItem: React.FC<ChartItemProps> = ({
           </IconButton>
         )}
         {title && (
-          <Typography variant="subtitle1" align="center" gutterBottom sx={{ fontSize: '0.9em' }}>
+          <Typography
+            variant="subtitle1"
+            align="center"
+            gutterBottom
+            sx={{
+              fontSize: `${0.9 * scalingFactor}em`,
+              backgroundColor: "transparent",
+            }}
+          >
             {title}
           </Typography>
         )}
@@ -232,6 +377,6 @@ const ChartItem: React.FC<ChartItemProps> = ({
       </Box>
     </Rnd>
   );
-};
+});
 
 export default ChartItem;

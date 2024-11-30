@@ -1,46 +1,30 @@
+// src/app/report/page.tsx
+
 "use client";
 
 import React, { useState, useEffect, ChangeEvent, KeyboardEvent, useRef } from "react";
 import {
-  Box,
-  Typography,
-  Button,
-  Paper,
-  TextField,
-  Select,
-  MenuItem,
-  Grid,
-  Tabs,
-  Tab,
-  IconButton,
-} from "@mui/material";
+  Box,Typography,Paper,TextField,Select,MenuItem,Grid,Tabs,Tab,IconButton,} from "@mui/material";
 import {
-  ScatterPlot as ScatterPlotIcon,
-  BarChart as BarChartIcon,
-  Radar as RadarIcon,
-  ShowChart as ShowChartIcon,
-  Layers as LayersIcon,
-  GetApp as GetAppIcon,
-  PictureAsPdf as PictureAsPdfIcon,
-  Image as ImageIcon,
-  Add as AddIcon,
-  Close as CloseIcon,
-} from "@mui/icons-material";
-import { Chart, ChartType, Page } from "../../types";
+  ScatterPlot as ScatterPlotIcon, BarChart as BarChartIcon, Radar as RadarIcon,
+  ShowChart as ShowChartIcon, Layers as LayersIcon, Add as AddIcon, Image as ImageIcon,
+  PictureAsPdf as PictureAsPdfIcon, Close as CloseIcon,} from "@mui/icons-material";
+import { ChartType, Page, Chart } from "../../types";
 import FullWidthDivider from "../../components/FullWidthDivider";
 import MainCanvas from "../../components/MainCanvas";
 import RightSidebar from "../../components/RightSidebar";
-import { generateSampleData } from "../../components/chartUtils";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import RemarkSection from "../../components/RemarkSection";
+import Toolbar from "../../components/Toolbar";
+import { exportAsPNG, exportAsPDF } from "./core/exportFunctions";
+import { addPage as addPageFn, deleteCurrentPage as deleteCurrentPageFn, } from "./core/pageFunctions";
+import { addChart as addChartFn, removeChart as removeChartFn, 
+updateChartPosition as updateChartPositionFn, updateChartSize as updateChartSizeFn,
+updateChartProperty as updateChartPropertyFn, } from "./core/chartFunctions";
 
 const icons = [
-  { icon: <ScatterPlotIcon />, label: "Scatter" },
-  { icon: <BarChartIcon />, label: "Histogram" },
-  { icon: <RadarIcon />, label: "Radar" },
-  { icon: <ShowChartIcon />, label: "Stacked Line" },
-  { icon: <LayersIcon />, label: "RadialBar" },
-];
+  { icon: <ScatterPlotIcon />, label: "Scatter" }, { icon: <BarChartIcon />, label: "Histogram" },
+  { icon: <RadarIcon />, label: "Radar" }, { icon: <ShowChartIcon />, label: "Stacked Line" },
+  { icon: <LayersIcon />, label: "RadialBar" }, ];
 
 const ReportLayout: React.FC = () => {
   const [pages, setPages] = useState<Page[]>([
@@ -57,6 +41,7 @@ const ReportLayout: React.FC = () => {
   const [editingPageName, setEditingPageName] = useState<string>("");
   const visualizationAreaRef = useRef<HTMLDivElement>(null); // Reference to the visualization area
 
+  // Load pages from localStorage on mount
   useEffect(() => {
     const savedPages = localStorage.getItem("reportPages");
     if (savedPages) {
@@ -82,184 +67,66 @@ const ReportLayout: React.FC = () => {
     }
   }, []);
 
+  // Save pages to localStorage whenever pages state changes
   useEffect(() => {
     localStorage.setItem("reportPages", JSON.stringify(pages));
   }, [pages]);
 
-  const addChart = (type: ChartType) => {
-    const newChart: Chart = {
-      id: Date.now(),
-      type,
-      title: "",
-      xAxis: "",
-      yAxis: "",
-      data: generateSampleData(type),
-      x: 50,
-      y: 50,
-      width: 200,
-      height: 200,
-    };
-    setPages((prevPages) => {
-      const updatedPages = prevPages.map((page, index) =>
-        index === currentPageIndex
-          ? { ...page, charts: [...page.charts, newChart] }
-          : page
-      );
-      return updatedPages;
-    });
-    setSelectedChartId(newChart.id);
+  /**
+   * Exports the visualization area as PNG.
+   */
+  const exportPNG = () => {
+    if (!visualizationAreaRef.current) return;
+    exportAsPNG(visualizationAreaRef.current, pages[currentPageIndex].name);
   };
 
-  const removeChart = (id: number) => {
-    setPages((prevPages) =>
-      prevPages.map((page, index) =>
-        index === currentPageIndex
-          ? { ...page, charts: page.charts.filter((chart) => chart.id !== id) }
-          : page
-      )
-    );
-    if (selectedChartId === id) {
-      setSelectedChartId(null);
-    }
+  /**
+   * Exports the current page as a PDF.
+   */
+  const exportPDF = () => {
+    if (!visualizationAreaRef.current) return;
+    exportAsPDF(visualizationAreaRef.current, pages[currentPageIndex].name);
   };
 
-  const updateChartPosition = (id: number, x: number, y: number) => {
-    setPages((prevPages) =>
-      prevPages.map((page, index) =>
-        index === currentPageIndex
-          ? {
-              ...page,
-              charts: page.charts.map((chart) =>
-                chart.id === id ? { ...chart, x, y } : chart
-              ),
-            }
-          : page
-      )
-    );
-  };
-
-  const updateChartSize = (id: number, width: number, height: number) => {
-    setPages((prevPages) =>
-      prevPages.map((page, index) =>
-        index === currentPageIndex
-          ? {
-              ...page,
-              charts: page.charts.map((chart) =>
-                chart.id === id ? { ...chart, width, height } : chart
-              ),
-            }
-          : page
-      )
-    );
-  };
-
-  // Function to export the visualization area as PNG
-  const exportAsPNG = async () => {
-    try {
-      if (!visualizationAreaRef.current) return;
-      const canvas = await html2canvas(visualizationAreaRef.current, {
-        backgroundColor: "#ffffff",
-        scale: 2, // Increase scale for better resolution
-      });
-      const dataURL = canvas.toDataURL("image/png");
-      const link = document.createElement("a");
-      link.href = dataURL;
-      link.download = `${pages[currentPageIndex].name}.png`;
-      link.click();
-    } catch (error) {
-      console.error("Failed to export as PNG:", error);
-      alert("An error occurred while exporting as PNG.");
-    }
-  };
-
-  // Function to export the visualization area as PDF
-  const exportAsPDF = async () => {
-    try {
-      if (!visualizationAreaRef.current) return;
-      const canvas = await html2canvas(visualizationAreaRef.current, {
-        backgroundColor: "#ffffff",
-        scale: 2,
-      });
-      const imgData = canvas.toDataURL("image/jpeg", 1.0);
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "px",
-        format: [canvas.width, canvas.height],
-      });
-      pdf.addImage(imgData, "JPEG", 0, 0, canvas.width, canvas.height);
-      pdf.save(`${pages[currentPageIndex].name}.pdf`);
-    } catch (error) {
-      console.error("Failed to export as PDF:", error);
-      alert("An error occurred while exporting as PDF.");
-    }
-  };
-
+  /**
+   * Handles chart selection.
+   * @param id - The ID of the chart to select/deselect.
+   */
   const selectChart = (id: number) => {
     setSelectedChartId((prevId) => (prevId === id ? null : id));
   };
 
+  /**
+   * Updates the selected chart's property.
+   * @param property - The property to update (e.g., title, xAxis, yAxis).
+   * @param value - The new value for the property.
+   */
   const updateSelectedChart = (property: keyof Omit<Chart, "data">, value: string | number) => {
     if (selectedChartId === null) return;
-    setPages((prevPages) =>
-      prevPages.map((page, index) =>
-        index === currentPageIndex
-          ? {
-              ...page,
-              charts: page.charts.map((chart) =>
-                chart.id === selectedChartId ? { ...chart, [property]: value } : chart
-              ),
-            }
-          : page
-      )
-    );
+    updateChartPropertyFn(selectedChartId, property, value, pages, currentPageIndex, setPages);
   };
 
-  const addPage = () => {
-    const newPage: Page = {
-      id: Date.now(),
-      name: `Page ${pages.length + 1}`,
-      charts: [],
-      remark: "This is an auto-generated remark. You can edit this section manually.",
-    };
-    setPages((prevPages) => [...prevPages, newPage]);
-    setCurrentPageIndex(pages.length);
-    setSelectedChartId(null);
-  };
-
-  const deleteCurrentPage = () => {
-    if (pages.length === 1) {
-      alert("Cannot delete the only remaining page.");
-      return;
-    }
-    const confirmDelete = window.confirm(`Are you sure you want to delete ${pages[currentPageIndex].name}?`);
-    if (!confirmDelete) return;
-    setPages((prevPages) => {
-      const newPages = prevPages.filter((_, index) => index !== currentPageIndex);
-      const newIndex = currentPageIndex >= newPages.length ? newPages.length - 1 : currentPageIndex;
-      setCurrentPageIndex(newIndex);
-      setSelectedChartId(null);
-      return newPages;
-    });
-  };
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    if (newValue === pages.length) {
-      addPage();
-    } else {
-      setCurrentPageIndex(newValue);
-      setSelectedChartId(null);
-    }
-  };
-
+  /**
+   * Initiates the editing mode for a page's name.
+   * @param pageId - The ID of the page to edit.
+   * @param currentName - The current name of the page.
+   */
   const startEditingPage = (pageId: number, currentName: string) => {
     setEditingPageId(pageId);
     setEditingPageName(currentName);
   };
 
+  /**
+   * Handles changes to the page name input.
+   * @param e - The change event from the input.
+   */
   const handlePageNameChange = (e: ChangeEvent<HTMLInputElement>) => {
     setEditingPageName(e.target.value);
   };
 
+  /**
+   * Finishes the editing mode and updates the page name.
+   */
   const finishEditingPage = () => {
     if (editingPageId === null) return;
     const trimmedName = editingPageName.trim();
@@ -268,18 +135,37 @@ const ReportLayout: React.FC = () => {
       return;
     }
     setPages((prevPages) =>
-      prevPages.map((page) => (page.id === editingPageId ? { ...page, name: trimmedName } : page))
+      prevPages.map((page) =>
+        page.id === editingPageId ? { ...page, name: trimmedName } : page
+      )
     );
     setEditingPageId(null);
     setEditingPageName("");
   };
 
+  /**
+   * Handles keypress events in the page name input.
+   * @param e - The keyboard event.
+   */
   const handleTabKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       finishEditingPage();
     }
   };
 
+  /**
+   * Handles changes to the remarks section.
+   * @param newRemark - The updated remark text.
+   */
+  const handleRemarkChange = (newRemark: string) => {
+    setPages((prevPages) =>
+      prevPages.map((page, index) =>
+        index === currentPageIndex ? { ...page, remark: newRemark } : page
+      )
+    );
+  };
+
+  // Retrieve the selected chart and current page
   const selectedChart = pages[currentPageIndex]?.charts.find((chart) => chart.id === selectedChartId);
   const currentPage = pages[currentPageIndex];
 
@@ -314,7 +200,15 @@ const ReportLayout: React.FC = () => {
           {icons.map((item, index) => (
             <Grid item xs={4} key={index}>
               <IconButton
-                onClick={() => addChart(item.label as ChartType)}
+                onClick={() =>
+                  addChartFn(
+                    item.label as ChartType,
+                    pages,
+                    currentPageIndex,
+                    setPages,
+                    setSelectedChartId
+                  )
+                }
                 sx={{
                   width: "100%",
                   height: 40,
@@ -344,7 +238,7 @@ const ReportLayout: React.FC = () => {
               </Typography>
               <TextField
                 fullWidth
-                value={selectedChart.title}
+                value={selectedChart.title || ""}
                 onChange={(e) => updateSelectedChart("title", e.target.value)}
                 size="small"
                 sx={{
@@ -449,7 +343,14 @@ const ReportLayout: React.FC = () => {
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs
             value={currentPageIndex}
-            onChange={handleTabChange}
+            onChange={(event, newValue) => {
+              if (newValue === pages.length) {
+                addPageFn(pages, setPages);
+              } else {
+                setCurrentPageIndex(newValue);
+                setSelectedChartId(null);
+              }
+            }}
             variant="scrollable"
             scrollButtons="auto"
             aria-label="report pages tabs"
@@ -499,57 +400,18 @@ const ReportLayout: React.FC = () => {
         </Box>
 
         {/* Toolbar */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mt: 2,
-            mb: 2,
-          }}
-        >
-          <Typography variant="h5" fontWeight="bold">
-            BUILD DATA VISUALIZATIONS
-          </Typography>
-          <Box>
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<ImageIcon />}
-              onClick={exportAsPNG}
-              sx={{ mr: 1 }}
-            >
-              Export PNG
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<PictureAsPdfIcon />}
-              onClick={exportAsPDF}
-              sx={{ mr: 1 }}
-            >
-              Export PDF
-            </Button>
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={<CloseIcon />}
-              onClick={deleteCurrentPage}
-              disabled={pages.length === 1}
-            >
-              Delete Page
-            </Button>
-          </Box>
-        </Box>
+        <Toolbar
+          exportPNG={exportPNG}
+          exportPDF={exportPDF} // Added exportPDF
+          deletePage={() => deleteCurrentPageFn(pages, currentPageIndex, setPages, setCurrentPageIndex)}
+          isDeleteDisabled={pages.length === 1}
+        />
         <FullWidthDivider />
 
         {/* Main Visualization and Remarks */}
         <Box
           sx={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            position: "relative",
+            flex: 1, display: "flex", flexDirection: "column", position: "relative",
           }}
         >
           {/* Main Visualization Area */}
@@ -575,66 +437,23 @@ const ReportLayout: React.FC = () => {
                 flexGrow: 1,
                 width: "100%",
                 position: "relative",
-                paddingBottom: "100px",
+                paddingBottom: "50px", // Space for remarks
               }}
             >
               <MainCanvas
                 charts={currentPage.charts}
-                removeChart={removeChart}
-                onDragStop={updateChartPosition}
-                onResizeStop={updateChartSize}
+                removeChart={(id) => removeChartFn(id, pages, currentPageIndex, setPages, setSelectedChartId)}
+                onDragStop={(id, x, y) => updateChartPositionFn(id, x, y, pages, currentPageIndex, setPages)}
+                onResizeStop={(id, width, height) => updateChartSizeFn(id, width, height, pages, currentPageIndex, setPages)}
                 onSelectChart={selectChart}
                 selectedChartId={selectedChartId}
               />
             </Box>
             {/* Remarks Section inside the visualization area */}
-            <Box
-              sx={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: "100px",
-                borderTop: "1px solid #adb5bd",
-                bgcolor: "#f8f9fa",
-                p: 1,
-                boxSizing: "border-box",
-                borderRadius: 1,
-                overflow: "hidden",
-              }}
-            >
-              <Typography
-                variant="subtitle2"
-                fontWeight="bold"
-                sx={{ mb: 0.5, fontSize: "0.8rem" }}
-              >
-                Remarks
-              </Typography>
-              <TextField
-                fullWidth
-                multiline
-                inputProps={{ style: { fontSize: 12 } }}
-                rows={3}
-                value={currentPage.remark}
-                onChange={(e) => {
-                  const newRemark = e.target.value;
-                  setPages((prevPages) =>
-                    prevPages.map((page, index) =>
-                      index === currentPageIndex ? { ...page, remark: newRemark } : page
-                    )
-                  );
-                }}
-                placeholder="Add your chart remarks here..."
-                sx={{
-                  bgcolor: "#ffffff",
-                  borderRadius: 1,
-                  fontSize: "0.8rem",
-                  "& .MuiInputBase-input": {
-                    padding: "4px 6px",
-                  },
-                }}
-              />
-            </Box>
+            <RemarkSection
+              remark={currentPage.remark}
+              onChange={handleRemarkChange}
+            />
           </Box>
         </Box>
       </Box>
