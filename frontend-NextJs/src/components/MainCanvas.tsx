@@ -1,4 +1,4 @@
-// components/MainCanvas.tsx
+// src/components/MainCanvas.tsx
 
 import React from "react";
 import { Box } from "@mui/material";

@@ -1,7 +1,9 @@
-// src/components/report/RemarkSection.tsx
+// src/components/RemarkSection.tsx
 
 import React from "react";
 import { Box, Typography, TextField } from "@mui/material";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTheme } from "@mui/material/styles";
 
 interface RemarkSectionProps {
   remark: string;
@@ -9,6 +11,9 @@ interface RemarkSectionProps {
 }
 
 const RemarkSection: React.FC<RemarkSectionProps> = ({ remark, onChange }) => {
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+
   return (
     <Box
       sx={{
@@ -16,7 +21,7 @@ const RemarkSection: React.FC<RemarkSectionProps> = ({ remark, onChange }) => {
         bottom: 0,
         left: 0,
         right: 0,
-        height: "100px",
+        height: isSmallScreen ? "80px" : "100px", // Adjust height based on screen size
         borderTop: "1px solid #adb5bd",
         bgcolor: "#f8f9fa",
         p: 1,
@@ -36,7 +41,7 @@ const RemarkSection: React.FC<RemarkSectionProps> = ({ remark, onChange }) => {
         fullWidth
         multiline
         inputProps={{ style: { fontSize: 12 } }}
-        rows={3}
+        rows={isSmallScreen ? 2 : 3} // Adjust number of rows based on screen size
         value={remark}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Add your chart remarks here..."

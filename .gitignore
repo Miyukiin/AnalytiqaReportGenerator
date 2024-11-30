@@ -21,5 +21,13 @@ backend-Django/media/
 Thumbs.db
 *.log
 
-# .gitignore
+# Ignore package.json and package-lock.json outside frontend-NextJs
+/package.json
+/package-lock.json
+
+# Allow package.json and package-lock.json in frontend-NextJs
+!frontend-NextJs/package.json
+!frontend-NextJs/package-lock.json
+
+# myenv/
 myenv/

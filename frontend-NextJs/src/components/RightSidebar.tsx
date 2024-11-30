@@ -1,4 +1,4 @@
-// components/RightSidebar.tsx
+// src/components/RightSidebar.tsx
 
 import React, { useState } from "react";
 import {
@@ -14,9 +14,14 @@ import {
 } from "@mui/material";
 import TableChartIcon from "@mui/icons-material/TableChart";
 import FullWidthDivider from "./FullWidthDivider";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTheme } from "@mui/material/styles";
 
 const RightSidebar: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+
   const tables: string[] = [
     "Car Sale",
     "Retained Header (Car ...)",
@@ -34,7 +39,7 @@ const RightSidebar: React.FC = () => {
   return (
     <Paper
       sx={{
-        width: 200,
+        width: 240,
         display: "flex",
         flexDirection: "column",
         p: 2,
@@ -85,40 +90,39 @@ const RightSidebar: React.FC = () => {
         ))}
       </List>
       <FullWidthDivider />
-      <Typography
-        variant="h6"
-        fontWeight="bold"
-        align="center"
-        sx={{ textTransform: "uppercase", mb: 0 }}
-      >
-        FILTER
-      </Typography>
-      <FullWidthDivider />
-      <Box
-        sx={{
-          mt: 1,
-          p: 1, // Reduced padding for compactness
-          bgcolor: "#f8f9fa",
-          border: "1px solid #adb5bd",
-          borderRadius: 1,
-        }}
-      >
-        <Typography variant="body2" sx={{ fontSize: "0.75rem" }}>
-          Fuels
+      <Box sx={{ px: 2, mb: 1 }}>
+        <Typography variant="h6" fontWeight="bold" align="center" sx={{ mb: 1 }}>
+          FILTER
         </Typography>
-        <Typography variant="body2" color="textSecondary" sx={{ fontSize: "0.65rem" }}>
-          is (All)
-        </Typography>
-        <Button
-          size="small"
+        <Box
           sx={{
-            mt: 0.5,
-            fontSize: "0.65rem",
-            padding: "2px 6px",
+            p: 1,
+            bgcolor: "#f8f9fa",
+            border: "1px solid #adb5bd",
+            borderRadius: 1,
           }}
         >
-          Add filter
-        </Button>
+          <Typography variant="body2" sx={{ fontSize: "0.75rem" }}>
+            Fuels
+          </Typography>
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            sx={{ fontSize: "0.65rem" }}
+          >
+            is (All)
+          </Typography>
+          <Button
+            size="small"
+            sx={{
+              mt: 0.5,
+              fontSize: "0.65rem",
+              padding: "2px 6px",
+            }}
+          >
+            Add filter
+          </Button>
+        </Box>
       </Box>
     </Paper>
   );

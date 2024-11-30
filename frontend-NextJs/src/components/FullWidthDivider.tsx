@@ -1,4 +1,4 @@
-// components/FullWidthDivider.tsx
+// src/components/FullWidthDivider.tsx
 
 import React from "react";
 import { Divider } from "@mui/material";

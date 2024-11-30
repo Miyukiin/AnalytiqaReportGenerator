@@ -4,11 +4,33 @@
 
 import React, { useState, useEffect, ChangeEvent, KeyboardEvent, useRef } from "react";
 import {
-  Box,Typography,Paper,TextField,Select,MenuItem,Grid,Tabs,Tab,IconButton,} from "@mui/material";
+  Box,
+  Typography,
+  Paper,
+  TextField,
+  Select,
+  MenuItem,
+  Grid,
+  Tabs,
+  Tab,
+  IconButton,
+  useMediaQuery,
+  Drawer,
+} from "@mui/material";
 import {
-  ScatterPlot as ScatterPlotIcon, BarChart as BarChartIcon, Radar as RadarIcon,
-  ShowChart as ShowChartIcon, Layers as LayersIcon, Add as AddIcon, Image as ImageIcon,
-  PictureAsPdf as PictureAsPdfIcon, Close as CloseIcon,} from "@mui/icons-material";
+  ScatterPlot as ScatterPlotIcon,
+  BarChart as BarChartIcon,
+  Radar as RadarIcon,
+  ShowChart as ShowChartIcon,
+  Layers as LayersIcon,
+  Add as AddIcon,
+  Image as ImageIcon,
+  PictureAsPdf as PictureAsPdfIcon,
+  Close as CloseIcon,
+  Menu as MenuIcon,
+  Settings as SettingsIcon,
+} from "@mui/icons-material";
+import { useTheme } from "@mui/material/styles";
 import { ChartType, Page, Chart } from "../../types";
 import FullWidthDivider from "../../components/FullWidthDivider";
 import MainCanvas from "../../components/MainCanvas";
@@ -16,15 +38,25 @@ import RightSidebar from "../../components/RightSidebar";
 import RemarkSection from "../../components/RemarkSection";
 import Toolbar from "../../components/Toolbar";
 import { exportAsPNG, exportAsPDF } from "./core/exportFunctions";
-import { addPage as addPageFn, deleteCurrentPage as deleteCurrentPageFn, } from "./core/pageFunctions";
-import { addChart as addChartFn, removeChart as removeChartFn, 
-updateChartPosition as updateChartPositionFn, updateChartSize as updateChartSizeFn,
-updateChartProperty as updateChartPropertyFn, } from "./core/chartFunctions";
+import {
+  addPage as addPageFn,
+  deleteCurrentPage as deleteCurrentPageFn,
+} from "./core/pageFunctions";
+import {
+  addChart as addChartFn,
+  removeChart as removeChartFn,
+  updateChartPosition as updateChartPositionFn,
+  updateChartSize as updateChartSizeFn,
+  updateChartProperty as updateChartPropertyFn,
+} from "./core/chartFunctions";
 
 const icons = [
-  { icon: <ScatterPlotIcon />, label: "Scatter" }, { icon: <BarChartIcon />, label: "Histogram" },
-  { icon: <RadarIcon />, label: "Radar" }, { icon: <ShowChartIcon />, label: "Stacked Line" },
-  { icon: <LayersIcon />, label: "RadialBar" }, ];
+  { icon: <ScatterPlotIcon />, label: "Scatter" },
+  { icon: <BarChartIcon />, label: "Histogram" },
+  { icon: <RadarIcon />, label: "Radar" },
+  { icon: <ShowChartIcon />, label: "Stacked Line" },
+  { icon: <LayersIcon />, label: "RadialBar" },
+];
 
 const ReportLayout: React.FC = () => {
   const [pages, setPages] = useState<Page[]>([
@@ -40,6 +72,30 @@ const ReportLayout: React.FC = () => {
   const [editingPageId, setEditingPageId] = useState<number | null>(null);
   const [editingPageName, setEditingPageName] = useState<string>("");
   const visualizationAreaRef = useRef<HTMLDivElement>(null); // Reference to the visualization area
+
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+
+  // State variables for sidebars
+  const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
+
+  // Handlers for sidebars
+  const handleOpenLeftSidebar = () => {
+    setLeftSidebarOpen(true);
+  };
+
+  const handleCloseLeftSidebar = () => {
+    setLeftSidebarOpen(false);
+  };
+
+  const handleOpenRightSidebar = () => {
+    setRightSidebarOpen(true);
+  };
+
+  const handleCloseRightSidebar = () => {
+    setRightSidebarOpen(false);
+  };
 
   // Load pages from localStorage on mount
   useEffect(() => {
@@ -101,9 +157,19 @@ const ReportLayout: React.FC = () => {
    * @param property - The property to update (e.g., title, xAxis, yAxis).
    * @param value - The new value for the property.
    */
-  const updateSelectedChart = (property: keyof Omit<Chart, "data">, value: string | number) => {
+  const updateSelectedChart = (
+    property: keyof Omit<Chart, "data">,
+    value: string | number
+  ) => {
     if (selectedChartId === null) return;
-    updateChartPropertyFn(selectedChartId, property, value, pages, currentPageIndex, setPages);
+    updateChartPropertyFn(
+      selectedChartId,
+      property,
+      value,
+      pages,
+      currentPageIndex,
+      setPages
+    );
   };
 
   /**
@@ -166,7 +232,9 @@ const ReportLayout: React.FC = () => {
   };
 
   // Retrieve the selected chart and current page
-  const selectedChart = pages[currentPageIndex]?.charts.find((chart) => chart.id === selectedChartId);
+  const selectedChart = pages[currentPageIndex]?.charts.find(
+    (chart) => chart.id === selectedChartId
+  );
   const currentPage = pages[currentPageIndex];
 
   if (!currentPage) {
@@ -179,10 +247,171 @@ const ReportLayout: React.FC = () => {
     );
   }
 
+  // Left Sidebar content
+  const leftSidebarContent = (
+    <Box
+      sx={{
+        width: 200,
+        display: "flex",
+        flexDirection: "column",
+        p: 2,
+        bgcolor: "#ECECEC",
+        height: "100%",
+      }}
+      role="presentation"
+    >
+      <Typography variant="h6" fontWeight="bold" align="center">
+        VISUALIZATIONS
+      </Typography>
+      <FullWidthDivider />
+      <Grid container spacing={1} sx={{ mb: 2 }}>
+        {icons.map((item, index) => (
+          <Grid item xs={4} key={index}>
+            <IconButton
+              onClick={() =>
+                addChartFn(
+                  item.label as ChartType,
+                  pages,
+                  currentPageIndex,
+                  setPages,
+                  setSelectedChartId
+                )
+              }
+              sx={{
+                width: "100%",
+                height: 40,
+                bgcolor: "#e9ecef",
+                border: "1px solid #adb5bd",
+                borderRadius: 1,
+              }}
+              title={item.label}
+              aria-label={`Add ${item.label} Chart`}
+            >
+              {item.icon}
+            </IconButton>
+          </Grid>
+        ))}
+      </Grid>
+      <FullWidthDivider />
+      {/* Values Section */}
+      {selectedChart ? (
+        <>
+          <Typography
+            variant="h6"
+            fontWeight="bold"
+            align="center"
+            sx={{ textTransform: "uppercase", mb: 0 }}
+          >
+            VALUES
+          </Typography>
+          <FullWidthDivider />
+          <Box sx={{ mb: 1 }}>
+            <Typography variant="caption" fontWeight="bold">
+              Title
+            </Typography>
+            <TextField
+              fullWidth
+              value={selectedChart.title || ""}
+              onChange={(e) => updateSelectedChart("title", e.target.value)}
+              size="small"
+              sx={{
+                mt: 0.5,
+                bgcolor: "#f8f9fa",
+                borderRadius: 1,
+                "& .MuiInputBase-input": {
+                  padding: "6px 8px",
+                  fontSize: "0.75rem",
+                },
+              }}
+              placeholder="Enter title here"
+            />
+          </Box>
+          <Box sx={{ mb: 1 }}>
+            <Typography variant="caption" fontWeight="bold">
+              Y-axis
+            </Typography>
+            <Select
+              fullWidth
+              displayEmpty
+              value={selectedChart.yAxis || ""}
+              onChange={(e) =>
+                updateSelectedChart("yAxis", e.target.value as string)
+              }
+              sx={{
+                mt: 0.5,
+                bgcolor: "#f8f9fa",
+                border: "1px solid #adb5bd",
+                borderRadius: "4px",
+                "& .MuiSelect-select": {
+                  padding: "6px 8px",
+                  fontSize: "0.75rem",
+                },
+              }}
+              size="small"
+            >
+              <MenuItem value="">
+                <em>Select Y-axis field</em>
+              </MenuItem>
+              {selectedChart.data.length > 0 &&
+                Object.keys(selectedChart.data[0]).map((key) =>
+                  key !== "fill" ? (
+                    <MenuItem key={key} value={key}>
+                      {key}
+                    </MenuItem>
+                  ) : null
+                )}
+            </Select>
+          </Box>
+          <Box sx={{ mb: 1 }}>
+            <Typography variant="caption" fontWeight="bold">
+              X-axis
+            </Typography>
+            <Select
+              fullWidth
+              displayEmpty
+              value={selectedChart.xAxis || ""}
+              onChange={(e) =>
+                updateSelectedChart("xAxis", e.target.value as string)
+              }
+              sx={{
+                mt: 0.5,
+                bgcolor: "#f8f9fa",
+                border: "1px solid #adb5bd",
+                borderRadius: "4px",
+                "& .MuiSelect-select": {
+                  padding: "6px 8px",
+                  fontSize: "0.75rem",
+                },
+              }}
+              size="small"
+            >
+              <MenuItem value="">
+                <em>Select X-axis field</em>
+              </MenuItem>
+              {selectedChart.data.length > 0 &&
+                Object.keys(selectedChart.data[0]).map((key) =>
+                  key !== "fill" ? (
+                    <MenuItem key={key} value={key}>
+                      {key}
+                    </MenuItem>
+                  ) : null
+                )}
+            </Select>
+          </Box>
+        </>
+      ) : (
+        <Typography variant="caption" align="center" sx={{ mt: 2 }}>
+          Select a chart to edit its values.
+        </Typography>
+      )}
+    </Box>
+  );
+
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", bgcolor: "#ECECEC" }}>
       {/* Left Sidebar */}
-      <Paper
+      {!isSmallScreen ? (
+        <Paper
         sx={{
           width: 200,
           display: "flex",
@@ -228,7 +457,12 @@ const ReportLayout: React.FC = () => {
         {/* Values Section */}
         {selectedChart ? (
           <>
-            <Typography variant="h6" fontWeight="bold" align="center" sx={{ textTransform: "uppercase", mb: 0 }}>
+            <Typography
+              variant="h6"
+              fontWeight="bold"
+              align="center"
+              sx={{ textTransform: "uppercase", mb: 0 }}
+            >
               VALUES
             </Typography>
             <FullWidthDivider />
@@ -239,7 +473,9 @@ const ReportLayout: React.FC = () => {
               <TextField
                 fullWidth
                 value={selectedChart.title || ""}
-                onChange={(e) => updateSelectedChart("title", e.target.value)}
+                onChange={(e) =>
+                  updateSelectedChart("title", e.target.value)
+                }
                 size="small"
                 sx={{
                   mt: 0.5,
@@ -261,7 +497,9 @@ const ReportLayout: React.FC = () => {
                 fullWidth
                 displayEmpty
                 value={selectedChart.yAxis || ""}
-                onChange={(e) => updateSelectedChart("yAxis", e.target.value as string)}
+                onChange={(e) =>
+                  updateSelectedChart("yAxis", e.target.value as string)
+                }
                 sx={{
                   mt: 0.5,
                   bgcolor: "#f8f9fa",
@@ -295,7 +533,9 @@ const ReportLayout: React.FC = () => {
                 fullWidth
                 displayEmpty
                 value={selectedChart.xAxis || ""}
-                onChange={(e) => updateSelectedChart("xAxis", e.target.value as string)}
+                onChange={(e) =>
+                  updateSelectedChart("xAxis", e.target.value as string)
+                }
                 sx={{
                   mt: 0.5,
                   bgcolor: "#f8f9fa",
@@ -328,6 +568,17 @@ const ReportLayout: React.FC = () => {
           </Typography>
         )}
       </Paper>
+      ) : (
+        <>
+          <Drawer
+            anchor="left"
+            open={leftSidebarOpen}
+            onClose={handleCloseLeftSidebar}
+          >
+            {leftSidebarContent}
+          </Drawer>
+        </>
+      )}
 
       {/* Visualization Area */}
       <Box
@@ -377,7 +628,9 @@ const ReportLayout: React.FC = () => {
                     />
                   ) : (
                     <Box
-                      onDoubleClick={() => startEditingPage(page.id, page.name)}
+                      onDoubleClick={() =>
+                        startEditingPage(page.id, page.name)
+                      }
                       sx={{
                         display: "flex",
                         alignItems: "center",
@@ -402,8 +655,15 @@ const ReportLayout: React.FC = () => {
         {/* Toolbar */}
         <Toolbar
           exportPNG={exportPNG}
-          exportPDF={exportPDF} // Added exportPDF
-          deletePage={() => deleteCurrentPageFn(pages, currentPageIndex, setPages, setCurrentPageIndex)}
+          exportPDF={exportPDF}
+          deletePage={() =>
+            deleteCurrentPageFn(
+              pages,
+              currentPageIndex,
+              setPages,
+              setCurrentPageIndex
+            )
+          }
           isDeleteDisabled={pages.length === 1}
         />
         <FullWidthDivider />
@@ -411,7 +671,10 @@ const ReportLayout: React.FC = () => {
         {/* Main Visualization and Remarks */}
         <Box
           sx={{
-            flex: 1, display: "flex", flexDirection: "column", position: "relative",
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            position: "relative",
           }}
         >
           {/* Main Visualization Area */}
@@ -442,9 +705,35 @@ const ReportLayout: React.FC = () => {
             >
               <MainCanvas
                 charts={currentPage.charts}
-                removeChart={(id) => removeChartFn(id, pages, currentPageIndex, setPages, setSelectedChartId)}
-                onDragStop={(id, x, y) => updateChartPositionFn(id, x, y, pages, currentPageIndex, setPages)}
-                onResizeStop={(id, width, height) => updateChartSizeFn(id, width, height, pages, currentPageIndex, setPages)}
+                removeChart={(id) =>
+                  removeChartFn(
+                    id,
+                    pages,
+                    currentPageIndex,
+                    setPages,
+                    setSelectedChartId
+                  )
+                }
+                onDragStop={(id, x, y) =>
+                  updateChartPositionFn(
+                    id,
+                    x,
+                    y,
+                    pages,
+                    currentPageIndex,
+                    setPages
+                  )
+                }
+                onResizeStop={(id, width, height) =>
+                  updateChartSizeFn(
+                    id,
+                    width,
+                    height,
+                    pages,
+                    currentPageIndex,
+                    setPages
+                  )
+                }
                 onSelectChart={selectChart}
                 selectedChartId={selectedChartId}
               />
@@ -459,7 +748,73 @@ const ReportLayout: React.FC = () => {
       </Box>
 
       {/* Right Sidebar */}
-      <RightSidebar />
+      {!isSmallScreen ? (
+        <RightSidebar />
+      ) : (
+        <>
+          <Drawer
+            anchor="right"
+            open={rightSidebarOpen}
+            onClose={handleCloseRightSidebar}
+          >
+            <Box
+              sx={{
+                width: 250,
+                display: "flex",
+                flexDirection: "column",
+                p: 2,
+                bgcolor: "#ECECEC",
+                height: "100%",
+              }}
+              role="presentation"
+            >
+              <RightSidebar />
+            </Box>
+          </Drawer>
+        </>
+      )}
+
+      {/* Floating Icons for Mobile View */}
+      {isSmallScreen && (
+        <Box
+          sx={{
+            position: "fixed",
+            bottom: 16,
+            left: 0,
+            right: 0,
+            display: "flex",
+            justifyContent: "space-around",
+            alignItems: "center",
+          }}
+        >
+          <IconButton
+            onClick={handleOpenLeftSidebar}
+            color="primary"
+            sx={{
+              bgcolor: "white",
+              "&:hover": {
+                bgcolor: "grey.200",
+              },
+              boxShadow: 5,
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <IconButton
+            onClick={handleOpenRightSidebar}
+            color="primary"
+            sx={{
+              bgcolor: "white",
+              "&:hover": {
+                bgcolor: "grey.200",
+              },
+              boxShadow: 5,
+            }}
+          >
+            <SettingsIcon />
+          </IconButton>
+        </Box>
+      )}
     </Box>
   );
 };
