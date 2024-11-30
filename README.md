@@ -135,9 +135,9 @@ To get a local copy up and running follow these simple example steps.
    cd Frontend
    ```
 8. Install the required dependencies.
-  ```sh
-  npm install
-  ```
+    ```sh
+    npm install
+    ```
 9. Verify that everything is working. Create a terminal for Backend and Frontend. Navigate them to:
    ```sh
    cd Backend
