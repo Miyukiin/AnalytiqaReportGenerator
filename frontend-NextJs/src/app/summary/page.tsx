@@ -1,16 +1,23 @@
+// pages/SummaryPage.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
 import { redirect, useRouter } from 'next/navigation';
 import StatRow from "@/components/StatRow";
-import Paper from '@mui/material/Paper';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TablePagination from '@mui/material/TablePagination';
-import TableRow from '@mui/material/TableRow';
+import DataTable from "@/components/DataTable";
+import NextStepSection from "@/components/NextStepSection";
+import FullscreenModal from "@/components/FullscreenModal";
+import ManageColumnsDialog from "@/components/ManageColumnsDialog";
+import {
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+} from '@mui/material';
+
+type Order = 'asc' | 'desc';
 import { useVisitorId } from "@/context/visitorIDManager";
 import { fetchCsrfToken } from '../../components/csrfToken'
 
@@ -43,6 +50,21 @@ const fetchData = async (url: string, uuid: string, csrfToken: string, setStatus
   }
 };
 
+interface FileData {
+  name: string;
+  headers_types: { [key: string]: string };
+  row_count: number;
+  column_count: number;
+  duplicate_count: number;
+  unique_count: number;
+  total_number_blank_cells: number;
+  data: Array<{ [key: string]: any }>;
+}
+
+interface Stat {
+  label: string;
+  value: number | string;
+}
 
 export default function SummaryPage() {
   const router = useRouter();
@@ -149,117 +171,230 @@ export default function SummaryPage() {
     { label: "Number of Blank Cells", value: summaryData?.total_number_blank_cells },
   ]; // Does not include numeric data, because each numeric column can have different set of numeric data mean median mode etc.
 
-
+  // Pagination state
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangePage = (event: unknown, newPage: number) => setPage(newPage);
+  const handleChangeRowsPerPage = (event: ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(+event.target.value);
     setPage(0);
+  };
+
+  // Sorting state
+  const [order, setOrder] = useState<Order>('asc');
+  const [orderBy, setOrderBy] = useState<string>(columns[0]?.id || '');
+
+  const handleRequestSort = (property: string) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
+  const comparator = useMemo(() => (
+    (a: any, b: any) => {
+      if (b[orderBy] < a[orderBy]) return order === 'desc' ? -1 : 1;
+      if (b[orderBy] > a[orderBy]) return order === 'desc' ? 1 : -1;
+      return 0;
+    }
+  ), [order, orderBy]);
+
+  const sortedData = useMemo(() => (
+    [...fileData.data].sort(comparator)
+  ), [fileData.data, comparator]);
+
+  // Manage Columns state
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(columns.map(col => col.id));
+  const [isManageColumnsOpen, setIsManageColumnsOpen] = useState(false);
+
+  const handleManageColumnsOpen = () => setIsManageColumnsOpen(true);
+  const handleManageColumnsClose = () => setIsManageColumnsOpen(false);
+  const toggleColumn = (columnId: string) => {
+    setVisibleColumns(prev =>
+      prev.includes(columnId) ? prev.filter(id => id !== columnId) : [...prev, columnId]
+    );
+  };
+
+  // Select All functionality
+  const allSelected = visibleColumns.length === columns.length;
+  const handleSelectAll = () => {
+    if (allSelected) {
+      setVisibleColumns([]);
+    } else {
+      setVisibleColumns(columns.map(col => col.id));
+    }
+  };
+
+  // Fullscreen state
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const toggleFullscreen = () => setIsFullscreen(prev => !prev);
+
+  // Close fullscreen on Esc key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) setIsFullscreen(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen]);
+
+  // Handlers for navigation
+  const handleCleanData = () => {
+    router.push("/cleanpreview");
+  };
+
+  const handleCreateReport = () => {
+    router.push("/report");
   };
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
       {/* Left Panel */}
-      <div className="flex-1 p-6 lg:p-12 bg-gray-100">
+      <div className="flex-1 p-6 lg:p-12 bg-gray-100 overflow-hidden">
         <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-6">Summary</h1>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-y-4 gap-x-8">
-          {/* Rows */}
           {stats.map((stat, idx) => (
             <StatRow key={idx} label={stat.label} value={stat.value} />
           ))}
         </div>
+
+        {/* Column Selection Dropdown */}
+        <div className="mt-4 w-full">
+          <FormControl fullWidth variant="outlined">
+            <InputLabel id="select-column-label">Select Column for Statistics</InputLabel>
+            <Select
+              labelId="select-column-label"
+              id="select-column"
+              value={selectedColumn}
+              label="Select Column for Statistics"
+              onChange={(event) => setSelectedColumn(event.target.value)}
+              sx={{ backgroundColor: 'white' }}
+            >
+              {columns.map((column) => (
+                <MenuItem key={column.id} value={column.id}>
+                  {column.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </div>
+
         <div className="mt-8 flex flex-col items-start">
-          <h2 className="text-gray-800 font-bold text-lg mb-2 text-center">
-             Previewing "{summaryData?.name}" 
-          </h2>
-          <div className="rounded-lg h-64 w-full lg:w-full shadow-sm">
-            <Paper sx={{ width: '100%', overflowX: 'auto', flexGrow: 1 }}>
-              <TableContainer sx={{ maxHeight: 440}}>
-                <Table stickyHeader aria-label="sticky table">
-                  <TableHead>
-                    <TableRow>
-                      {columns.map((column) => (
-                        <TableCell
-                          key={column.id}
-                          align={column.align}
-                          style={{ minWidth: column.minWidth }}
-                        >
-                          {column.label}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  </TableHead>
-                  {previewData ? (
-                    <TableBody>
-                    {previewData.data
-                      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                      .map((row, rowIndex) => (
-                        <TableRow hover role="checkbox" tabIndex={-1} key={rowIndex}>
-                          {columns.map((column, colIndex) => {
-                            const value = row[column.id];
-                            return (
-                              <TableCell key={`${rowIndex}-${colIndex}`} align={column.align}>
-                                {column.format && typeof value === 'number' ? column.format(value) : value || ""}
-                              </TableCell>
-                            );
-                          })}
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                  ): (
-                    <div>Unable to Display Data</div> // Temporary. Show if no data
-                  )}
-                </Table>
-              </TableContainer>
-              <TablePagination
-                rowsPerPageOptions={[10, 25, 100]}
-                component="div"
-                count={previewData.data.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-              />
-            </Paper>
+          <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4 space-y-4 md:space-y-0">
+            <h2 className="text-gray-800 font-bold text-lg text-center">
+              Preview of "{fileData.name}"
+            </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 space-y-2 sm:space-y-0 w-full sm:w-auto">
+              {/* Manage Columns Button */}
+              <Button
+                variant="outlined"
+                onClick={handleManageColumnsOpen}
+                aria-controls={isManageColumnsOpen ? 'manage-columns-dialog' : undefined}
+                aria-haspopup="true"
+                aria-expanded={isManageColumnsOpen ? 'true' : undefined}
+                sx={{
+                  backgroundColor: "grey.700",
+                  "&:hover": { backgroundColor: "primary.main" },
+                  color: "white",
+                  fontWeight: "bold",
+                  padding: "5px 12px",
+                  width: { xs: "100%", sm: "auto" },
+                }}
+              >
+                Manage Columns
+              </Button>
+
+              {/* Fullscreen Toggle Button */}
+              <Button
+                variant="outlined"
+                onClick={toggleFullscreen}
+                aria-label={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                sx={{
+                  backgroundColor: "grey.700",
+                  "&:hover": { backgroundColor: "primary.main" },
+                  color: "white",
+                  fontWeight: "bold",
+                  padding: "5px 12px",
+                  width: { xs: "100%", sm: "auto" },
+                }}
+              >
+                {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+              </Button>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className={`rounded-lg w-full shadow-sm transition-all duration-300 overflow-x-auto`}>
+            <DataTable
+              columns={columns}
+              data={sortedData}
+              visibleColumns={visibleColumns}
+              order={order}
+              orderBy={orderBy}
+              onRequestSort={handleRequestSort}
+              page={page}
+              rowsPerPage={rowsPerPage}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            />
           </div>
         </div>
       </div>
 
       {/* Right Panel */}
-      <div className="w-full lg:w-96 p-6 lg:p-12 bg-gray-200">
-        <h2 className="text-2xl font-bold text-gray-800 mb-8 text-center">Next Steps</h2>
-        <div className="mb-8 flex flex-col items-center text-center">
-          <h3 className="font-bold text-lg text-gray-800 mb-2">Data Cleaning</h3>
-          <p className="text-sm text-gray-600">
-            Data cleaning is the process of fixing or removing incorrect, corrupted, incorrectly
-            formatted, duplicate, or incomplete data within a dataset. When combining multiple data
-            sources, there are many opportunities for data to be duplicated or mislabeled.
-          </p>
-        </div>
-        <div className="mb-8 flex flex-col items-center text-center">
-          <h3 className="font-bold text-lg text-gray-800 mb-2">Create Report</h3>
-          <p className="text-sm text-gray-600">
-            A data analysis report is a type of business report in which you present quantitative and
-            qualitative data to evaluate your strategies and performance. Based on this data, you give
-            recommendations for further steps and business decisions while using the data as evidence
-            that backs up your evaluation.
-          </p>
-        </div>
+      <div className="w-full lg:w-96 p-6 lg:p-12 bg-gray-200 flex-shrink-0">
+        <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">NEXT STEPS</h2>
+        <NextStepSection
+          title="Data Cleaning"
+          description="Data cleaning is the process of fixing or removing incorrect, corrupted, incorrectly formatted, duplicate, or incomplete data within a dataset. When combining multiple data sources, there are many opportunities for data to be duplicated or mislabeled."
+        />
+        <NextStepSection
+          title="Create Report"
+          description="A data analysis report is a type of business report in which you present quantitative and qualitative data to evaluate your strategies and performance. Based on this data, you give recommendations for further steps and business decisions while using the data as evidence that backs up your evaluation."
+        />
         <div className="flex flex-col space-y-4">
-          <button className="w-full py-2 bg-gray-800 text-white text-sm font-bold rounded-lg hover:bg-gray-900">
+          <button
+            onClick={handleCleanData}
+            className="w-full py-2 bg-gray-800 text-white text-sm font-bold rounded-lg hover:bg-gray-900 transition-colors"
+          >
             + Clean My Data
           </button>
           <p className="text-sm text-center text-gray-600">Or go straight to</p>
-          <button className="w-full py-2 bg-gray-800 text-white text-sm font-bold rounded-lg hover:bg-gray-900">
+          <button
+            onClick={handleCreateReport}
+            className="w-full py-2 bg-gray-800 text-white text-sm font-bold rounded-lg hover:bg-gray-900 transition-colors"
+          >
             + Create Report
           </button>
         </div>
       </div>
+
+      {/* Fullscreen Modal */}
+      <FullscreenModal
+        open={isFullscreen}
+        onClose={toggleFullscreen}
+        columns={columns}
+        data={sortedData}
+        visibleColumns={visibleColumns}
+        order={order}
+        orderBy={orderBy}
+        onRequestSort={handleRequestSort}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
+
+      {/* Manage Columns Dialog */}
+      <ManageColumnsDialog
+        open={isManageColumnsOpen}
+        onClose={handleManageColumnsClose}
+        columns={columns}
+        visibleColumns={visibleColumns}
+        toggleColumn={toggleColumn}
+        allSelected={allSelected}
+        handleSelectAll={handleSelectAll}
+      />
     </div>
   );
 }
