@@ -10,6 +10,11 @@ import ExpandIcon from "@/components/icons/ExpandIcon"; // Adjust the path as ne
 export default function CleanPreviewPage() {
   const router = useRouter(); // Initialize useRouter
 
+  // Navigate to the /summary page
+  const handleGoBack = () => {
+    router.push("/summary"); // Navigate to the /summary page
+  };
+
   const handleProceedToReport = () => {
     router.push("/report"); // Navigate to the /report page
   };
@@ -182,6 +187,7 @@ export default function CleanPreviewPage() {
               padding: "5px 15px",
               width: { xs: "100%", sm: "auto" }, // Full width on mobile
             }}
+            onClick={handleGoBack}
           >
             Go Back
           </Button>
