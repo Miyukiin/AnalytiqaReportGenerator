@@ -508,8 +508,8 @@ const ReportLayout: React.FC = () => {
             mb: 2,
           }}
         >
-          <Typography variant="h6" fontWeight="bold">
-            BUILD VISUALS
+          <Typography variant="h5" fontWeight="bold">
+            BUILD DATA VISUALIZATIONS
           </Typography>
           <Box>
             <Button
