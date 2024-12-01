@@ -49,6 +49,7 @@ const RemarkSection: React.FC<RemarkSectionProps> = ({ remark, onChange }) => {
           bgcolor: "#ffffff",
           borderRadius: 1,
           fontSize: "0.8rem",
+          fontStyle: "italic",
           "& .MuiInputBase-input": {
             padding: "4px 6px",
           },

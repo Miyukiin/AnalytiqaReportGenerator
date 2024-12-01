@@ -33,7 +33,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {!isNoGlobalLayout && (
           <header className="bg-white shadow-md absolute top-0 left-0 right-0 z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center py-4">
-            {/* Logo */}
             <img
               src="/images/analytiqa_header.png"
               alt="Analytiqa Logo"
@@ -49,8 +48,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               isNoGlobalLayout
                 ? "flex-grow"
                 : pathname === "/home"
-                ? "mt-24 flex-grow" // Add specific space for home route
-                : "mt-16 flex-grow" // Default space for other routes
+                ? "mt-24 flex-grow"
+                : "mt-16 flex-grow"
             }`}
           >
             <ThemeProvider theme={theme}>

@@ -46,6 +46,8 @@ interface ChartItemProps extends Chart {
   ) => void;
   onSelectChart: (id: number) => void;
   isSelected: boolean;
+  xAxisColor: string; // Added for X-axis color
+  yAxisColor: string; // Added for Y-axis color
 }
 
 const baseWidth = 400;
@@ -68,6 +70,8 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
   xAxis,
   yAxis,
   isSelected,
+  xAxisColor,
+  yAxisColor,
 }) => {
   const [currentWidth, setCurrentWidth] = useState(width);
   const [currentHeight, setCurrentHeight] = useState(height);
@@ -100,9 +104,9 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
       itemStyle: { fontSize: baseFontSize * scalingFactor },
       labelStyle: { fontSize: baseFontSize * scalingFactor },
     };
-
+  
     const legendStyle = { fontSize: baseFontSize * scalingFactor };
-
+  
     switch (type) {
       case "Scatter":
         return (
@@ -113,9 +117,15 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
               label={{
                 value: xAxis || "X-axis",
                 position: "insideBottomRight",
-                style: { fontSize: commonChartProps.fontSize },
+                style: {
+                  fontSize: commonChartProps.fontSize,
+                  fill: xAxisColor || "#000",
+                },
               }}
-              tick={{ fontSize: commonChartProps.fontSize }}
+              tick={{
+                fontSize: commonChartProps.fontSize,
+                fill: xAxisColor || "#000",
+              }}
             />
             <YAxis
               dataKey={yAxis || "y"}
@@ -123,9 +133,15 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
                 value: yAxis || "Y-axis",
                 angle: -90,
                 position: "insideLeft",
-                style: { fontSize: commonChartProps.fontSize },
+                style: {
+                  fontSize: commonChartProps.fontSize,
+                  fill: yAxisColor || "#000",
+                },
               }}
-              tick={{ fontSize: commonChartProps.fontSize }}
+              tick={{
+                fontSize: commonChartProps.fontSize,
+                fill: yAxisColor || "#000",
+              }}
             />
             <Tooltip {...tooltipStyle} />
             <Scatter
@@ -136,7 +152,7 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
             <Legend wrapperStyle={legendStyle} />
           </ScatterChart>
         );
-
+  
       case "Histogram":
         return (
           <BarChart {...commonChartProps} data={data as HistogramDataPoint[]}>
@@ -146,29 +162,37 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
               label={{
                 value: xAxis || "X-axis",
                 position: "insideBottomRight",
-                style: { fontSize: commonChartProps.fontSize },
+                style: {
+                  fontSize: commonChartProps.fontSize,
+                  fill: xAxisColor || "#000",
+                },
               }}
-              tick={{ fontSize: commonChartProps.fontSize }}
+              tick={{
+                fontSize: commonChartProps.fontSize,
+                fill: xAxisColor || "#000",
+              }}
             />
             <YAxis
               label={{
                 value: yAxis || "Y-axis",
                 angle: -90,
                 position: "insideLeft",
-                style: { fontSize: commonChartProps.fontSize },
+                style: {
+                  fontSize: commonChartProps.fontSize,
+                  fill: yAxisColor || "#000",
+                },
               }}
-              tick={{ fontSize: commonChartProps.fontSize }}
+              tick={{
+                fontSize: commonChartProps.fontSize,
+                fill: yAxisColor || "#000",
+              }}
             />
             <Tooltip {...tooltipStyle} />
-            <Bar
-              dataKey="value"
-              fill="#82ca9d"
-              barSize={30 * scalingFactor}
-            />
+            <Bar dataKey="value" fill="#82ca9d" barSize={30 * scalingFactor} />
             <Legend wrapperStyle={legendStyle} />
           </BarChart>
         );
-
+  
       case "Radar":
         const radarOuterRadius =
           ((Math.min(currentWidth, currentHeight) - marginSize * 2) / 2) * 0.8;
@@ -179,18 +203,20 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
             cx="50%"
             cy="50%"
             outerRadius={radarOuterRadius}
-            margin={{
-              ...commonChartProps.margin,
-              bottom: marginSize + 30 * scalingFactor,
-            }}
           >
             <PolarGrid />
             <PolarAngleAxis
               dataKey={xAxis || "subject"}
-              tick={{ fontSize: commonChartProps.fontSize }}
+              tick={{
+                fontSize: commonChartProps.fontSize,
+                fill: xAxisColor || "#000",
+              }}
             />
             <PolarRadiusAxis
-              tick={{ fontSize: commonChartProps.fontSize }}
+              tick={{
+                fontSize: commonChartProps.fontSize,
+                fill: yAxisColor || "#000",
+              }}
             />
             <Radar
               name={title || "Radar"}
@@ -202,7 +228,7 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
             <Tooltip {...tooltipStyle} />
           </RadarChart>
         );
-
+  
       case "Stacked Line":
         return (
           <LineChart {...commonChartProps} data={data as StackedLineDataPoint[]}>
@@ -212,18 +238,30 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
               label={{
                 value: xAxis || "X-axis",
                 position: "insideBottomRight",
-                style: { fontSize: commonChartProps.fontSize },
+                style: {
+                  fontSize: commonChartProps.fontSize,
+                  fill: xAxisColor || "#000",
+                },
               }}
-              tick={{ fontSize: commonChartProps.fontSize }}
+              tick={{
+                fontSize: commonChartProps.fontSize,
+                fill: xAxisColor || "#000",
+              }}
             />
             <YAxis
               label={{
                 value: yAxis || "Y-axis",
                 angle: -90,
                 position: "insideLeft",
-                style: { fontSize: commonChartProps.fontSize },
+                style: {
+                  fontSize: commonChartProps.fontSize,
+                  fill: yAxisColor || "#000",
+                },
               }}
-              tick={{ fontSize: commonChartProps.fontSize }}
+              tick={{
+                fontSize: commonChartProps.fontSize,
+                fill: yAxisColor || "#000",
+              }}
             />
             <Tooltip {...tooltipStyle} />
             <Line type="monotone" dataKey="pv" stroke="#8884d8" />
@@ -231,47 +269,32 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
             <Legend wrapperStyle={legendStyle} />
           </LineChart>
         );
-
+  
       case "RadialBar":
         const radialOuterRadius =
           ((Math.min(currentWidth, currentHeight) - marginSize * 2) / 2) * 0.8;
-        const radialInnerRadius = radialOuterRadius * 0.5;
         return (
           <RadialBarChart
             {...commonChartProps}
-            width={730} 
-            height={250} 
-            innerRadius="20%" 
-            outerRadius="120%" 
-            data={data as RadialBarDataPoint[]} 
-            startAngle={180} 
-            endAngle={0}
+            data={data as RadialBarDataPoint[]}
+            innerRadius="10%"
+            outerRadius={radialOuterRadius}
           >
             <RadialBar
-              minPointSize={15}
+              dataKey="uv"
+              fill="#8884d8"
+              background
               label={{
                 position: "insideStart",
                 fill: "#fff",
                 fontSize: commonChartProps.fontSize,
               }}
-              background
-              dataKey="uv"
             />
             <Tooltip {...tooltipStyle} />
-            <Legend
-              iconSize={12 * scalingFactor}
-              layout="horizontal"
-              align="center"
-              verticalAlign="bottom"
-              wrapperStyle={{
-                fontSize: commonChartProps.fontSize,
-                right: 0,
-                transform: "translate(0, -20px)",
-              }}
-            />
+            <Legend wrapperStyle={legendStyle} />
           </RadialBarChart>
         );
-
+  
       default:
         return (
           <Typography variant="body2" color="error">
@@ -279,7 +302,7 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
           </Typography>
         );
     }
-  };
+  };  
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();

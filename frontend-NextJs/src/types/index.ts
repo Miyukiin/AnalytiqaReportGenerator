@@ -38,6 +38,8 @@ export type ChartData =
   | RadialBarDataPoint[];
 
 export interface Chart {
+  xAxisColor: string;
+  yAxisColor: string;
   id: number;
   type: ChartType;
   title?: string;

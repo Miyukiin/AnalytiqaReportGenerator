@@ -264,170 +264,19 @@ const ReportLayout: React.FC = () => {
         VISUALIZATIONS
       </Typography>
       <FullWidthDivider />
-      <Grid container spacing={1} sx={{ mb: 2 }}>
+      <Grid container spacing={1} sx={{ mb: 2 }} flexDirection="column">
         {icons.map((item, index) => (
-          <Grid item xs={4} key={index}>
-            <IconButton
-              onClick={() =>
-                addChartFn(
-                  item.label as ChartType,
-                  pages,
-                  currentPageIndex,
-                  setPages,
-                  setSelectedChartId
-                )
-              }
+          <Grid item xs="auto" key={index}>
+            {/* Flex container to align icon and label horizontally */}
+            <Box
               sx={{
-                width: "100%",
-                height: 40,
-                bgcolor: "#e9ecef",
-                border: "1px solid #adb5bd",
-                borderRadius: 1,
+                display: 'flex',
+                flexDirection: 'row',  // Align icon and label horizontally
+                alignItems: 'center',   // Vertically align icon and label
+                width: '100%',          // Ensure full width of the container
+                mb: 1,                  // Optional spacing between items
               }}
-              title={item.label}
-              aria-label={`Add ${item.label} Chart`}
             >
-              {item.icon}
-            </IconButton>
-          </Grid>
-        ))}
-      </Grid>
-      <FullWidthDivider />
-      {/* Values Section */}
-      {selectedChart ? (
-        <>
-          <Typography
-            variant="h6"
-            fontWeight="bold"
-            align="center"
-            sx={{ textTransform: "uppercase", mb: 0 }}
-          >
-            VALUES
-          </Typography>
-          <FullWidthDivider />
-          <Box sx={{ mb: 1 }}>
-            <Typography variant="caption" fontWeight="bold">
-              Title
-            </Typography>
-            <TextField
-              fullWidth
-              value={selectedChart.title || ""}
-              onChange={(e) => updateSelectedChart("title", e.target.value)}
-              size="small"
-              sx={{
-                mt: 0.5,
-                bgcolor: "#f8f9fa",
-                borderRadius: 1,
-                "& .MuiInputBase-input": {
-                  padding: "6px 8px",
-                  fontSize: "0.75rem",
-                },
-              }}
-              placeholder="Enter title here"
-            />
-          </Box>
-          <Box sx={{ mb: 1 }}>
-            <Typography variant="caption" fontWeight="bold">
-              Y-axis
-            </Typography>
-            <Select
-              fullWidth
-              displayEmpty
-              value={selectedChart.yAxis || ""}
-              onChange={(e) =>
-                updateSelectedChart("yAxis", e.target.value as string)
-              }
-              sx={{
-                mt: 0.5,
-                bgcolor: "#f8f9fa",
-                border: "1px solid #adb5bd",
-                borderRadius: "4px",
-                "& .MuiSelect-select": {
-                  padding: "6px 8px",
-                  fontSize: "0.75rem",
-                },
-              }}
-              size="small"
-            >
-              <MenuItem value="">
-                <em>Select Y-axis field</em>
-              </MenuItem>
-              {selectedChart.data.length > 0 &&
-                Object.keys(selectedChart.data[0]).map((key) =>
-                  key !== "fill" ? (
-                    <MenuItem key={key} value={key}>
-                      {key}
-                    </MenuItem>
-                  ) : null
-                )}
-            </Select>
-          </Box>
-          <Box sx={{ mb: 1 }}>
-            <Typography variant="caption" fontWeight="bold">
-              X-axis
-            </Typography>
-            <Select
-              fullWidth
-              displayEmpty
-              value={selectedChart.xAxis || ""}
-              onChange={(e) =>
-                updateSelectedChart("xAxis", e.target.value as string)
-              }
-              sx={{
-                mt: 0.5,
-                bgcolor: "#f8f9fa",
-                border: "1px solid #adb5bd",
-                borderRadius: "4px",
-                "& .MuiSelect-select": {
-                  padding: "6px 8px",
-                  fontSize: "0.75rem",
-                },
-              }}
-              size="small"
-            >
-              <MenuItem value="">
-                <em>Select X-axis field</em>
-              </MenuItem>
-              {selectedChart.data.length > 0 &&
-                Object.keys(selectedChart.data[0]).map((key) =>
-                  key !== "fill" ? (
-                    <MenuItem key={key} value={key}>
-                      {key}
-                    </MenuItem>
-                  ) : null
-                )}
-            </Select>
-          </Box>
-        </>
-      ) : (
-        <Typography variant="caption" align="center" sx={{ mt: 2 }}>
-          Select a chart to edit its values.
-        </Typography>
-      )}
-    </Box>
-  );
-
-  return (
-    <Box sx={{ minHeight: "100vh", display: "flex", bgcolor: "#ECECEC" }}>
-      {/* Left Sidebar */}
-      {!isSmallScreen ? (
-        <Paper
-        sx={{
-          width: 200,
-          display: "flex",
-          flexDirection: "column",
-          p: 2,
-          borderRight: "1px solid #ccc",
-          bgcolor: "#ECECEC",
-        }}
-      >
-        <Typography variant="h6" fontWeight="bold" align="center">
-          VISUALIZATIONS
-        </Typography>
-        <FullWidthDivider />
-        <Grid container spacing={1} sx={{ mb: 2 }}>
-          {icons.map((item, index) => (
-            <Grid item xs={4} key={index}>
               <IconButton
                 onClick={() =>
                   addChartFn(
@@ -439,135 +288,412 @@ const ReportLayout: React.FC = () => {
                   )
                 }
                 sx={{
-                  width: "100%",
+                  width: 40,  // Set the width of the icon
                   height: 40,
                   bgcolor: "#e9ecef",
                   border: "1px solid #adb5bd",
                   borderRadius: 1,
+                  mr: 1,  // Space between icon and text
                 }}
                 title={item.label}
                 aria-label={`Add ${item.label} Chart`}
               >
                 {item.icon}
               </IconButton>
-            </Grid>
-          ))}
-        </Grid>
+              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                {item.label}
+              </Typography>
+            </Box>
+          </Grid>
+        ))}
+      </Grid>
+      <FullWidthDivider />
+      {/* Values Section */}
+      {selectedChart ? (
+        <>
+        <Typography
+          variant="h6"
+          fontWeight="bold"
+          align="center"
+          sx={{ textTransform: "uppercase", mb: 0 }}
+        >
+          VALUES
+        </Typography>
         <FullWidthDivider />
-        {/* Values Section */}
-        {selectedChart ? (
-          <>
-            <Typography
-              variant="h6"
-              fontWeight="bold"
-              align="center"
-              sx={{ textTransform: "uppercase", mb: 0 }}
-            >
-              VALUES
-            </Typography>
-            <FullWidthDivider />
-            <Box sx={{ mb: 1 }}>
-              <Typography variant="caption" fontWeight="bold">
-                Title
-              </Typography>
-              <TextField
-                fullWidth
-                value={selectedChart.title || ""}
-                onChange={(e) =>
-                  updateSelectedChart("title", e.target.value)
-                }
-                size="small"
-                sx={{
-                  mt: 0.5,
-                  bgcolor: "#f8f9fa",
-                  borderRadius: 1,
-                  "& .MuiInputBase-input": {
-                    padding: "6px 8px",
-                    fontSize: "0.75rem",
-                  },
-                }}
-                placeholder="Enter title here"
-              />
-            </Box>
-            <Box sx={{ mb: 1 }}>
-              <Typography variant="caption" fontWeight="bold">
-                Y-axis
-              </Typography>
-              <Select
-                fullWidth
-                displayEmpty
-                value={selectedChart.yAxis || ""}
-                onChange={(e) =>
-                  updateSelectedChart("yAxis", e.target.value as string)
-                }
-                sx={{
-                  mt: 0.5,
-                  bgcolor: "#f8f9fa",
-                  border: "1px solid #adb5bd",
-                  borderRadius: "4px",
-                  "& .MuiSelect-select": {
-                    padding: "6px 8px",
-                    fontSize: "0.75rem",
-                  },
-                }}
-                size="small"
-              >
-                <MenuItem value="">
-                  <em>Select Y-axis field</em>
-                </MenuItem>
-                {selectedChart.data.length > 0 &&
-                  Object.keys(selectedChart.data[0]).map((key) =>
-                    key !== "fill" ? (
-                      <MenuItem key={key} value={key}>
-                        {key}
-                      </MenuItem>
-                    ) : null
-                  )}
-              </Select>
-            </Box>
-            <Box sx={{ mb: 1 }}>
-              <Typography variant="caption" fontWeight="bold">
-                X-axis
-              </Typography>
-              <Select
-                fullWidth
-                displayEmpty
-                value={selectedChart.xAxis || ""}
-                onChange={(e) =>
-                  updateSelectedChart("xAxis", e.target.value as string)
-                }
-                sx={{
-                  mt: 0.5,
-                  bgcolor: "#f8f9fa",
-                  border: "1px solid #adb5bd",
-                  borderRadius: "4px",
-                  "& .MuiSelect-select": {
-                    padding: "6px 8px",
-                    fontSize: "0.75rem",
-                  },
-                }}
-                size="small"
-              >
-                <MenuItem value="">
-                  <em>Select X-axis field</em>
-                </MenuItem>
-                {selectedChart.data.length > 0 &&
-                  Object.keys(selectedChart.data[0]).map((key) =>
-                    key !== "fill" ? (
-                      <MenuItem key={key} value={key}>
-                        {key}
-                      </MenuItem>
-                    ) : null
-                  )}
-              </Select>
-            </Box>
-          </>
-        ) : (
-          <Typography variant="caption" align="center" sx={{ mt: 2 }}>
-            Select a chart to edit its values.
+        {/* Title Input */}
+        <Box sx={{ mb: 1 }}>
+          <Typography variant="caption" fontWeight="bold">
+            Title
           </Typography>
-        )}
-      </Paper>
+          <TextField
+            fullWidth
+            value={selectedChart.title || ""}
+            onChange={(e) => updateSelectedChart("title", e.target.value)}
+            size="small"
+            sx={{
+              mt: 0.5,
+              bgcolor: "#f8f9fa",
+              borderRadius: 1,
+              "& .MuiInputBase-input": {
+                padding: "6px 8px",
+                fontSize: "0.75rem",
+              },
+            }}
+            placeholder="Enter title here"
+          />
+        </Box>
+
+        {/* Y-Axis Input and Color Picker */}
+        <Box sx={{ mb: 1 }}>
+          <Typography variant="caption" fontWeight="bold">
+            Y-axis
+          </Typography>
+          <Select
+            fullWidth
+            displayEmpty
+            value={selectedChart.yAxis || ""}
+            onChange={(e) =>
+              updateSelectedChart("yAxis", e.target.value as string)
+            }
+            sx={{
+              mt: 0.5,
+              bgcolor: "#f8f9fa",
+              border: "1px solid #adb5bd",
+              borderRadius: "4px",
+              "& .MuiSelect-select": {
+                padding: "6px 8px",
+                fontSize: "0.75rem",
+              },
+            }}
+            size="small"
+          >
+            <MenuItem value="">
+              <em>Select Y-axis field</em>
+            </MenuItem>
+            {selectedChart.data.length > 0 &&
+              Object.keys(selectedChart.data[0]).map((key) =>
+                key !== "fill" ? (
+                  <MenuItem key={key} value={key}>
+                    {key}
+                  </MenuItem>
+                ) : null
+              )}
+          </Select>
+
+          {/* Y-axis Color Customization */}
+          <Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
+            <Typography variant="caption" fontWeight="bold" sx={{ mr: 2 }}>
+              Pick Color
+            </Typography>
+            <TextField
+              type="color"
+              value={selectedChart.yAxisColor || "#000000"}
+              onChange={(e) => updateSelectedChart("yAxisColor", e.target.value)}
+              sx={{
+                width: 90,
+                height: 30,
+                bgcolor: "#fff",
+                mt: 0.5,
+                '& input': {
+                  height: '100%',
+                  width: '100%',
+                  padding: 1,
+                },
+              }}
+            />
+          </Box>
+        </Box>
+
+        {/* X-Axis Input and Color Picker */}
+        <Box sx={{ mb: 1 }}>
+          <Typography variant="caption" fontWeight="bold">
+            X-axis
+          </Typography>
+          <Select
+            fullWidth
+            displayEmpty
+            value={selectedChart.xAxis || ""}
+            onChange={(e) =>
+              updateSelectedChart("xAxis", e.target.value as string)
+            }
+            sx={{
+              mt: 0.5,
+              bgcolor: "#f8f9fa",
+              border: "1px solid #adb5bd",
+              borderRadius: "4px",
+              "& .MuiSelect-select": {
+                padding: "6px 8px",
+                fontSize: "0.75rem",
+              },
+            }}
+            size="small"
+          >
+            <MenuItem value="">
+              <em>Select X-axis field</em>
+            </MenuItem>
+            {selectedChart.data.length > 0 &&
+              Object.keys(selectedChart.data[0]).map((key) =>
+                key !== "fill" ? (
+                  <MenuItem key={key} value={key}>
+                    {key}
+                  </MenuItem>
+                ) : null
+              )}
+          </Select>
+
+          {/* X-axis Color Customization */}
+          <Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
+            <Typography variant="caption" fontWeight="bold" sx={{ mr: 2 }}>
+              Pick Color
+            </Typography>
+            <TextField
+              type="color"
+              value={selectedChart.xAxisColor || "#000000"}
+              onChange={(e) => updateSelectedChart("xAxisColor", e.target.value)}
+              sx={{
+                width: 90,
+                height: 30,
+                bgcolor: "#fff",
+                mt: 0.5,
+                '& input': {
+                  height: '100%',
+                  width: '100%',
+                  padding: 1,
+                },
+              }}
+            />
+          </Box>
+        </Box>
+      </>
+    ) : (
+      <Typography variant="caption" align="center" sx={{ mt: 2 }}>
+        Select a chart to edit its values.
+      </Typography>
+    )}
+    </Box>
+  );
+
+  return (
+    <Box sx={{ minHeight: "100vh", display: "flex", bgcolor: "#ECECEC" }}>
+      {/* Left Sidebar */}
+      {!isSmallScreen ? (
+        <Paper
+          sx={{
+            width: 200,
+            display: "flex",
+            flexDirection: "column",
+            p: 2,
+            borderRight: "1px solid #ccc",
+            bgcolor: "#ECECEC",
+          }}
+        >
+          <Typography variant="h6" fontWeight="bold" align="center">
+            VISUALIZATIONS
+          </Typography>
+          <FullWidthDivider />
+          
+          {/* Updated Grid Container to display icons vertically */}
+          <Grid container spacing={0} sx={{ mb: 1, flexDirection: 'column' }}>
+            {icons.map((item, index) => (
+              <Grid item xs="auto" key={index}>
+                {/* Flex container to align icon and label */}
+                <Box 
+                  sx={{
+                    display: 'flex', 
+                    alignItems: 'center',  // Vertically align icon and text
+                    width: '100%',  // Ensure full width of the container
+                    mb: 1  // Optional spacing between icons
+                  }}
+                >
+                  <IconButton
+                    onClick={() =>
+                      addChartFn(
+                        item.label as ChartType,
+                        pages,
+                        currentPageIndex,
+                        setPages,
+                        setSelectedChartId
+                      )
+                    }
+                    sx={{
+                      width: 40,  // Set the width of the icon
+                      height: 40,
+                      bgcolor: "#e9ecef",
+                      border: "1px solid #adb5bd",
+                      borderRadius: 1,
+                      mr: 1, // Space between icon and text
+                    }}
+                    title={item.label}
+                    aria-label={`Add ${item.label} Chart`}
+                  >
+                    {item.icon}
+                  </IconButton>
+                  {/* Display the chart name next to the icon */}
+                  <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                    {item.label}
+                  </Typography>
+                </Box>
+              </Grid>
+            ))}
+          </Grid>
+
+          <FullWidthDivider />
+          {/* Values Section */}
+          {selectedChart ? (
+            <>
+              <Typography
+                variant="h6"
+                fontWeight="bold"
+                align="center"
+                sx={{ textTransform: "uppercase", mb: 0 }}
+              >
+                VALUES
+              </Typography>
+              <FullWidthDivider />
+              <Box sx={{ mb: 1 }}>
+                <Typography variant="caption" fontWeight="bold">
+                  Title
+                </Typography>
+                <TextField
+                  fullWidth
+                  value={selectedChart.title || ""}
+                  onChange={(e) => updateSelectedChart("title", e.target.value)}
+                  size="small"
+                  sx={{
+                    mt: 0.5,
+                    bgcolor: "#f8f9fa",
+                    borderRadius: 1,
+                    "& .MuiInputBase-input": {
+                      padding: "6px 8px",
+                      fontSize: "0.75rem",
+                    },
+                  }}
+                  placeholder="Enter title here"
+                />
+              </Box>
+              <Box sx={{ mb: 1 }}>
+                <Typography variant="caption" fontWeight="bold">
+                  Y-axis
+                </Typography>
+                <Select
+                  fullWidth
+                  displayEmpty
+                  value={selectedChart.yAxis || ""}
+                  onChange={(e) =>
+                    updateSelectedChart("yAxis", e.target.value as string)
+                  }
+                  sx={{
+                    mt: 0.5,
+                    bgcolor: "#f8f9fa",
+                    border: "1px solid #adb5bd",
+                    borderRadius: "4px",
+                    "& .MuiSelect-select": {
+                      padding: "6px 8px",
+                      fontSize: "0.75rem",
+                    },
+                  }}
+                  size="small"
+                >
+                  <MenuItem value="">
+                    <em>Select Y-axis field</em>
+                  </MenuItem>
+                  {selectedChart.data.length > 0 &&
+                    Object.keys(selectedChart.data[0]).map((key) =>
+                      key !== "fill" ? (
+                        <MenuItem key={key} value={key}>
+                          {key}
+                        </MenuItem>
+                      ) : null
+                    )}
+                </Select>
+                {/* Y-axis Color Customization */}
+                <Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
+                  <Typography variant="caption" fontWeight="bold" sx={{ mr: 2 }}>
+                    Pick Color
+                  </Typography>
+                  <TextField
+                    type="color"
+                    value={selectedChart.yAxisColor || "#000000"}
+                    onChange={(e) => updateSelectedChart("yAxisColor", e.target.value)}
+                    sx={{
+                      width: 90, 
+                      height: 30, 
+                      bgcolor: "#fff",
+                      mt: 0.5,
+                      '& input': {
+                        height: '100%', 
+                        width: '100%',
+                        padding: 1,  
+                      },
+                    }}
+                  />
+                </Box>
+              </Box>
+              <Box sx={{ mb: 1 }}>
+                <Typography variant="caption" fontWeight="bold">
+                  X-axis
+                </Typography>
+                <Select
+                  fullWidth
+                  displayEmpty
+                  value={selectedChart.xAxis || ""}
+                  onChange={(e) =>
+                    updateSelectedChart("xAxis", e.target.value as string)
+                  }
+                  sx={{
+                    mt: 0.5,
+                    bgcolor: "#f8f9fa",
+                    border: "1px solid #adb5bd",
+                    borderRadius: "4px",
+                    "& .MuiSelect-select": {
+                      padding: "6px 8px",
+                      fontSize: "0.75rem",
+                    },
+                  }}
+                  size="small"
+                >
+                  <MenuItem value="">
+                    <em>Select X-axis field</em>
+                  </MenuItem>
+                  {selectedChart.data.length > 0 &&
+                    Object.keys(selectedChart.data[0]).map((key) =>
+                      key !== "fill" ? (
+                        <MenuItem key={key} value={key}>
+                          {key}
+                        </MenuItem>
+                      ) : null
+                    )}
+                </Select>
+                {/* X-axis Color Customization */}
+                <Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
+                  <Typography variant="caption" fontWeight="bold" sx={{ mr: 2 }}>
+                    Pick Color
+                  </Typography>
+                  <TextField
+                    type="color"
+                    value={selectedChart.xAxisColor || "#000000"}
+                    onChange={(e) => updateSelectedChart("xAxisColor", e.target.value)}
+                    sx={{
+                      width: 90, 
+                      height: 30, 
+                      bgcolor: "#fff",
+                      mt: 0.5,
+                      '& input': {
+                        height: '100%', 
+                        width: '100%',
+                        padding: 1,  
+                      },
+                    }}
+                  />
+                </Box>
+              </Box>
+            </>
+          ) : (
+            <Typography variant="caption" align="center" sx={{ mt: 2 }}>
+              Select a chart to edit its values.
+            </Typography>
+          )}
+        </Paper>
       ) : (
         <>
           <Drawer
@@ -759,12 +885,12 @@ const ReportLayout: React.FC = () => {
           >
             <Box
               sx={{
-                width: 250,
-                display: "flex",
-                flexDirection: "column",
+                width: isSmallScreen ? '100%' : '250px', // make drawer width dynamic
+                display: 'flex',
+                flexDirection: 'column',
                 p: 2,
-                bgcolor: "#ECECEC",
-                height: "100%",
+                bgcolor: '#ECECEC',
+                height: '100%',
               }}
               role="presentation"
             >

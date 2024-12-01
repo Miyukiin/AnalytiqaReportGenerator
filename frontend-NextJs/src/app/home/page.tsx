@@ -1,14 +1,12 @@
 "use client";
 
-import { useState, createContext, useContext } from "react";
+import { useState, useEffect} from "react";
 import Head from "next/head";
 import { useRouter } from "next/navigation"; // Import useRouter
 import BadgeCheckIcon from "../../components/icons/BadgeCheckIcon";
 import FilePlusIcon from "../../components/icons/FilePlusIcon";
 import ChevronDownIcon from "../../components/icons/ChevronDownIcon";
-import { useGlobalContext } from "@/context/GlobalContext";
-import { useEffect } from "react";
-import { initialFileData } from "@/context/GlobalContext";
+import { useGlobalContext, initialFileData } from "@/context/GlobalContext";
 
 export default function DataReportGenerator() {
   const { fileData, setFileData } = useGlobalContext();
@@ -202,7 +200,7 @@ export default function DataReportGenerator() {
           </li>
         ))}
       </ul>
-      <span className="mt-10 text-gray-600 font-bold mb-12 text-sm md:text-xl">
+      <span className="mt-12 text-gray-600 font-bold mb-12 text-sm md:text-xl">
         ANALYTIQA is a comprehensive data visualization and reporting tool designed to transform complex data into clear, actionable insights.
       </span>
     </div>
