@@ -485,7 +485,18 @@ export default function CleanPreviewPage() {
               fontSize: "1.75rem",
             }}
           >
-            SUMMARY OF CHANGES:
+            What's the Difference?
+          </Typography>
+          <Typography
+            variant="h1"
+            sx={{
+              fontWeight: "medium",
+              color: "grey.800", // Uses theme's grey.800
+              marginBottom: 2,
+              fontSize: "1rem",
+            }}
+          >
+            In cleaning <b>{fileName}</b> we performed the following cleaning steps:
           </Typography>
           <SummaryChanges summaryChangesData={summaryChangesData} />
         </Box>
