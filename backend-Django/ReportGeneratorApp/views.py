@@ -55,6 +55,7 @@ def get_cleaned_table_preview_data(request:HttpRequest, query_object: Visitors):
     if request.method == "GET":
         try:
             preview_data:dict = get_csv_preview_data(str(query_object.clean_csv_file))
+            preview_data['name'] = query_object.file_name
             return JsonResponse(preview_data)
 
         except Exception as e:

@@ -48,15 +48,17 @@ export default function CleanPreviewPage() {
   const visitorId = useVisitorId();
   const [loading, setLoading] = useState(true); 
   const [status, setStatus] = useState({ error: "", success: "" });
+  const [fileName, setFileName] = useState("");
   const [origPreviewData, setOrigPreviewData] = useState<{
     data: { [key: string]: string | number | null | boolean; }[];
     headers_types: { [key:string]: string | number | null | boolean} | {};
   }>({ data: [], headers_types: {} });
 
   const [cleanedPreviewData, setCleanedPreviewData] = useState<{
+    name: string | "";
     data: { [key: string]: string | number | null | boolean; }[];
     headers_types: { [key:string]: string | number | null | boolean} | {};
-  }>({ data: [], headers_types: {} });
+  }>({ name: "", data: [], headers_types: {} });
 
   const [summaryChangesData, setSummaryChangesData] = useState<{
     data: {
@@ -113,6 +115,7 @@ export default function CleanPreviewPage() {
     // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-table-preview-data/`, uuid, csrfToken, setStatus);
     if (data) {
       setCleanedPreviewData(data);
+      setFileName(data.name)
       setStatus({ error: '', success: 'Getting Cleaned Preview Data Successful' });
     }
   };
@@ -398,7 +401,7 @@ export default function CleanPreviewPage() {
               fontSize: "1.75rem",
             }}
           >
-            Original Data
+            Original {fileName}
           </Typography>
     
           <div className={`rounded-lg w-full shadow-sm transition-all duration-300 overflow-x-auto`}>
@@ -441,7 +444,7 @@ export default function CleanPreviewPage() {
               fontSize: "1.75rem",
             }}
           >
-            Cleaned Data
+            Cleaned {fileName}
           </Typography>
           
 
