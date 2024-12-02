@@ -17,21 +17,23 @@ import {
   MenuItem,
 } from '@mui/material';
 
-type Order = 'asc' | 'desc';
+
 import { useVisitorId } from "@/context/visitorIDManager";
 import { fetchCsrfToken } from '../../components/csrfToken'
 
 // Shared fetch function
-const fetchData = async (url: string, uuid: string, csrfToken: string, setStatus: React.Dispatch<any>) => {
+const fetchData = async (url: string, uuid: string, csrfToken: string, setStatus: React.Dispatch<any>,  method: string = 'GET', body: any = null) => {
   try {
     const fullUrl = new URL(url);
     fullUrl.searchParams.append('uuid', uuid);
+
     const response = await fetch(fullUrl.toString(), {
-      method: 'GET',
+      method,
       headers: {
         'X-CSRFToken': csrfToken,
       },
       credentials: 'include',
+      body: method !== 'GET' && body ? JSON.stringify(body) : null, // Add body for non-GET requests
     });
 
     const data = await response.json();
@@ -84,7 +86,7 @@ export default function SummaryPage() {
     };
   }
   >();
-
+  // Visitor ID Check
   useEffect(() => {
     if (visitorId){
       get_summary_statistics(visitorId);
@@ -98,10 +100,11 @@ export default function SummaryPage() {
     }
   }, [visitorId]);
 
+  // PreviewData API Call
   const get_preview_data = async (uuid: string) => {
     setStatus({ error: '', success: '' }); 
     const csrfToken = await fetchCsrfToken();
-    const data = await fetchData("http://127.0.0.1:8000/api/get-table-preview-data/", uuid, csrfToken, setStatus);
+    const data = await fetchData("http://127.0.0.1:8000/api/csv/get-table-preview-data/", uuid, csrfToken, setStatus);
     // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-table-preview-data/`, uuid, csrfToken, setStatus);
     if (data) {
       setPreviewData(data);
@@ -109,16 +112,35 @@ export default function SummaryPage() {
     }
   };
 
+  // SummaryData API Call
   const get_summary_statistics = async (uuid: string) => {
     setStatus({ error: '', success: '' });
     const csrfToken = await fetchCsrfToken(); 
-    const data = await fetchData("http://127.0.0.1:8000/api/get-summary-statistics/", uuid, csrfToken, setStatus);
+    const data = await fetchData("http://127.0.0.1:8000/api/csv/get-summary-statistics/", uuid, csrfToken, setStatus);
 
     // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-summary-statistics/`, uuid, csrfToken, setStatus);
     if (data) {
       setSummaryData(data);
       console.log(data)
       setStatus({ error: '', success: 'Getting Summary Statistics Successful' });
+    }
+  };
+
+  // CleanCSV API Call
+  const clean_csv = async (uuid: string) => {
+    setStatus({ error: '', success: '' });
+    const csrfToken = await fetchCsrfToken(); 
+    const data = await fetchData(
+      "http://127.0.0.1:8000/api/csv/clean/",
+      uuid,
+      csrfToken,
+      setStatus,
+      'PUT' 
+    );
+
+    if (data) {
+      console.log(data)
+      setStatus({ error: '', success: 'Cleaning successful' });
     }
   };
 
@@ -187,6 +209,7 @@ export default function SummaryPage() {
   };
 
   // Sorting state
+  type Order = 'asc' | 'desc';
   const [order, setOrder] = useState<Order>('asc');
   const [orderBy, setOrderBy] = useState<string>(columns[0]?.id || '');
 
@@ -225,7 +248,8 @@ export default function SummaryPage() {
 
   // Handlers for navigation
   const handleCleanData = () => {
-    router.push("/cleanpreview");
+    clean_csv(visitorId)
+    router.push("/clean");
   };
 
   const handleCreateReport = () => {

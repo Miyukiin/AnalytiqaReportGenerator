@@ -32,11 +32,18 @@ class Visitors(models.Model):
                             upload_to='visitors/csv_files/clean',
                             verbose_name="Cleaned CSV FILE", 
                             unique=False,
-                            blank=False,
+                            blank=True,
                             null=True
                             )
     
     updated_at = models.DateTimeField(
                             auto_now=True
                             )
+    def __str__(self):
+        return f"Visitor {self.uuid} - {self.file_name}"
+
+    class Meta:
+        verbose_name = "Visitor"
+        verbose_name_plural = "Visitors"
+        ordering = ['-updated_at']  # Newest first
     

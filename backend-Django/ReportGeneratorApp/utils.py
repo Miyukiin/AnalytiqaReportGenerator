@@ -25,10 +25,9 @@ def get_csv_preview_data(csv_file_of_uuid_path: str) -> dict | JsonResponse:
     headers = {}   
     
     csv_file_path = os.path.join(settings.MEDIA_ROOT, csv_file_of_uuid_path)
-    
     with open(csv_file_path) as csv_file:
-        df = pd.read_csv(csv_file, encoding="UTF-8")
-         
+        df:pd.DataFrame = pd.read_csv(csv_file, encoding="UTF-8")
+        
         # Extract column headers and dtypes
         for column in df.columns:
             dtype = str(df[column].dtype)
@@ -40,7 +39,7 @@ def get_csv_preview_data(csv_file_of_uuid_path: str) -> dict | JsonResponse:
         # Include CSV rows as an array of dictionaries
         df = df.where(pd.notnull(df), "") # Replace Nan, None null things with empty string for mapping
         data["data"] = df.to_dict(orient="records")  # Converts each row into a dictionary
-        
+
         return data
 
 
@@ -48,7 +47,7 @@ def get_summary_data(csv_file_of_uuid_path: str) -> dict | JsonResponse:
     csv_file_path = os.path.join(settings.MEDIA_ROOT, csv_file_of_uuid_path)
     
     with open(csv_file_path) as csv_file:
-        df = pd.read_csv(csv_file, encoding="UTF-8")
+        df:pd.DataFrame = pd.read_csv(csv_file, encoding="UTF-8")
         
         if df.empty:
             return JsonResponse({"error": "The uploaded CSV file is empty"}, status=400)
