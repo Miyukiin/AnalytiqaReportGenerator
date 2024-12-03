@@ -29,6 +29,8 @@ export const addChart = (
     y: 50,
     width: 200,
     height: 200,
+    xAxisColor: "",
+    yAxisColor: ""
   };
   const updatedPages = pages.map((page, index) =>
     index === currentPageIndex ? { ...page, charts: [...page.charts, newChart] } : page
