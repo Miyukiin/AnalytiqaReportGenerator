@@ -1,34 +1,26 @@
 "use client";
 
-import { useState, useEffect} from "react";
+import { useState, createContext, useContext, use } from "react";
 import Head from "next/head";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation"; // Import useRouter
 import BadgeCheckIcon from "../../components/icons/BadgeCheckIcon";
 import FilePlusIcon from "../../components/icons/FilePlusIcon";
 import ChevronDownIcon from "../../components/icons/ChevronDownIcon";
-import { useGlobalContext, initialFileData } from "@/context/GlobalContext";
+import { useVisitorId } from '../../context/visitorIDManager';
+import { fetchCsrfToken } from '../../components/csrfToken'
 
 export default function DataReportGenerator() {
-  const { fileData, setFileData } = useGlobalContext();
-  const { resetFileData } = useGlobalContext();
+  const [fileData, setFileData] = useState<{ name: string; size: number | null; csv_file: null | File }>({
+    name: "",
+    size: null,
+    csv_file: null,
+  });
   const [isDragging, setIsDragging] = useState(false);
   const [status, setStatus] = useState({ error: "", success: "" });
-  const [loading, setLoading] = useState(false); // Add loading state
-
-  const router = useRouter(); // Initialize the router
-
-  // Reset `fileData` to initial state when the user visits the upload page. Handles case where user goes back to upload after uploading.
-  useEffect(() => {
-    resetFileData();
-  }, [resetFileData]);
-
-  // User go to summary page when fileData is updated, by observing row_count value
-  useEffect(() => {
-    if (fileData.row_count) {
-      console.log(fileData)
-      router.push("/summary");
-    }
-  }, [fileData, router]);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const visitorId = useVisitorId();
 
   const validateFile = (file: File) => {
     const fileType = file.name.split(".").pop()?.toLowerCase();
@@ -39,39 +31,33 @@ export default function DataReportGenerator() {
     return ""; // No Error
   };
 
-  const handleFileUpload = (file: File | null) => {
+  const handleFileUpload = (uuid: string, file: File | null) => {
     if (!file) return;
     const error = validateFile(file);
 
     if (error) {
       setStatus({ error, success: "" });
-      setFileData(initialFileData);
+      setFileData({name: "", size: null, csv_file: null});
       return;
     } 
-
-    setFileData({ name: file.name, size: file.size, data: [], headers_types: {} });
-    setStatus({ error: "", success: "" });
-    simulateUpload(file);
-  
+    else if (uuid && file){
+      setFileData({ name: file.name, size: file.size, csv_file: file});
+      setStatus({ error: "", success: "" });
+      simulateUpload(uuid, file);
+    }
   };
 
-  const simulateUpload = async (file: File) => {
-    async function fetchCsrfToken(): Promise<string> {
-      const response = await fetch("http://127.0.0.1:8000/api/csrf-token/", {
-        credentials: "include",
-      });
-      const data = await response.json();
-      return data.csrfToken;
-    }
-
+  const simulateUpload = async (uuid: string, file: File) => {
     setLoading(true); // Set loading to true
 
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("uuid", uuid);
+      formData.append('file_name', fileData.name)
 
-      const response = await fetch("http://127.0.0.1:8000/api/upload/", { // pass to api
-        method: "POST",
+      const response = await fetch("http://127.0.0.1:8000/api/csv-upload/", { // pass to api
+        method: "PUT",
         headers: {
           "X-CSRFToken": await fetchCsrfToken() || "", // 
         },
@@ -83,24 +69,11 @@ export default function DataReportGenerator() {
         setStatus({ error: "", success: "File uploaded successfully!" });
         const apiData = await response.json();
 
-        // Map yung API data, except yung already set name and size para match sila ng fileData structure na nakaspecify sa globalcontext
-        setFileData((prev) => ({
-          ...prev,
-          row_count: apiData.row_count,
-          column_count: apiData.column_count,
-          duplicate_count: apiData.duplicate_count,
-          unique_count: apiData.unique_count,
-          total_number_blank_cells: apiData.total_number_blank_cells,
-          numeric_columns_stats: apiData.numeric_columns_stats,
-          data: apiData.data,
-          headers_types: apiData.headers_types,
-        }));
-
         router.push("/summary"); 
       } 
       else {
         const error = await response.json();
-        setFileData(initialFileData); // Reset file names and size for failed uploads.
+        setFileData({name: "", size: null, csv_file: null});
         setStatus({ error: error.error || "Upload failed. Please try again.", success: "" });
       }
 
@@ -112,7 +85,7 @@ export default function DataReportGenerator() {
       else {
         setStatus({ error: "An unexpected error occurred.", success: "" });
       }
-      setFileData(initialFileData); // Reset file names and size in case of errors.
+      setFileData({name: "", size: null, csv_file: null});
     } 
     finally {
       setLoading(false); // After upload logic, regardless of fail or success, stop loading spinner.
@@ -128,8 +101,10 @@ export default function DataReportGenerator() {
     <div className="relative flex flex-col items-center text-center px-4 w-full">
       <Head>
         {/* Set the favicon for the tab */}
+
         <link rel="icon" href="logo.png" />
         <title>Data Report Generator</title> {/* Optional: You can also set the title */}
+
       </Head>
 
       <h2 className="text-4xl sm:text-4xl font-bold text-gray-600 my-6">DATA REPORT GENERATOR</h2>
@@ -155,7 +130,7 @@ export default function DataReportGenerator() {
         } border-dashed rounded-lg p-6 flex flex-col items-center space-y-3 transition-all`}
         onDrop={(e) => {
           handleDrag(e, false);
-          handleFileUpload(e.dataTransfer.files?.[0] || null);
+          handleFileUpload(visitorId,e.dataTransfer.files?.[0] || null);
         }}
         onDragOver={(e) => handleDrag(e, true)}
         onDragLeave={(e) => handleDrag(e, false)}
@@ -166,7 +141,7 @@ export default function DataReportGenerator() {
             type="file"
             accept=".csv"
             id="file-upload"
-            onChange={(e) => handleFileUpload(e.target.files?.[0] || null)}
+            onChange={(e) => handleFileUpload(visitorId,e.target.files?.[0] || null)}
             className="hidden"
             aria-label="File upload input"
           />

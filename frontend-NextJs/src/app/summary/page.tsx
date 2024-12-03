@@ -2,9 +2,8 @@
 
 "use client";
 
-import React, { useEffect, useState, useMemo, ChangeEvent } from "react";
-import { useRouter } from 'next/navigation';
-import { useGlobalContext } from "@/context/GlobalContext";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { redirect, useRouter } from 'next/navigation';
 import StatRow from "@/components/StatRow";
 import DataTable from "@/components/DataTable";
 import NextStepSection from "@/components/NextStepSection";
@@ -18,125 +17,132 @@ import {
   MenuItem,
 } from '@mui/material';
 
-type Order = 'asc' | 'desc';
 
-interface Column {
-  id: string;
-  label: string;
-  minWidth?: number;
-  align?: 'left' | 'right' | 'center';
-  format?: (value: any) => string;
-}
+import { useVisitorId } from "@/context/visitorIDManager";
+import { fetchCsrfToken } from '../../components/csrfToken'
 
-interface FileData {
-  name: string;
-  headers_types: { [key: string]: string };
-  row_count: number;
-  column_count: number;
-  duplicate_count: number;
-  unique_count: number;
-  total_number_blank_cells: number;
-  data: Array<{ [key: string]: any }>;
-}
+// Shared fetch function
+const fetchData = async (url: string, uuid: string, csrfToken: string, setStatus: React.Dispatch<any>,  method: string = 'GET', body: any = null) => {
+  try {
+    const fullUrl = new URL(url);
+    fullUrl.searchParams.append('uuid', uuid);
 
-interface Stat {
-  label: string;
-  value: number | string;
-}
+    const response = await fetch(fullUrl.toString(), {
+      method,
+      headers: {
+        'X-CSRFToken': csrfToken,
+      },
+      credentials: 'include',
+      body: method !== 'GET' && body ? JSON.stringify(body) : null, // Add body for non-GET requests
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setStatus({ error: data["error"] || "Error Fetching Data", success: "" });
+      return null;
+    }
+    return data;
+
+  } 
+  catch (error) {
+    if (error instanceof Error) {
+      setStatus({ error: error.message, success: "" });
+    }
+  }
+};
 
 export default function SummaryPage() {
-  const { fileData } = useGlobalContext() as { fileData: FileData };
   const router = useRouter();
-
-  // Redirect to home if no file data
+  const visitorId = useVisitorId();
+  const [loading, setLoading] = useState(true); 
+  const [status, setStatus] = useState({ error: "", success: "" });
+  const [previewData, setPreviewData] = useState<{
+    data: { [key: string]: string | number | null | boolean; }[];
+    headers_types: { [key:string]: string | number | null | boolean} | {};
+  }>({ data: [], headers_types: {} });
+  const [summaryData, setSummaryData] = useState<{
+    name?: string;
+    row_count?: number;
+    column_count?: number;
+    duplicate_count?: number;
+    unique_count?: number;
+    total_number_blank_cells?: number; 
+    numeric_columns_stats?: {
+      [key: string]: {
+        Min: number;
+        Max: number;
+        Standard_Deviation: number;
+        Variance: number;
+        Mean: number;
+        Median: number;
+        Mode: number | null;
+        Quartiles: {
+          Q1: number;
+          Q2: number;
+          Q3: number;
+        };
+      };
+    };
+  }
+  >();
+  // Visitor ID Check
   useEffect(() => {
-    if (!fileData.name) {
-      router.push("/home");
+    if (visitorId){
+      get_summary_statistics(visitorId);
+      get_preview_data(visitorId);
+      setLoading(false); // Visitor ID is resolved, stop loading now.
     }
-  }, [fileData, router]);
-
-  if (!fileData.name) return null;
-
-  // Define columns based on fileData headers
-  const columns: Column[] = useMemo(() => (
-    Object.entries(fileData.headers_types).map(([key, type]) => ({
-      id: key,
-      label: key,
-      minWidth: 150,
-      align: 'left' as const,
-      format: type === "number" ? (value: number) => value.toLocaleString() : undefined,
-    }))
-  ), [fileData.headers_types]);
-
-  // State for selected column
-  const [selectedColumn, setSelectedColumn] = useState<string>('');
-
-  // Compute stats including mean, median, mode if applicable
-  const stats = useMemo(() => {
-    const baseStats: Stat[] = [
-      { label: "Number of Rows", value: fileData.row_count },
-      { label: "Number of Columns", value: fileData.column_count },
-      { label: "Number of Duplicate Values", value: fileData.duplicate_count },
-      { label: "Number of Unique Values", value: fileData.unique_count },
-      { label: "Number of Blank Cells", value: fileData.total_number_blank_cells },
-    ];
-
-    if (selectedColumn) {
-      const columnType = fileData.headers_types[selectedColumn];
-      const columnData = fileData.data
-        .map(row => row[selectedColumn])
-        .filter(value => value !== null && value !== undefined && value !== 0);
-    
-      if (columnData.length > 0) {
-        if (columnType === 'number') {
-          // Compute numerical stats (mean, median, mode)
-          const numericData = columnData.map(Number).filter(value => !isNaN(value) && value !== 0);
-          const mean = numericData.reduce((sum, val) => sum + val, 0) / numericData.length;
-          const sortedData = [...numericData].sort((a, b) => a - b);
-          const mid = Math.floor(sortedData.length / 2);
-          const median = sortedData.length % 2 === 0 ? (sortedData[mid - 1] + sortedData[mid]) / 2 : sortedData[mid];
-    
-          const frequencyMap: { [key: number]: number } = {};
-          let maxFreq = 0;
-          numericData.forEach(num => {
-            frequencyMap[num] = (frequencyMap[num] || 0) + 1;
-            maxFreq = Math.max(maxFreq, frequencyMap[num]);
-          });
-          const numericModes = Object.keys(frequencyMap)
-            .filter(num => frequencyMap[Number(num)] === maxFreq && Number(num) !== 0)
-            .map(Number);
-          const formattedMode = maxFreq === 1 ? "No mode" : numericModes.join(', ');
-    
-          baseStats.push(
-            { label: "Mean", value: mean.toFixed(2) },
-            { label: "Median", value: median.toFixed(2) },
-            { label: "Mode", value: formattedMode }
-          );
-        } else {
-          // Compute qualitative mode
-          const frequencyMap: { [key: string]: number } = {};
-          let maxFreq = 0;
-    
-          columnData.forEach(value => {
-            const stringValue = String(value);
-            frequencyMap[stringValue] = (frequencyMap[stringValue] || 0) + 1;
-            maxFreq = Math.max(maxFreq, frequencyMap[stringValue]);
-          });
-    
-          const modes = Object.keys(frequencyMap)
-            .filter(value => frequencyMap[value] === maxFreq && value !== '0' && value !== '');
-    
-          const formattedMode = maxFreq === 1 ? "No Mode" : modes.join(', ');
-    
-          baseStats.push(
-            { label: "Mode", value: formattedMode }
-          );
-        }
-      }
+      else if (visitorId === "") { // Wait to resolve, from initial state empty string.
+        console.log("Waiting for visitor ID...");
+    } else if (visitorId === null) { // If it is set to null, then the localstorage return nothing.
+        router.push('/home'); // Redirect if visitorId is not available, meaning it is a new user with no prior csv uploads or progress.
     }
-    
-    return baseStats;
-  }, [fileData, selectedColumn]);
+  }, [visitorId]);
+
+  // PreviewData API Call
+  const get_preview_data = async (uuid: string) => {
+    setStatus({ error: '', success: '' }); 
+    const csrfToken = await fetchCsrfToken();
+    const data = await fetchData("http://127.0.0.1:8000/api/csv/get-table-preview-data/", uuid, csrfToken, setStatus);
+    // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-table-preview-data/`, uuid, csrfToken, setStatus);
+    if (data) {
+      setPreviewData(data);
+      setStatus({ error: '', success: 'Getting Preview Data Successful' });
+    }
+  };
+
+  // SummaryData API Call
+  const get_summary_statistics = async (uuid: string) => {
+    setStatus({ error: '', success: '' });
+    const csrfToken = await fetchCsrfToken(); 
+    const data = await fetchData("http://127.0.0.1:8000/api/csv/get-summary-statistics/", uuid, csrfToken, setStatus);
+
+    // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-summary-statistics/`, uuid, csrfToken, setStatus);
+    if (data) {
+      setSummaryData(data);
+      console.log(data)
+      setStatus({ error: '', success: 'Getting Summary Statistics Successful' });
+    }
+  };
+
+  // CleanCSV API Call
+  const clean_csv = async (uuid: string) => {
+    setStatus({ error: '', success: '' });
+    const csrfToken = await fetchCsrfToken(); 
+    const data = await fetchData(
+      "http://127.0.0.1:8000/api/csv/clean/",
+      uuid,
+      csrfToken,
+      setStatus,
+      'PUT' 
+    );
+
+    if (data) {
+      console.log(data)
+      setStatus({ error: '', success: 'Cleaning successful' });
+    }
+  };
 
   // Pagination state
   const [page, setPage] = useState(0);
@@ -148,7 +154,62 @@ export default function SummaryPage() {
     setPage(0);
   };
 
+  // Initialization of Columns
+  const [columns, setColumns] = useState<Column[]>([]); 
+  const [visibleColumns, setVisibleColumns] = useState<string[]>([]); // Initially empty, because first render of this component does not have previewData yet.
+
+  interface Column {
+    id: string;
+    label: string;
+    minWidth?: number;
+    align?: 'left';
+    format?: (value: number) => string;
+  }
+  
+  // Hook for column mapping, and setting visible columns to all columns of passed API Data.
+  useEffect(() => {
+    if (previewData.headers_types) {
+      // For each column in passed API data, we create a Column object.
+      const RenderedColumns: Column[] = Object.entries(previewData.headers_types).map(([key, type]) => {
+        const column: Column = {
+          id: key, 
+          label: key, 
+          minWidth: 170,
+          align: 'left',
+        };
+        if (type === "number") {
+          column.format = (value: number) => value.toLocaleString(); // Format numbers
+        }
+        return column;
+      });
+      setColumns(RenderedColumns); // Then we set our columns after creating the Column Objects we need.
+      setVisibleColumns(RenderedColumns.map(col => col.id)); // Here we set all Column Objects as our visible columns. Initial state if passed API data contains columns.
+    }
+  }, [previewData]); // When previewData changes, run this hook. Ensures that columns are visible when previewData is loaded.
+
+  // State handling column management.
+  const [isManageColumnsOpen, setIsManageColumnsOpen] = useState(false);
+
+  const handleManageColumnsOpen = () => setIsManageColumnsOpen(true);
+  const handleManageColumnsClose = () => setIsManageColumnsOpen(false);
+  const toggleColumn = (columnId: string) => {
+    setVisibleColumns(prev =>
+      prev.includes(columnId) ? prev.filter(id => id !== columnId) : [...prev, columnId]
+    );
+  };
+
+  // Select All functionality
+  const allSelected = visibleColumns.length === columns.length; // If the number of visible columns is equal to the full length of columns, it means that all columns are visible.
+  const handleSelectAll = () => {
+    if (allSelected) {
+      setVisibleColumns([]);
+    } else {
+      setVisibleColumns(columns.map(col => col.id));
+    }
+  };
+
   // Sorting state
+  type Order = 'asc' | 'desc';
   const [order, setOrder] = useState<Order>('asc');
   const [orderBy, setOrderBy] = useState<string>(columns[0]?.id || '');
 
@@ -167,30 +228,8 @@ export default function SummaryPage() {
   ), [order, orderBy]);
 
   const sortedData = useMemo(() => (
-    [...fileData.data].sort(comparator)
-  ), [fileData.data, comparator]);
-
-  // Manage Columns state
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(columns.map(col => col.id));
-  const [isManageColumnsOpen, setIsManageColumnsOpen] = useState(false);
-
-  const handleManageColumnsOpen = () => setIsManageColumnsOpen(true);
-  const handleManageColumnsClose = () => setIsManageColumnsOpen(false);
-  const toggleColumn = (columnId: string) => {
-    setVisibleColumns(prev =>
-      prev.includes(columnId) ? prev.filter(id => id !== columnId) : [...prev, columnId]
-    );
-  };
-
-  // Select All functionality
-  const allSelected = visibleColumns.length === columns.length;
-  const handleSelectAll = () => {
-    if (allSelected) {
-      setVisibleColumns([]);
-    } else {
-      setVisibleColumns(columns.map(col => col.id));
-    }
-  };
+    [...previewData.data].sort(comparator)
+  ), [previewData.data, comparator]);
 
   // Fullscreen state
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -205,30 +244,80 @@ export default function SummaryPage() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isFullscreen]);
 
+  
+
   // Handlers for navigation
   const handleCleanData = () => {
-    router.push("/cleanpreview");
+    clean_csv(visitorId)
+    router.push("/clean");
   };
 
   const handleCreateReport = () => {
     router.push("/report");
   };
 
+  // Dropdown Selected Column Stats Management
+  const [selectedColumn, setSelectedColumn] = useState<string>('');
+
+  // Handle Summary Statistics
+  const GenStats = [
+    { label: "Number of Rows", value: summaryData?.row_count },
+    { label: "Number of Columns", value: summaryData?.column_count },
+    { label: "Number of Duplicate Values", value: summaryData?.duplicate_count },
+    { label: "Number of Unique Values", value: summaryData?.unique_count },
+    { label: "Number of Blank Cells", value: summaryData?.total_number_blank_cells },
+  ];
+  
+  const NumStats = useMemo(() => {
+    // Quantitative stats handling
+    const stats = []
+    if (selectedColumn) {
+      // Type-checking. get columntype of currently selected column only if its structure follows as defined.
+      const columnType = (previewData.headers_types as { [key: string]: string | number | boolean | null })[selectedColumn]
+      const columnData = previewData.data
+        .map(row => row[selectedColumn])
+        .filter(value => value !== null && value !== undefined && value !== 0);
+    
+      if (columnData.length > 0 && (columnType === 'number' && (summaryData && summaryData.numeric_columns_stats))) {
+        // If columnData has more than zero rows, columnType is number, and summaryData is not empty. 
+          // Get the selectedColumn's numerical statistics
+          stats.push(
+            { label: "Min", value: summaryData.numeric_columns_stats[selectedColumn]['Min'] },
+            { label: "Max", value: summaryData.numeric_columns_stats[selectedColumn]['Max'] },
+            { label: "Standard Deviation", value: summaryData.numeric_columns_stats[selectedColumn]['Standard_Deviation'] },
+            { label: "Variance", value: summaryData.numeric_columns_stats[selectedColumn]['Variance'] },
+            { label: "Mean", value: summaryData.numeric_columns_stats[selectedColumn]['Mean'] },
+            { label: "Median", value: summaryData.numeric_columns_stats[selectedColumn]['Median'] },
+            { label: "Mode", value: summaryData?.numeric_columns_stats[selectedColumn]['Mode'] || undefined},
+            { label: "Quartiles (1)", value: summaryData.numeric_columns_stats[selectedColumn]['Quartiles']['Q1'] },
+            { label: "Quartiles (2)", value: summaryData.numeric_columns_stats[selectedColumn]['Quartiles']['Q2'] },
+            { label: "Quartiles (3)", value: summaryData.numeric_columns_stats[selectedColumn]['Quartiles']['Q3'] },
+          );
+        }
+      }
+    
+    return stats;
+  }, [previewData, summaryData, selectedColumn]);
+  
+
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
       {/* Left Panel */}
       <div className="flex-1 p-6 lg:p-12 bg-gray-100 overflow-hidden">
-        <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-6">DATA SUMMARY</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-6">Summary</h1>
+        {/* Gen Stats */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-y-4 gap-x-8">
-          {stats.map((stat, idx) => (
+          {GenStats.map((stat, idx) => (
             <StatRow key={idx} label={stat.label} value={stat.value} />
           ))}
         </div>
 
         {/* Column Selection Dropdown */}
-        <div className="mt-4 w-full">
+        <div className="mt-5 w-full">
           <FormControl fullWidth variant="outlined">
-            <InputLabel id="select-column-label">Select Column for Statistics</InputLabel>
+            <InputLabel id="select-column-label">
+              Select A Numeric Column
+            </InputLabel>
             <Select
               labelId="select-column-label"
               id="select-column"
@@ -237,19 +326,28 @@ export default function SummaryPage() {
               onChange={(event) => setSelectedColumn(event.target.value)}
               sx={{ backgroundColor: 'white' }}
             >
-              {columns.map((column) => (
-                <MenuItem key={column.id} value={column.id}>
-                  {column.label}
-                </MenuItem>
-              ))}
+              {/* Filter columns where headers_types is "number" */}
+              {columns
+                .filter((column) => (previewData.headers_types as { [key: string]: string | number | boolean | null })[column.id] === 'number') // Filter numeric columns
+                .map((column) => (
+                  <MenuItem key={column.id} value={column.id}>
+                    {column.label}
+                  </MenuItem>
+                ))}
             </Select>
           </FormControl>
         </div>
+        {/* Num Stats */}
+        <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-y-4 gap-x-8">
+          {NumStats.map((stat, idx) => (
+            <StatRow key={idx} label={stat.label} value={stat.value} />
+          ))}
+        </div>
 
-        <div className="mt-8 flex flex-col items-start">
+        <div className="mt-7 flex flex-col items-start">
           <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4 space-y-4 md:space-y-0">
             <h2 className="text-gray-800 font-bold text-lg text-center">
-              Preview of "{fileData.name}"
+              Preview of "{summaryData?.name}"
             </h2>
             <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 space-y-2 sm:space-y-0 w-full sm:w-auto">
               {/* Manage Columns Button */}
@@ -365,3 +463,4 @@ export default function SummaryPage() {
     </div>
   );
 }
+

@@ -1,12 +1,12 @@
 "use client";
 
 import React from "react";
-import "./globals.css";
+import './globals.css';
 import { usePathname } from "next/navigation"; // To get the current route
-import { GlobalProvider } from "../context/GlobalContext";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import theme from "../theme"; // Adjust the path based on your project structure
+import { VisitorIdProvider } from "../context/visitorIDManager"; // Import the VisitorIdProvider
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -54,7 +54,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           >
             <ThemeProvider theme={theme}>
               <CssBaseline />
-              <GlobalProvider>{children}</GlobalProvider>
+                <VisitorIdProvider>
+                  {children}
+                </VisitorIdProvider>
             </ThemeProvider>
           </main>
 
