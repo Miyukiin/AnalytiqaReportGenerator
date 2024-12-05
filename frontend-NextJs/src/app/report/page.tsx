@@ -33,7 +33,7 @@ import {
   Settings as SettingsIcon,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
-import { ChartType, Page, Chart, ScatterDataPoint } from "../../types";
+import { ChartType, Page, Chart, ScatterDataPoint, HistogramDataPoint, RadarDataPoint, StackedLineDataPoint, RadialBarDataPoint } from "../../types";
 import FullWidthDivider from "../../components/FullWidthDivider";
 import MainCanvas from "../../components/MainCanvas";
 import RightSidebar from "../../components/RightSidebar";
@@ -55,7 +55,7 @@ import { useVisitorId } from "@/context/visitorIDManager";
 import { useRouter } from "next/navigation";
 import { fetchCsrfToken } from '../../components/csrfToken'
 import { ChartData } from "../../types";
-import createChartData from "../../components/chartData"
+import { createChartData, isScatterData, isHistogramData, isRadarData, isStackedLineData, isRadialBarData } from "../../components/chartData"
 
 const icons = [
   { icon: <ScatterPlotIcon />, label: "Scatter" },
@@ -309,7 +309,7 @@ const ReportLayout: React.FC = () => {
   const [menuItemsData, setMenuItemsData] = useState<Record<string, string[]>>({});
   const [isDropdownChange, setIsDropdownChange] = useState(false);
 
-  // Handle X or Y axis values change
+  // Handle dropdown values change of either of the any data chart types. Currently accommodates scatterplot
   const handleChange = async (e: SelectChangeEvent<string>, axis: "Y" | "X") => {
     const value = e.target.value as string;
     
@@ -326,11 +326,7 @@ const ReportLayout: React.FC = () => {
   
   useEffect(() => {
     if (selectedChart) {
-      // Define ScatterData
-      const isScatterData = (data: any): data is ScatterDataPoint[] => {
-        return Array.isArray(data) && data.every(point => 'x' in point && 'y' in point);
-      };
-      // ScatterPlotData Handling
+      // Handle data update depending on data type of selectedChart.
       if ((selectedChart.yAxis || selectedChart.xAxis) && isScatterData(selectedChart.data)) {
 
         // Step 1: Set previousData before running update, because we'll use this in determining the values in case of x only updated or y only updated.
@@ -341,8 +337,6 @@ const ReportLayout: React.FC = () => {
           xField: selectedChart.xAxis ? selectedChart.xAxis : undefined,
           yField: selectedChart.yAxis ? selectedChart.yAxis : undefined,
         }, previousDataRef.current); // Use ref value for previous data
-
-        console.log(updatedData);
         
         // Step 3: Update chart data
         updateSelectedChart('data', updatedData);
@@ -350,10 +344,26 @@ const ReportLayout: React.FC = () => {
         // Reset the flag after processing the update
         setIsDropdownChange(false);
       }
-      // Else if Histogram
-      // Else if Radar
-      // Else if Stacked Line
-      // Else if RadialBar
+      else if (isHistogramData(selectedChart.data)){
+
+        // Reset the flag after processing the update
+        setIsDropdownChange(false);
+      }
+      else if (isRadarData(selectedChart.data)){
+
+        // Reset the flag after processing the update
+        setIsDropdownChange(false);
+      }
+      else if (isStackedLineData(selectedChart.data)){
+
+        // Reset the flag after processing the update
+        setIsDropdownChange(false);
+      }
+      else if (isRadialBarData(selectedChart.data)){
+
+        // Reset the flag after processing the update
+        setIsDropdownChange(false);
+      } 
     }
   }, [isDropdownChange]); // Run when Dropdown values change
 
