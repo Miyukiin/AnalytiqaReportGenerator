@@ -11,6 +11,10 @@ from .utils import get_summary_data, get_csv_preview_data
 from django.core.exceptions import ObjectDoesNotExist
 from functools import wraps
 from django.core.files.base import ContentFile
+import google.generativeai as genai
+from decouple import config
+
+genai.configure(api_key=settings.API_KEY)
 
 import logging
 logger = logging.getLogger(__name__)
@@ -238,6 +242,65 @@ def get_summary_changes(request: HttpRequest, query_object: Visitors):
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+
+
+@api_view(['GET'])
+@validate_uuid
+def retrieve_chart_data(request: HttpRequest, query_object: Visitors):
+    if request.method == "GET":
+        try:
+            chartData: dict[list[str | int]] = {}
+
+            if query_object.clean_csv_file:
+                csv_path = str(query_object.clean_csv_file)
+            else:
+                csv_path = str(query_object.orig_csv_file)
+
+                
+            csv_file_path = os.path.join(settings.MEDIA_ROOT, csv_path)
+            
+            with open(csv_file_path, encoding='utf-8') as csv_file:
+                df:pd.DataFrame = pd.read_csv(csv_file, encoding="UTF-8")
+                df = df.fillna(value="") # Handle missing values as empty strings.
+                
+                csv_column_headers = df.columns.to_list()
+                
+                for column in csv_column_headers:
+                   column_values = df[column].to_list()
+                   chartData[column] = column_values
+            
+            return JsonResponse(chartData)  
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
         
 def csrf_token_view(request: HttpRequest):
     return JsonResponse({"csrfToken": get_token(request)})
+
+@api_view(['POST'])
+def generate_ai_remarks(request: HttpRequest):
+    if request.method == "POST":
+        chart_type:str = request.data.get("chart_type")
+        chart_data:list[dict] = request.data.get("chart_data")
+        
+        logger.info(chart_type)
+        logger.info(chart_data)
+        
+        if not chart_type or not chart_data:
+                return JsonResponse({'error': "No Chart Type or Chart Data provided"}, status=400)
+
+        model = genai.GenerativeModel("gemini-1.5-flash")
+
+        prompt = f"Given the following chart data that I used in chart type {chart_type}, generate remarks and insights in the form of one paragraph, with a minimum of five sentences:\n"
+        for item in chart_data:
+            prompt += f"Point: x = {item['x']}, y = {item['y']}\n"
+        
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        response = model.generate_content([prompt])
+        
+        try:
+            remarks = response.text
+        except AttributeError:
+            return JsonResponse({'error': 'Unexpected response format or no content found'}, status=500)
+
+        # Return the AI-generated remarks
+        return JsonResponse({'remarks': remarks}, status=200)

@@ -1,13 +1,13 @@
 // src/types/index.ts
 
-export type ChartType = "Scatter" | "Histogram" | "Radar" | "Stacked Line" | "RadialBar";
+export type ChartType = "Scatter" | "Histogram" | "Radar" | "StackedLine" | "RadialBar";
 
 export interface ScatterDataPoint {
   x: number;
   y: number;
 }
 
-export interface HistogramDataPoint {
+export interface HistogramDataPoint { 
   name: string;
   value: number;
 }
@@ -42,9 +42,9 @@ export interface Chart {
   yAxisColor: string;
   id: number;
   type: ChartType;
-  title?: string;
-  xAxis?: string;
-  yAxis?: string;
+  title: string;
+  xAxis: string;
+  yAxis: string;
   data: ChartData;
   x: number;
   y: number;

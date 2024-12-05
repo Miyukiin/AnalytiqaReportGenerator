@@ -16,6 +16,8 @@ import {
   IconButton,
   useMediaQuery,
   Drawer,
+  SelectChangeEvent,
+  Button,
 } from "@mui/material";
 import {
   ScatterPlot as ScatterPlotIcon,
@@ -31,7 +33,7 @@ import {
   Settings as SettingsIcon,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
-import { ChartType, Page, Chart } from "../../types";
+import { ChartType, Page, Chart, ScatterDataPoint } from "../../types";
 import FullWidthDivider from "../../components/FullWidthDivider";
 import MainCanvas from "../../components/MainCanvas";
 import RightSidebar from "../../components/RightSidebar";
@@ -49,6 +51,11 @@ import {
   updateChartSize as updateChartSizeFn,
   updateChartProperty as updateChartPropertyFn,
 } from "./core/chartFunctions";
+import { useVisitorId } from "@/context/visitorIDManager";
+import { useRouter } from "next/navigation";
+import { fetchCsrfToken } from '../../components/csrfToken'
+import { ChartData } from "../../types";
+import createChartData from "../../components/chartData"
 
 const icons = [
   { icon: <ScatterPlotIcon />, label: "Scatter" },
@@ -72,7 +79,6 @@ const ReportLayout: React.FC = () => {
   const [editingPageId, setEditingPageId] = useState<number | null>(null);
   const [editingPageName, setEditingPageName] = useState<string>("");
   const visualizationAreaRef = useRef<HTMLDivElement>(null); // Reference to the visualization area
-
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -157,9 +163,9 @@ const ReportLayout: React.FC = () => {
    * @param property - The property to update (e.g., title, xAxis, yAxis).
    * @param value - The new value for the property.
    */
-  const updateSelectedChart = (
-    property: keyof Omit<Chart, "data">,
-    value: string | number
+  const updateSelectedChart = async( 
+    property: keyof Chart,
+    value: string | number | ChartData
   ) => {
     if (selectedChartId === null) return;
     updateChartPropertyFn(
@@ -171,6 +177,7 @@ const ReportLayout: React.FC = () => {
       setPages
     );
   };
+
 
   /**
    * Initiates the editing mode for a page's name.
@@ -232,7 +239,7 @@ const ReportLayout: React.FC = () => {
   };
 
   // Retrieve the selected chart and current page
-  const selectedChart = pages[currentPageIndex]?.charts.find(
+  const selectedChart = pages[currentPageIndex].charts.find(
     (chart) => chart.id === selectedChartId
   );
   const currentPage = pages[currentPageIndex];
@@ -246,6 +253,144 @@ const ReportLayout: React.FC = () => {
       </Box>
     );
   }
+
+
+  // Retrieve visitorId
+  const router = useRouter();
+  const visitorId = useVisitorId();
+  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState({ error: "", success: "" }); 
+  
+  useEffect(() => {
+    if (visitorId) {
+      try {
+        const fetchMenuItems = async () => {
+          const fullUrl = new URL("http://127.0.0.1:8000/api/report/retrieve-chart-data/");
+            fullUrl.searchParams.append('uuid', visitorId);
+
+          const response = await fetch(fullUrl.toString(), {
+            method: 'GET',
+            headers: {
+              'X-CSRFToken': await fetchCsrfToken(),
+            },
+            credentials: 'include',
+          });
+
+          const data = await response.json()
+
+          if (!response.ok) {
+            setStatus({ error: data["error"] || "Error Fetching Data", success: "" });
+            return null;
+          }
+
+          setMenuItemsData(data)
+        };
+
+        fetchMenuItems();
+    
+      } 
+      catch (error) {
+        if (error instanceof Error) {
+          setStatus({ error: error.message, success: "" });
+        }
+      }
+      finally{
+        setLoading(false); 
+      }
+    }
+      else if (visitorId === "") { // Wait to resolve, from initial state empty string.
+        console.log("Waiting for visitor ID...");
+    } else if (visitorId === null && router !== null) { // If it is set to null, then the localstorage return nothing.
+        router.push('/home'); // Redirect if visitorId is not available, meaning it is a new user with no prior csv uploads or progress.
+    }
+  }, [visitorId]);
+
+  // Initialize Menu Items to be used as X or Y Axis values.
+  const [menuItemsData, setMenuItemsData] = useState<Record<string, string[]>>({});
+  const [isDropdownChange, setIsDropdownChange] = useState(false);
+
+  // Handle X or Y axis values change
+  const handleChange = async (e: SelectChangeEvent<string>, axis: "Y" | "X") => {
+    const value = e.target.value as string;
+    
+    if (axis === 'Y') {
+      await updateSelectedChart("yAxis", value);
+      setIsDropdownChange(true); // Mark that this change is coming from the dropdown
+    } else {
+      await updateSelectedChart("xAxis", value);
+      setIsDropdownChange(true); // Mark that this change is coming from the dropdown
+    }
+  };
+
+  const previousDataRef = useRef<ScatterDataPoint[]>([]); // Ref to hold previous data without causing re-renders
+  
+  useEffect(() => {
+    if (selectedChart) {
+      // Define ScatterData
+      const isScatterData = (data: any): data is ScatterDataPoint[] => {
+        return Array.isArray(data) && data.every(point => 'x' in point && 'y' in point);
+      };
+      // ScatterPlotData Handling
+      if ((selectedChart.yAxis || selectedChart.xAxis) && isScatterData(selectedChart.data)) {
+
+        // Step 1: Set previousData before running update, because we'll use this in determining the values in case of x only updated or y only updated.
+        previousDataRef.current = selectedChart.data; // Temporarily store previous data in ref
+        
+        // Step 2: Calculate updatedData based on previousData and passed xFields or yFields
+        const updatedData = createChartData(menuItemsData, selectedChart, {
+          xField: selectedChart.xAxis ? selectedChart.xAxis : undefined,
+          yField: selectedChart.yAxis ? selectedChart.yAxis : undefined,
+        }, previousDataRef.current); // Use ref value for previous data
+
+        console.log(updatedData);
+        
+        // Step 3: Update chart data
+        updateSelectedChart('data', updatedData);
+
+        // Reset the flag after processing the update
+        setIsDropdownChange(false);
+      }
+      // Else if Histogram
+      // Else if Radar
+      // Else if Stacked Line
+      // Else if RadialBar
+    }
+  }, [isDropdownChange]); // Run when Dropdown values change
+
+
+  // Generate AI Remarks
+  const sendChartData = async () => {
+    const chartData = [
+      { x: 34.5, y: 7.8292 },
+      { x: 47, y: 7 },
+      { x: 62, y: 9.6875 },
+      { x: 27, y: 8.6625 },
+      { x: 22, y: 12.2875 },
+      // ... TEMPORARY SHOULD GET FROM SELECTED CHART
+    ];
+  
+    const chartType = "scatter";  // TEMPORARY SHOULD GET FROM SELECTED CHART
+  
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/report/generate-ai-remarks/", {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': await fetchCsrfToken(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chart_type: chartType,
+          chart_data: chartData,
+        }),
+      });
+  
+      const aiRemarks = await response.json();
+      handleRemarkChange(aiRemarks.remarks)
+  
+    } catch (error) {
+      console.error('Error sending chart data:', error);
+    }
+  };
 
   // Left Sidebar content
   const leftSidebarContent = (
@@ -413,8 +558,10 @@ const ReportLayout: React.FC = () => {
             fullWidth
             displayEmpty
             value={selectedChart.xAxis || ""}
-            onChange={(e) =>
+            onChange={(e) =>{
               updateSelectedChart("xAxis", e.target.value as string)
+
+              }
             }
             sx={{
               mt: 0.5,
@@ -428,6 +575,7 @@ const ReportLayout: React.FC = () => {
             }}
             size="small"
           >
+
             <MenuItem value="">
               <em>Select X-axis field</em>
             </MenuItem>
@@ -487,6 +635,11 @@ const ReportLayout: React.FC = () => {
             bgcolor: "#ECECEC",
           }}
         >
+          {/* Temporary Button */}
+          <Button variant='contained' onClick={() => { sendChartData(); }}>
+            Generate Remarks
+          </Button>
+
           <Typography variant="h6" fontWeight="bold" align="center">
             VISUALIZATIONS
           </Typography>
@@ -579,9 +732,7 @@ const ReportLayout: React.FC = () => {
                   fullWidth
                   displayEmpty
                   value={selectedChart.yAxis || ""}
-                  onChange={(e) =>
-                    updateSelectedChart("yAxis", e.target.value as string)
-                  }
+                  onChange={(e) => handleChange(e, "Y")} 
                   sx={{
                     mt: 0.5,
                     bgcolor: "#f8f9fa",
@@ -597,14 +748,15 @@ const ReportLayout: React.FC = () => {
                   <MenuItem value="">
                     <em>Select Y-axis field</em>
                   </MenuItem>
-                  {selectedChart.data.length > 0 &&
-                    Object.keys(selectedChart.data[0]).map((key) =>
-                      key !== "fill" ? (
+
+                  {Object.keys(menuItemsData).map((key) =>
+                      key ? (
                         <MenuItem key={key} value={key}>
                           {key}
                         </MenuItem>
                       ) : null
                     )}
+
                 </Select>
                 {/* Y-axis Color Customization */}
                 <Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
@@ -637,9 +789,7 @@ const ReportLayout: React.FC = () => {
                   fullWidth
                   displayEmpty
                   value={selectedChart.xAxis || ""}
-                  onChange={(e) =>
-                    updateSelectedChart("xAxis", e.target.value as string)
-                  }
+                  onChange={(e) => handleChange(e, "X")} 
                   sx={{
                     mt: 0.5,
                     bgcolor: "#f8f9fa",
@@ -655,14 +805,15 @@ const ReportLayout: React.FC = () => {
                   <MenuItem value="">
                     <em>Select X-axis field</em>
                   </MenuItem>
-                  {selectedChart.data.length > 0 &&
-                    Object.keys(selectedChart.data[0]).map((key) =>
-                      key !== "fill" ? (
+
+                  {Object.keys(menuItemsData).map((key) =>
+                      key ? (
                         <MenuItem key={key} value={key}>
                           {key}
                         </MenuItem>
                       ) : null
                     )}
+
                 </Select>
                 {/* X-axis Color Customization */}
                 <Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>

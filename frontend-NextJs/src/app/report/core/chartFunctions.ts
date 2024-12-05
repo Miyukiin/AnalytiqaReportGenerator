@@ -1,6 +1,6 @@
 // src/app/report/core/chartFunctions.ts
 
-import { Chart, ChartType, Page } from "../../../types";
+import { Chart, ChartData, ChartType, Page } from "../../../types";
 import { generateSampleData } from "../../../utils/chartUtils";
 
 /**
@@ -134,8 +134,8 @@ export const updateChartSize = (
  */
 export const updateChartProperty = (
   id: number,
-  property: keyof Omit<Chart, "data">,
-  value: string | number,
+  property: keyof Chart,
+  value: string | number | ChartData,
   pages: Page[],
   currentPageIndex: number,
   setPages: React.Dispatch<React.SetStateAction<Page[]>>
@@ -152,3 +152,5 @@ export const updateChartProperty = (
   );
   setPages(updatedPages);
 };
+
+

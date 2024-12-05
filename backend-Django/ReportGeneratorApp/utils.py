@@ -94,6 +94,7 @@ def get_summary_data(csv_file_of_uuid_path: str) -> dict | JsonResponse:
             data["numeric_columns_stats"] = numeric_columns_stats
         
         return data
+
         
 
 if __name__ == "__main__":

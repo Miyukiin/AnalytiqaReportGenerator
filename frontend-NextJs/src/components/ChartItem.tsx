@@ -7,6 +7,7 @@ import {
   Scatter,
   XAxis,
   YAxis,
+  ZAxis,
   CartesianGrid,
   Tooltip,
   BarChart,
@@ -113,10 +114,12 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
           <ScatterChart {...commonChartProps}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
-              dataKey={xAxis || "x"}
+              type="number"
+              dataKey="x"
               label={{
-                value: xAxis || "X-axis",
-                position: "insideBottomRight",
+                value: xAxis,
+                offset: -10,
+                position: "insideBottom",
                 style: {
                   fontSize: commonChartProps.fontSize,
                   fill: xAxisColor || "#000",
@@ -128,10 +131,11 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
               }}
             />
             <YAxis
-              dataKey={yAxis || "y"}
+              type="number"
+              dataKey="y"
               label={{
-                value: yAxis || "Y-axis",
-                angle: -90,
+                value: yAxis,
+                offset: -10,
                 position: "insideLeft",
                 style: {
                   fontSize: commonChartProps.fontSize,
@@ -144,12 +148,8 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
               }}
             />
             <Tooltip {...tooltipStyle} />
-            <Scatter
-              name={title || "Scatter"}
-              data={data as ScatterDataPoint[]}
-              fill="#8884d8"
-            />
             <Legend wrapperStyle={legendStyle} />
+            <Scatter name={title ? title : "Placeholder Title"} data={data as ScatterDataPoint[]} fill="#8884d8"/>
           </ScatterChart>
         );
   
@@ -158,9 +158,9 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
           <BarChart {...commonChartProps} data={data as HistogramDataPoint[]}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
-              dataKey={xAxis || "name"}
+              dataKey="name"
               label={{
-                value: xAxis || "X-axis",
+                value: name,
                 position: "insideBottomRight",
                 style: {
                   fontSize: commonChartProps.fontSize,
@@ -172,21 +172,7 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
                 fill: xAxisColor || "#000",
               }}
             />
-            <YAxis
-              label={{
-                value: yAxis || "Y-axis",
-                angle: -90,
-                position: "insideLeft",
-                style: {
-                  fontSize: commonChartProps.fontSize,
-                  fill: yAxisColor || "#000",
-                },
-              }}
-              tick={{
-                fontSize: commonChartProps.fontSize,
-                fill: yAxisColor || "#000",
-              }}
-            />
+            <YAxis/>
             <Tooltip {...tooltipStyle} />
             <Bar dataKey="value" fill="#82ca9d" barSize={30 * scalingFactor} />
             <Legend wrapperStyle={legendStyle} />
@@ -229,7 +215,7 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
           </RadarChart>
         );
   
-      case "Stacked Line":
+      case "StackedLine":
         return (
           <LineChart {...commonChartProps} data={data as StackedLineDataPoint[]}>
             <CartesianGrid strokeDasharray="3 3" />

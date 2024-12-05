@@ -10,5 +10,7 @@ urlpatterns = [
     path('api/csv/get-cleaned-table-preview-data/', get_cleaned_table_preview_data, name="get_cleaned_table_preview_data"),
     path('api/csv/clean/', clean_csv, name ="clean_csv"),
     path('api/csv/download-cleaned-csv/', download_cleaned_csv, name="download_cleaned_csv"),
-    path('api/csv/get-summary-changes/', get_summary_changes, name="get_summary_changes")
+    path('api/csv/get-summary-changes/', get_summary_changes, name="get_summary_changes"),
+    path('api/report/retrieve-chart-data/', retrieve_chart_data, name="retrieve_chart_data"),
+    path('api/report/generate-ai-remarks/', generate_ai_remarks, name="generate_ai_remarks")
 ]
