@@ -121,13 +121,13 @@ export default function SummaryPage() {
     // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-summary-statistics/`, uuid, csrfToken, setStatus);
     if (data) {
       setSummaryData(data);
-      console.log(data)
       setStatus({ error: '', success: 'Getting Summary Statistics Successful' });
     }
   };
 
   // CleanCSV API Call
   const clean_csv = async (uuid: string) => {
+    console.log("Calling Clean API")
     setStatus({ error: '', success: '' });
     const csrfToken = await fetchCsrfToken(); 
     const data = await fetchData(
@@ -139,7 +139,6 @@ export default function SummaryPage() {
     );
 
     if (data) {
-      console.log(data)
       setStatus({ error: '', success: 'Cleaning successful' });
     }
   };
@@ -249,7 +248,7 @@ export default function SummaryPage() {
   // Handlers for navigation
   const handleCleanData = () => {
     clean_csv(visitorId)
-    router.push("/clean");
+    //router.push("/clean");
   };
 
   const handleCreateReport = () => {

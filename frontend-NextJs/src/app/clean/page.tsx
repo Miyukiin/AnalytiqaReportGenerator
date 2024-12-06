@@ -66,13 +66,15 @@ export default function CleanPreviewPage() {
       missing_values_replaced: number | null;
       column_changes: { [key: string]: number | null };
       removed_columns: string[];
+      non_ascii_values: number | null;
     };
   }>({
     data: {
       rows_removed: null,
       missing_values_replaced: null,
       column_changes: {},
-      removed_columns: []
+      removed_columns: [],
+      non_ascii_values: null,
     }
   });
 
