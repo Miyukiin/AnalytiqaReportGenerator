@@ -308,16 +308,10 @@ const ReportLayout: React.FC = () => {
   const [isDropdownChange, setIsDropdownChange] = useState(false);
 
   // Handle X or Y axis values change
-  const handleChange = async (e: SelectChangeEvent<string>, axis: "Y" | "X") => {
+  const handleChange = async (e: SelectChangeEvent<string>, property: keyof Chart) => {
     const value = e.target.value as string;
-
-    if (axis === 'Y') {
-      await updateSelectedChart("yAxis", value);
-      setIsDropdownChange(true); // Mark that this change is coming from the dropdown
-    } else {
-      await updateSelectedChart("xAxis", value);
-      setIsDropdownChange(true); // Mark that this change is coming from the dropdown
-    }
+    await updateSelectedChart(property, value);
+    setIsDropdownChange(true); // Mark that this change is coming from the dropdown
   };
 
   const previousDataRef = useRef<ScatterDataPoint[]>([]); // Ref to hold previous data without causing re-renders
@@ -404,7 +398,7 @@ const ReportLayout: React.FC = () => {
                 fullWidth
                 displayEmpty
                 value={chart.xAxis || ""}
-                onChange={(e) => handleChange(e, "X")}
+                onChange={(e) => handleChange(e, "xAxis")}
                 sx={{
                   mt: 0.5,
                   bgcolor: "#f8f9fa",
@@ -461,7 +455,7 @@ const ReportLayout: React.FC = () => {
                 fullWidth
                 displayEmpty
                 value={chart.yAxis || ""}
-                onChange={(e) => handleChange(e, "Y")}
+                onChange={(e) => handleChange(e, "yAxis")}
                 sx={{
                   mt: 0.5,
                   bgcolor: "#f8f9fa",
@@ -522,7 +516,7 @@ const ReportLayout: React.FC = () => {
                   fullWidth
                   displayEmpty
                   value={chart.xAxis || ""}
-                  onChange={(e) => handleChange(e, "X")}
+                  onChange={(e) => handleChange(e, "subjectAxis")}
                   sx={{
                     mt: 0.5,
                     bgcolor: "#f8f9fa",
@@ -557,42 +551,7 @@ const ReportLayout: React.FC = () => {
                   fullWidth
                   displayEmpty
                   value={chart.yAxis || ""}
-                  onChange={(e) => handleChange(e, "Y")}
-                  sx={{
-                    mt: 0.5,
-                    bgcolor: "#f8f9fa",
-                    border: "1px solid #adb5bd",
-                    borderRadius: "4px",
-                    "& .MuiSelect-select": {
-                      padding: "6px 8px",
-                      fontSize: "0.75rem",
-                    },
-                  }}
-                  size="small"
-                >
-                  <MenuItem value="">
-                    <em>Select Y-axis field</em>
-                  </MenuItem>
-                  {Object.keys(menuItemsData).map((key) =>
-                    key ? (
-                      <MenuItem key={key} value={key}>
-                        {key}
-                      </MenuItem>
-                    ) : null
-                  )}
-                </Select>
-
-              </Box>
-              {/* Fullmark Input*/}
-              <Box sx={{ mb: 1 }}>
-                <Typography variant="caption" fontWeight="bold">
-                  Fullmark
-                </Typography>
-                <Select
-                  fullWidth
-                  displayEmpty
-                  value={chart.yAxis || ""}
-                  onChange={(e) => handleChange(e, "Y")}
+                  onChange={(e) => handleChange(e, "aAxis")}
                   sx={{
                     mt: 0.5,
                     bgcolor: "#f8f9fa",
@@ -632,7 +591,7 @@ const ReportLayout: React.FC = () => {
                     fullWidth
                     displayEmpty
                     value={chart.xAxis || ""}
-                    onChange={(e) => handleChange(e, "X")}
+                    onChange={(e) => handleChange(e, "nameAxis")}
                     sx={{
                       mt: 0.5,
                       bgcolor: "#f8f9fa",
@@ -667,7 +626,7 @@ const ReportLayout: React.FC = () => {
                     fullWidth
                     displayEmpty
                     value={chart.yAxis || ""}
-                    onChange={(e) => handleChange(e, "Y")}
+                    onChange={(e) => handleChange(e, "uvAxis")}
                     sx={{
                       mt: 0.5,
                       bgcolor: "#f8f9fa",
@@ -702,7 +661,7 @@ const ReportLayout: React.FC = () => {
                     fullWidth
                     displayEmpty
                     value={chart.yAxis || ""}
-                    onChange={(e) => handleChange(e, "Y")}
+                    onChange={(e) => handleChange(e, "pvAxis")}
                     sx={{
                       mt: 0.5,
                       bgcolor: "#f8f9fa",
@@ -742,7 +701,7 @@ const ReportLayout: React.FC = () => {
                       fullWidth
                       displayEmpty
                       value={chart.xAxis || ""}
-                      onChange={(e) => handleChange(e, "X")}
+                      onChange={(e) => handleChange(e, "nameAxis")}
                       sx={{
                         mt: 0.5,
                         bgcolor: "#f8f9fa",
@@ -777,7 +736,7 @@ const ReportLayout: React.FC = () => {
                       fullWidth
                       displayEmpty
                       value={chart.yAxis || ""}
-                      onChange={(e) => handleChange(e, "Y")}
+                      onChange={(e) => handleChange(e, "pvAxis")}
                       sx={{
                         mt: 0.5,
                         bgcolor: "#f8f9fa",
@@ -817,7 +776,7 @@ const ReportLayout: React.FC = () => {
                         fullWidth
                         displayEmpty
                         value={chart.yAxis || ""}
-                        onChange={(e) => handleChange(e, "Y")}
+                        onChange={(e) => handleChange(e, "line1Axis")}
                         sx={{
                           mt: 0.5,
                           bgcolor: "#f8f9fa",
@@ -852,7 +811,7 @@ const ReportLayout: React.FC = () => {
                         fullWidth
                         displayEmpty
                         value={chart.yAxis || ""}
-                        onChange={(e) => handleChange(e, "Y")}
+                        onChange={(e) => handleChange(e, "line2Axis")}
                         sx={{
                           mt: 0.5,
                           bgcolor: "#f8f9fa",
@@ -887,7 +846,7 @@ const ReportLayout: React.FC = () => {
                         fullWidth
                         displayEmpty
                         value={chart.yAxis || ""}
-                        onChange={(e) => handleChange(e, "Y")}
+                        onChange={(e) => handleChange(e, "line3Axis")}
                         sx={{
                           mt: 0.5,
                           bgcolor: "#f8f9fa",
@@ -1037,6 +996,7 @@ const ReportLayout: React.FC = () => {
       {!isSmallScreen ? (
         <Paper
           sx={{
+            height: "130vh",
             width: 200,
             display: "flex",
             flexDirection: "column",
@@ -1045,10 +1005,6 @@ const ReportLayout: React.FC = () => {
             bgcolor: "#ECECEC",
           }}
         >
-          {/* Temporary Button */}
-          <Button variant='contained' onClick={() => { sendChartData(); }}>
-            Generate Remarks
-          </Button>
 
           <Typography variant="h6" fontWeight="bold" align="center">
             VISUALIZATIONS
@@ -1241,7 +1197,9 @@ const ReportLayout: React.FC = () => {
             )
           }
           isDeleteDisabled={pages.length === 1}
+          generateRemarks={sendChartData} // Pass the generateRemarks function
         />
+
         <FullWidthDivider />
 
         {/* Main Visualization and Remarks */}
@@ -1276,7 +1234,7 @@ const ReportLayout: React.FC = () => {
                 flexGrow: 1,
                 width: "100%",
                 position: "relative",
-                paddingBottom: "50px", // Space for remarks
+                paddingBottom: "100px", // Space for remarks
               }}
             >
               <MainCanvas
@@ -1323,33 +1281,6 @@ const ReportLayout: React.FC = () => {
         </Box>
       </Box>
 
-      {/* Right Sidebar */}
-      {!isSmallScreen ? (
-        <RightSidebar />
-      ) : (
-        <>
-          <Drawer
-            anchor="right"
-            open={rightSidebarOpen}
-            onClose={handleCloseRightSidebar}
-          >
-            <Box
-              sx={{
-                width: isSmallScreen ? '100%' : '250px', // make drawer width dynamic
-                display: 'flex',
-                flexDirection: 'column',
-                p: 2,
-                bgcolor: '#ECECEC',
-                height: '100%',
-              }}
-              role="presentation"
-            >
-              <RightSidebar />
-            </Box>
-          </Drawer>
-        </>
-      )}
-
       {/* Floating Icons for Mobile View */}
       {isSmallScreen && (
         <Box
@@ -1375,19 +1306,6 @@ const ReportLayout: React.FC = () => {
             }}
           >
             <MenuIcon />
-          </IconButton>
-          <IconButton
-            onClick={handleOpenRightSidebar}
-            color="primary"
-            sx={{
-              bgcolor: "white",
-              "&:hover": {
-                bgcolor: "grey.200",
-              },
-              boxShadow: 5,
-            }}
-          >
-            <SettingsIcon />
           </IconButton>
         </Box>
       )}

@@ -9,25 +9,27 @@ export interface ScatterDataPoint {
 
 export interface HistogramDataPoint { 
   name: string;
-  value: number;
+  A: number;
 }
 
 export interface RadarDataPoint {
   subject: string;
-  value: number;
+  A: number;
+  fullMark?: number;
 }
 
 export interface StackedLineDataPoint {
   name: string;
-  uv: number;
-  pv: number;
+  line1: number;
+  line2: number;
+  line3: number;
 }
 
 export interface RadialBarDataPoint {
   name: string;
   uv: number;
   pv: number;
-  fill: string;
+  fill?: string;
 }
 
 export type ChartData =
@@ -38,13 +40,21 @@ export type ChartData =
   | RadialBarDataPoint[];
 
 export interface Chart {
-  xAxisColor: string;
-  yAxisColor: string;
   id: number;
   type: ChartType;
-  title: string;
-  xAxis: string;
-  yAxis: string;
+  title?: string;
+  xAxis?: string;          // For charts needing an X-axis field
+  yAxis?: string;          // For charts needing a Y-axis field
+  xAxisColor?: string;
+  yAxisColor?: string;
+  uvAxis?: string;         // For charts needing a UV field (RadialBar)
+  pvAxis?: string;         // For charts needing a PV field (RadialBar)
+  line1Axis?: string;      // For StackedLine chart's Line 1
+  line2Axis?: string;      // For StackedLine chart's Line 2
+  line3Axis?: string;      // For StackedLine chart's Line 3
+  subjectAxis?: string;
+  nameAxis?: string;    
+  aAxis?: string;      
   data: ChartData;
   x: number;
   y: number;
