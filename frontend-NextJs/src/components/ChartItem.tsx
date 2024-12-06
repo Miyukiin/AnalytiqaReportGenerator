@@ -23,6 +23,7 @@ import {
   RadialBar,
   Legend,
   ResponsiveContainer,
+  LabelList, // Import LabelList for displaying values
 } from "recharts";
 import { IconButton, Typography, Box } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
@@ -118,7 +119,7 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
               dataKey="x"
               label={{
                 value: xAxis,
-                offset: -10,
+                offset: -10 * scalingFactor, // Dynamically adjusted offset
                 position: "insideBottom",
                 style: {
                   fontSize: commonChartProps.fontSize,
@@ -135,7 +136,7 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
               dataKey="y"
               label={{
                 value: yAxis,
-                offset: -10,
+                offset: -10 * scalingFactor, // Dynamically adjusted offset
                 position: "insideLeft",
                 style: {
                   fontSize: commonChartProps.fontSize,
@@ -152,16 +153,24 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
             <Scatter name={title ? title : "Placeholder Title"} data={data as ScatterDataPoint[]} fill="#8884d8"/>
           </ScatterChart>
         );
-  
+
       case "Histogram":
         return (
-          <BarChart {...commonChartProps} data={data as HistogramDataPoint[]}>
+          <BarChart 
+            {...commonChartProps} 
+            data={data as HistogramDataPoint[]} 
+            barCategoryGap="1%" // Removes space between categories
+            barGap="0%" // Removes space between bars
+          >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="name"
+              scale="band" // Using band scale for categorical data
+              padding={{ left: 0, right: 0 }} // Reduced padding for compact bars
               label={{
-                value: name,
+                value: xAxis, // Using xAxis prop for label
                 position: "insideBottomRight",
+                offset: -10 * scalingFactor, // Dynamically adjusted offset
                 style: {
                   fontSize: commonChartProps.fontSize,
                   fill: xAxisColor || "#000",
@@ -172,13 +181,41 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
                 fill: xAxisColor || "#000",
               }}
             />
-            <YAxis/>
+            <YAxis
+              label={{
+                value: yAxis,
+                angle: -90,
+                position: "insideLeft",
+                offset: -10 * scalingFactor, // Dynamically adjusted offset
+                style: {
+                  fontSize: commonChartProps.fontSize,
+                  fill: yAxisColor || "#000",
+                },
+              }}
+              tick={{
+                fontSize: commonChartProps.fontSize,
+                fill: yAxisColor || "#000",
+              }}
+            />
             <Tooltip {...tooltipStyle} />
-            <Bar dataKey="value" fill="#82ca9d" barSize={30 * scalingFactor} />
+            <Bar 
+              dataKey="value" 
+              fill="#82ca9d" 
+              background={{ fill: "#eee" }} // Background for better visual separation
+            >
+              <LabelList 
+                dataKey="value" 
+                position="top" // Position labels above the bars
+                style={{ 
+                  fontSize: baseFontSize * scalingFactor, 
+                  fill: yAxisColor || "#000" 
+                }} 
+              />
+            </Bar>
             <Legend wrapperStyle={legendStyle} />
           </BarChart>
         );
-  
+
       case "Radar":
         const radarOuterRadius =
           ((Math.min(currentWidth, currentHeight) - marginSize * 2) / 2) * 0.8;
@@ -197,6 +234,15 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
                 fontSize: commonChartProps.fontSize,
                 fill: xAxisColor || "#000",
               }}
+              label={{
+                value: xAxis,
+                position: "insideBottom",
+                offset: -10 * scalingFactor, // Dynamically adjusted offset
+                style: {
+                  fontSize: commonChartProps.fontSize,
+                  fill: xAxisColor || "#000",
+                },
+              }}
             />
             <PolarRadiusAxis
               tick={{
@@ -212,9 +258,10 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
               fillOpacity={0.6}
             />
             <Tooltip {...tooltipStyle} />
+            <Legend wrapperStyle={legendStyle} />
           </RadarChart>
         );
-  
+
       case "StackedLine":
         return (
           <LineChart {...commonChartProps} data={data as StackedLineDataPoint[]}>
@@ -224,6 +271,7 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
               label={{
                 value: xAxis || "X-axis",
                 position: "insideBottomRight",
+                offset: -10 * scalingFactor, // Dynamically adjusted offset
                 style: {
                   fontSize: commonChartProps.fontSize,
                   fill: xAxisColor || "#000",
@@ -239,6 +287,7 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
                 value: yAxis || "Y-axis",
                 angle: -90,
                 position: "insideLeft",
+                offset: -10 * scalingFactor, // Dynamically adjusted offset
                 style: {
                   fontSize: commonChartProps.fontSize,
                   fill: yAxisColor || "#000",
@@ -255,7 +304,7 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
             <Legend wrapperStyle={legendStyle} />
           </LineChart>
         );
-  
+
       case "RadialBar":
         const radialOuterRadius =
           ((Math.min(currentWidth, currentHeight) - marginSize * 2) / 2) * 0.8;
@@ -280,7 +329,7 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
             <Legend wrapperStyle={legendStyle} />
           </RadialBarChart>
         );
-  
+
       default:
         return (
           <Typography variant="body2" color="error">
