@@ -9,7 +9,7 @@ export interface ScatterDataPoint {
 
 export interface HistogramDataPoint { 
   name: string;
-  A: number;
+  value: number;
 }
 
 export interface RadarDataPoint {
@@ -53,6 +53,11 @@ export interface Chart {
   line2Axis?: string;      // For StackedLine chart's Line 2
   line3Axis?: string;      // For StackedLine chart's Line 3
   subjectAxis?: string;
+
+  xAxis1?: string;         // Histogram First x Axis.
+  
+  NumericColumns?: Array<string>;   // Radar All Numeric Columns Selected
+
   nameAxis?: string;    
   aAxis?: string;      
   data: ChartData;

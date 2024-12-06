@@ -225,8 +225,6 @@ def get_summary_changes(request: HttpRequest, query_object: Visitors):
                     # Calculate the difference in missing values
                     if original_missing > cleaned_missing:
                         comparison_result["missing_values_replaced"] += int(original_missing - cleaned_missing)
-                    
-                    logger.info(comparison_result)
 
                     # Simulate dropping of duplicate rows to allow comparison (same shape of columns) and identify how many changes per column occurred.
                     temp_df = original_df.drop_duplicates(keep="first")
@@ -235,6 +233,8 @@ def get_summary_changes(request: HttpRequest, query_object: Visitors):
                     changes_in_column = cleaned_df[column] != temp_df[column]
                     if changes_in_column.any():
                         comparison_result["column_changes"][column] = int(changes_in_column.sum())
+                        
+                    logger.info(comparison_result)
 
 
             # Return the comparison summary

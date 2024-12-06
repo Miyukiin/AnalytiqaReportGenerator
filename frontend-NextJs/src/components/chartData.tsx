@@ -39,10 +39,22 @@ const constructScatterPlotData = (
   }) : [];
 };
 
-const constructHistogramData = () => {
-  const newDataPoint: HistogramDataPoint[] = []
-  return newDataPoint
+const constructHistogramData = (
+  dataset: Record<string, string[]>,
+  xField: string | undefined,
+) => {
+  return (xField) ? dataset[(xField) as string].map((value, index) => {
+
+    // Generate Datapoint for Column X with Structure {name: ColumnName, value: rowValue} for all rows of that column
+    const newDataPoint = {
+      name: xField,
+      value: Number(dataset[xField][index])
+    };
+
+    return newDataPoint as HistogramDataPoint;
+  }) : [];
 }
+
 const constructRadarData = () => {
   const newDataPoint: RadarDataPoint[] = []
   return newDataPoint
@@ -77,7 +89,7 @@ const createChartData = (
       
     case "Histogram":
 
-        return constructHistogramData() as HistogramDataPoint[];
+        return constructHistogramData(dataset, xField) as HistogramDataPoint[];
       
     case "Radar":
 

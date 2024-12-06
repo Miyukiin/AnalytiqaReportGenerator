@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Render Global Header only if not in noGlobalLayoutRoutes */}
         {!isNoGlobalLayout && (
           <header className="bg-white shadow-md top-0 left-0 right-0 z-10">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between py-4">
+            <div className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between py-4">
               {/* Logo on the left */}
               <div className="flex-shrink-0">
                 <Link href="/">
@@ -52,7 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {/* Upload CSV Button on the right, hidden on /home */}
               {!isHomePage && (
                 <div>
-                  <Link href="/upload">
+                  <Link href="/home">
                     <button
                       className="flex items-center bg-mainblue-default hover:bg-[#2c5056] text-white px-4 py-2 rounded-md transition"
                       aria-label="Upload CSV"
@@ -68,15 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         )}
 
         {/* Main Content */}
-        <main
-          className={`${
-            isNoGlobalLayout
-              ? "flex-grow"
-              : isHomePage
-              ? "mt-0 flex-grow"
-              : "mt-16 flex-grow"
-          }`}
-        >
+        <main className={"flex-grow"}>
           <ThemeProvider theme={theme}>
             <CssBaseline />
             <VisitorIdProvider>

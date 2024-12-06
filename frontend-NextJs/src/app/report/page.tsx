@@ -18,6 +18,8 @@ import {
   Drawer,
   SelectChangeEvent,
   Button,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import {
   ScatterPlot as ScatterPlotIcon,
@@ -61,7 +63,7 @@ const icons = [
   { icon: <ScatterPlotIcon />, label: "Scatter" },
   { icon: <BarChartIcon />, label: "Histogram" },
   { icon: <RadarIcon />, label: "Radar" },
-  { icon: <ShowChartIcon />, label: "Stacked Line" },
+  { icon: <ShowChartIcon />, label: "StackedLine" },
   { icon: <LayersIcon />, label: "RadialBar" },
 ];
 
@@ -127,6 +129,7 @@ const ReportLayout: React.FC = () => {
         console.error("Error parsing saved pages:", e);
       }
     }
+    console.log(savedPages)
   }, []);
 
   // Save pages to localStorage whenever pages state changes
@@ -165,7 +168,7 @@ const ReportLayout: React.FC = () => {
    */
   const updateSelectedChart = async (
     property: keyof Chart,
-    value: string | number | ChartData
+    value: any
   ) => {
     if (selectedChartId === null) return;
     updateChartPropertyFn(
@@ -176,6 +179,7 @@ const ReportLayout: React.FC = () => {
       currentPageIndex,
       setPages
     );
+    console.log(selectedChart)
   };
 
   /**
@@ -307,15 +311,54 @@ const ReportLayout: React.FC = () => {
   const [menuItemsData, setMenuItemsData] = useState<Record<string, string[]>>({});
   const [isDropdownChange, setIsDropdownChange] = useState(false);
 
-  // Handle dropdown values change of either of the any data chart types. Currently accommodates scatterplot
-  const handleChange = async (e: SelectChangeEvent<string>, axis: "Y" | "X") => {
+  // Handle dropdown values change of either of the any data chart types. 
+  const handleChange = async (e: SelectChangeEvent<string>, property: string, selectIndex?: number) => {
     const value = e.target.value as string;
-    await updateSelectedChart(property, value);
-    setIsDropdownChange(true); // Mark that this change is coming from the dropdown
+
+    // Handle ScatterPlot X or Y Axis.
+    if (property === 'xAxis' || property === 'yAxis') {
+      if (property === 'yAxis') {
+        await updateSelectedChart("yAxis", value);
+        setIsDropdownChange(true); // Mark that this change is coming from the dropdown
+      } else {
+        await updateSelectedChart("xAxis", value);
+        setIsDropdownChange(true); 
+      }
+    } 
+    // Handle Histogram
+    else if (property === "xAxis1"){
+      await updateSelectedChart("xAxis1", value);
+      setIsDropdownChange(true);
+    }
+    // Handle Radar
+    else if (property === "NumericColumns"){
+      if (selectedChart && typeof selectIndex === "number") {
+        let updatedNumericColumns;
+    
+        if (!selectedChart.NumericColumns || selectedChart.NumericColumns.length === 0) {
+          // If NumericColumns is empty, initialize it with the selected value
+          updatedNumericColumns = [e.target.value as string];
+        } else {
+          // If NumericColumns has existing values, update or append based on selectIndex
+          updatedNumericColumns = [...selectedChart.NumericColumns];
+    
+          // If selectIndex is within bounds, replace the value at selectIndex
+          if (selectIndex < updatedNumericColumns.length) {
+            updatedNumericColumns[selectIndex] = e.target.value as string;
+          } else {
+            // If selectIndex is out of bounds, append the new value
+            updatedNumericColumns.push(e.target.value as string);
+          }
+        }
+    
+        // Update the chart with the new array of numeric columns
+        await updateSelectedChart("NumericColumns", updatedNumericColumns);
+        setIsDropdownChange(true);
+      }
+    }
   };
 
   const previousDataRef = useRef<ScatterDataPoint[]>([]); // Ref to hold previous data without causing re-renders
-
   useEffect(() => {
     if (selectedChart) {
       // Handle data update depending on data type of selectedChart.
@@ -337,12 +380,22 @@ const ReportLayout: React.FC = () => {
         setIsDropdownChange(false);
       }
       else if (isHistogramData(selectedChart.data)){
+        // ERROR: Requires calculation of Y-Axis frequency Range, Calculation of X-axis values distribution range.
+
+        // Step 1: Calculate updatedData based on passed dataset, the selected passed xField column, and its data.
+        const updatedData = createChartData(menuItemsData, selectedChart, {
+          xField: selectedChart.xAxis1,
+        }, previousDataRef.current)
+        
+        // Step 2: Update chart data
+        updateSelectedChart('data', updatedData);
 
         // Reset the flag after processing the update
         setIsDropdownChange(false);
       }
       else if (isRadarData(selectedChart.data)){
 
+        
         // Reset the flag after processing the update
         setIsDropdownChange(false);
       }
@@ -393,6 +446,40 @@ const ReportLayout: React.FC = () => {
     }
   };
 
+  // Dynamic Radar Select
+  // Add a new Select when a column is selected
+  const renderSelect = (index: number, chart: Chart) => (
+    <FormControl fullWidth size="small" sx={{ mt: 1 }} key={index}>
+      <Select
+        labelId={`select-label-${index}`}
+        value={(chart.NumericColumns || [])[index] || ""}
+        onChange={(e) => handleChange(e, "NumericColumns", index)}
+        displayEmpty
+        sx={{
+          bgcolor: "#f8f9fa",
+          border: "1px solid #adb5bd",
+          borderRadius: "4px",
+          "& .MuiSelect-select": {
+            padding: "6px 8px",
+            fontSize: "0.75rem",
+          },
+        }}
+      >
+        <MenuItem value="">
+          <em>Select a Numerical Column</em>
+        </MenuItem>
+        {Object.keys(menuItemsData).map((key) =>
+          // Check if the values in the menuItemsData[key] array are numeric
+          menuItemsData[key].every((item) => typeof item === 'number') ? (
+            <MenuItem key={key} value={key}>
+              {key}
+            </MenuItem>
+          ) : null
+        )}
+      </Select>
+    </FormControl>
+  );
+
   // Function to render chart-specific fields based on chart type
   const renderChartSpecificFields = (chart: Chart) => {
     switch (chart.type) {
@@ -402,7 +489,7 @@ const ReportLayout: React.FC = () => {
             {/* X-Axis Input and Color Picker */}
             <Box sx={{ mb: 1 }}>
               <Typography variant="caption" fontWeight="bold">
-                X-axis
+                X-axis (Numeric)
               </Typography>
               <Select
                 fullWidth
@@ -425,7 +512,8 @@ const ReportLayout: React.FC = () => {
                   <em>Select X-axis field</em>
                 </MenuItem>
                 {Object.keys(menuItemsData).map((key) =>
-                  key ? (
+                  // Check if the values in the menuItemsData[key] array are numeric
+                  menuItemsData[key].every((item) => typeof item === 'number') ? (
                     <MenuItem key={key} value={key}>
                       {key}
                     </MenuItem>
@@ -459,7 +547,7 @@ const ReportLayout: React.FC = () => {
             {/* Y-Axis Input and Color Picker */}
             <Box sx={{ mb: 1 }}>
               <Typography variant="caption" fontWeight="bold">
-                Y-axis
+                Y-axis (Numeric)
               </Typography>
               <Select
                 fullWidth
@@ -481,8 +569,10 @@ const ReportLayout: React.FC = () => {
                 <MenuItem value="">
                   <em>Select Y-axis field</em>
                 </MenuItem>
+
                 {Object.keys(menuItemsData).map((key) =>
-                  key ? (
+                  // Check if the values in the menuItemsData[key] array are numeric
+                  menuItemsData[key].every((item) => typeof item === 'number') ? (
                     <MenuItem key={key} value={key}>
                       {key}
                     </MenuItem>
@@ -517,42 +607,20 @@ const ReportLayout: React.FC = () => {
       case "Radar":
           return (
             <>
-              {/* Subject Input*/}
+              {/* Numeric Column Input*/}
               <Box sx={{ mb: 1 }}>
                 <Typography variant="caption" fontWeight="bold">
-                  Subject
+                  Select Numeric Columns
                 </Typography>
-                <Select
-                  fullWidth
-                  displayEmpty
-                  value={chart.xAxis || ""}
-                  onChange={(e) => handleChange(e, "subjectAxis")}
-                  sx={{
-                    mt: 0.5,
-                    bgcolor: "#f8f9fa",
-                    border: "1px solid #adb5bd",
-                    borderRadius: "4px",
-                    "& .MuiSelect-select": {
-                      padding: "6px 8px",
-                      fontSize: "0.75rem",
-                    },
-                  }}
-                  size="small"
-                >
-                  <MenuItem value="">
-                    <em>Select Subhect field</em>
-                  </MenuItem>
-                  {Object.keys(menuItemsData).map((key) =>
-                    key ? (
-                      <MenuItem key={key} value={key}>
-                        {key}
-                      </MenuItem>
-                    ) : null
-                  )}
-                </Select>
-  
+
+
+                {renderSelect(0, chart)} {/* Render the first select */}
+                {(selectedChart?.NumericColumns ?? []).map((_, index) => 
+                  index > 0 && renderSelect(index, chart) // Render additional selects only when the previous one is populated
+                )}
+
               </Box>
-              {/* Value Input */}
+              {/* Row Input 1 */}
               <Box sx={{ mb: 1 }}>
                 <Typography variant="caption" fontWeight="bold">
                   Value
@@ -615,7 +683,7 @@ const ReportLayout: React.FC = () => {
                     size="small"
                   >
                     <MenuItem value="">
-                      <em>Select Subhect field</em>
+                      <em>Select Subject field</em>
                     </MenuItem>
                     {Object.keys(menuItemsData).map((key) =>
                       key ? (
@@ -705,13 +773,13 @@ const ReportLayout: React.FC = () => {
                   {/* Name Input*/}
                   <Box sx={{ mb: 1 }}>
                     <Typography variant="caption" fontWeight="bold">
-                      Name
+                      First X Axis
                     </Typography>
                     <Select
                       fullWidth
                       displayEmpty
-                      value={chart.xAxis || ""}
-                      onChange={(e) => handleChange(e, "nameAxis")}
+                      value={chart.xAxis1 || ""}
+                      onChange={(e) => handleChange(e, "xAxis1")}
                       sx={{
                         mt: 0.5,
                         bgcolor: "#f8f9fa",
@@ -725,7 +793,7 @@ const ReportLayout: React.FC = () => {
                       size="small"
                     >
                       <MenuItem value="">
-                        <em>Select Subhect field</em>
+                        <em>Select First X Axis</em>
                       </MenuItem>
                       {Object.keys(menuItemsData).map((key) =>
                         key ? (
@@ -737,44 +805,9 @@ const ReportLayout: React.FC = () => {
                     </Select>
       
                   </Box>
-                  {/* PV Input */}
-                  <Box sx={{ mb: 1 }}>
-                    <Typography variant="caption" fontWeight="bold">
-                      PV
-                    </Typography>
-                    <Select
-                      fullWidth
-                      displayEmpty
-                      value={chart.yAxis || ""}
-                      onChange={(e) => handleChange(e, "pvAxis")}
-                      sx={{
-                        mt: 0.5,
-                        bgcolor: "#f8f9fa",
-                        border: "1px solid #adb5bd",
-                        borderRadius: "4px",
-                        "& .MuiSelect-select": {
-                          padding: "6px 8px",
-                          fontSize: "0.75rem",
-                        },
-                      }}
-                      size="small"
-                    >
-                      <MenuItem value="">
-                        <em>Select Y-axis field</em>
-                      </MenuItem>
-                      {Object.keys(menuItemsData).map((key) =>
-                        key ? (
-                          <MenuItem key={key} value={key}>
-                            {key}
-                          </MenuItem>
-                        ) : null
-                      )}
-                    </Select>
-    
-                  </Box>
                 </>
               );
-      case "Stacked Line":
+      case "StackedLine":
                 return (
                   <>
                     {/* Line 1 Input */}

@@ -121,7 +121,6 @@ export default function SummaryPage() {
     // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-summary-statistics/`, uuid, csrfToken, setStatus);
     if (data) {
       setSummaryData(data);
-      console.log(data)
       setStatus({ error: '', success: 'Getting Summary Statistics Successful' });
     }
   };
@@ -139,7 +138,6 @@ export default function SummaryPage() {
     );
 
     if (data) {
-      console.log(data)
       setStatus({ error: '', success: 'Cleaning successful' });
     }
   };

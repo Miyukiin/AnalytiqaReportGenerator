@@ -107,7 +107,8 @@ export default function DataReportGenerator() {
 
       </Head>
 
-      <h2 className="text-4xl sm:text-4xl font-bold text-gray-600 my-6">DATA REPORT GENERATOR</h2>
+      <h2 className="text-4xl sm:text-4xl font-bold text-gray-600 my-6 mt-16">DATA REPORT GENERATOR</h2>
+
 
       {/* Full-screen Loading Overlay */}
       {loading && (
