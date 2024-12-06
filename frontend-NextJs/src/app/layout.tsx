@@ -38,8 +38,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {!isNoGlobalLayout && (
           <header className="bg-white shadow-md top-0 left-0 right-0 z-10">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between py-4">
-              {/* Logo on the left */}
-              <div className="flex-shrink-0">
+              {/* Logo on the left, center it when on the home page */}
+              <div className={`flex-shrink-0 ${isHomePage ? "mx-auto" : ""}`}>
                 <Link href="/">
                   <img
                     src="/images/analytiqa_header.png"
@@ -52,13 +52,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {/* Upload CSV Button on the right, hidden on /home */}
               {!isHomePage && (
                 <div>
-                  <Link href="/upload">
+                  <Link href="/home">
                     <button
-                      className="flex items-center bg-mainblue-default hover:bg-[#2c5056] text-white px-4 py-2 rounded-md transition"
-                      aria-label="Upload CSV"
+                      className="flex items-center bg-mainblue-default hover:bg-[#2c5056] text-white px-4 py-2 rounded-md transition transform hover:scale-105"
+                      aria-label="Upload New CSV"
                     >
                       <UploadFileIcon className="w-5 h-5 mr-2" />
-                      Upload CSV
+                      Upload New CSV
                     </button>
                   </Link>
                 </div>
