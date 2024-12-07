@@ -13,9 +13,9 @@ export interface HistogramDataPoint {
 }
 
 export interface RadarDataPoint {
-  subject: string;
-  A: number;
-  fullMark?: number;
+  header: string;
+  row1: number;
+  row2: number;
 }
 
 export interface StackedLineDataPoint {
@@ -57,6 +57,7 @@ export interface Chart {
   xAxis1?: string;         // Histogram First x Axis.
   
   NumericColumns?: Array<string>;   // Radar All Numeric Columns Selected
+  RowsSelected?:  Array<number>;    // Radar All Rows indexes Selected To be Shown in Radar
 
   nameAxis?: string;    
   aAxis?: string;      

@@ -129,7 +129,6 @@ const ReportLayout: React.FC = () => {
         console.error("Error parsing saved pages:", e);
       }
     }
-    console.log(savedPages)
   }, []);
 
   // Save pages to localStorage whenever pages state changes
@@ -179,7 +178,6 @@ const ReportLayout: React.FC = () => {
       currentPageIndex,
       setPages
     );
-    console.log(selectedChart)
   };
 
   /**
@@ -312,48 +310,76 @@ const ReportLayout: React.FC = () => {
   const [isDropdownChange, setIsDropdownChange] = useState(false);
 
   // Handle dropdown values change of either of the any data chart types. 
-  const handleChange = async (e: SelectChangeEvent<string>, property: string, selectIndex?: number) => {
-    const value = e.target.value as string;
+  const handleChange = async (e: SelectChangeEvent<string | number>, property: string, selectIndex?: number) => {
 
     // Handle ScatterPlot X or Y Axis.
     if (property === 'xAxis' || property === 'yAxis') {
       if (property === 'yAxis') {
-        await updateSelectedChart("yAxis", value);
+        await updateSelectedChart("yAxis", e.target.value);
         setIsDropdownChange(true); // Mark that this change is coming from the dropdown
       } else {
-        await updateSelectedChart("xAxis", value);
+        await updateSelectedChart("xAxis", e.target.value);
         setIsDropdownChange(true); 
       }
     } 
     // Handle Histogram
     else if (property === "xAxis1"){
-      await updateSelectedChart("xAxis1", value);
+      await updateSelectedChart("xAxis1", e.target.value);
       setIsDropdownChange(true);
     }
     // Handle Radar
-    else if (property === "NumericColumns"){
+    else if (property === "NumericColumns" || property === "RowsSelected"){
       if (selectedChart && typeof selectIndex === "number") {
-        let updatedNumericColumns;
-    
-        if (!selectedChart.NumericColumns || selectedChart.NumericColumns.length === 0) {
-          // If NumericColumns is empty, initialize it with the selected value
-          updatedNumericColumns = [e.target.value as string];
-        } else {
-          // If NumericColumns has existing values, update or append based on selectIndex
-          updatedNumericColumns = [...selectedChart.NumericColumns];
-    
-          // If selectIndex is within bounds, replace the value at selectIndex
-          if (selectIndex < updatedNumericColumns.length) {
-            updatedNumericColumns[selectIndex] = e.target.value as string;
-          } else {
-            // If selectIndex is out of bounds, append the new value
-            updatedNumericColumns.push(e.target.value as string);
+        if (property === "NumericColumns"){
+          let updatedNumericColumns;
+          if (!selectedChart.NumericColumns || selectedChart.NumericColumns.length === 0) {
+            // If NumericColumns is empty, initialize it with the selected value
+            updatedNumericColumns = [e.target.value as string];
+          } 
+          else {
+            // If NumericColumns has existing values, update or append based on selectIndex
+            updatedNumericColumns = [...selectedChart.NumericColumns];
+      
+            // If selectIndex is within bounds, replace the value at selectIndex
+            if (selectIndex < updatedNumericColumns.length) {
+              updatedNumericColumns[selectIndex] = e.target.value as string;
+            } 
+            else {
+              // If selectIndex is out of bounds, append the new value
+              updatedNumericColumns.push(e.target.value as string);
+            }
           }
+
+          // Update the chart with the new array of numeric columns
+          await updateSelectedChart("NumericColumns", updatedNumericColumns);
+          setIsDropdownChange(true);
+
+        } 
+        else if (property ==="RowsSelected"){
+          let updatedRowsSelected;
+          if (!selectedChart.RowsSelected || selectedChart.RowsSelected.length === 0) {
+            // If RowsSelected is empty, initialize it with the selected value
+            updatedRowsSelected = [Number(e.target.value)];
+          } 
+          else {
+            // If RowsSelected has existing values, update or append based on selectIndex
+            updatedRowsSelected = [...selectedChart.RowsSelected];
+      
+            // Replace value if updatedRowsSelected[selectIndex] already has a value.
+            if (updatedRowsSelected[selectIndex] !== undefined) {
+              updatedRowsSelected[selectIndex] = Number(e.target.value);
+            } 
+            else {
+              updatedRowsSelected.push(Number(e.target.value));
+            }
+          }
+
+          // Update the chart with the new array of numeric columns
+          await updateSelectedChart("RowsSelected", updatedRowsSelected);
+          setIsDropdownChange(true);
+
         }
-    
-        // Update the chart with the new array of numeric columns
-        await updateSelectedChart("NumericColumns", updatedNumericColumns);
-        setIsDropdownChange(true);
+        
       }
     }
   };
@@ -362,10 +388,11 @@ const ReportLayout: React.FC = () => {
   useEffect(() => {
     if (selectedChart) {
       // Handle data update depending on data type of selectedChart.
-      if ((selectedChart.yAxis || selectedChart.xAxis) && isScatterData(selectedChart.data)) {
-
+      if ((selectedChart.yAxis || selectedChart.xAxis) && (isScatterData(selectedChart.data) || (!selectedChart.data || selectedChart.data.length === 0))) {
         // Step 1: Set previousData before running update, because we'll use this in determining the values in case of x only updated or y only updated.
-        previousDataRef.current = selectedChart.data; // Temporarily store previous data in ref
+        if(selectedChart.data){
+          previousDataRef.current = selectedChart.data as ScatterDataPoint[]; // Temporarily store previous data in ref
+        }
 
         // Step 2: Calculate updatedData based on previousData and passed xFields or yFields
         const updatedData = createChartData(menuItemsData, selectedChart, {
@@ -379,7 +406,7 @@ const ReportLayout: React.FC = () => {
         // Reset the flag after processing the update
         setIsDropdownChange(false);
       }
-      else if (isHistogramData(selectedChart.data)){
+      else if ((isHistogramData(selectedChart.data)) || (!selectedChart.data || selectedChart.data.length === 0)) {
         // ERROR: Requires calculation of Y-Axis frequency Range, Calculation of X-axis values distribution range.
 
         // Step 1: Calculate updatedData based on passed dataset, the selected passed xField column, and its data.
@@ -394,7 +421,15 @@ const ReportLayout: React.FC = () => {
         setIsDropdownChange(false);
       }
       else if (isRadarData(selectedChart.data)){
-
+        // Possible to update headers with no rows selected, but no update other way around.
+        if (selectedChart.NumericColumns){
+        // Step 1: Calculate updatedData based on passed dataset, the selected passed RadarColumns, and the column specific data of selected rows.
+         const updatedData = createChartData(menuItemsData, selectedChart, {
+          RadarColumns: selectedChart.NumericColumns, RowsSelected: selectedChart.RowsSelected
+        }, previousDataRef.current)
+        // Step 2: Update chart data
+        updateSelectedChart('data', updatedData);
+        }
         
         // Reset the flag after processing the update
         setIsDropdownChange(false);
@@ -494,7 +529,7 @@ const ReportLayout: React.FC = () => {
               <Select
                 fullWidth
                 displayEmpty
-                value={chart.xAxis || ""}
+                value={chart.xAxis || "DefaultScatter"}
                 onChange={(e) => handleChange(e, "xAxis")}
                 sx={{
                   mt: 0.5,
@@ -508,7 +543,7 @@ const ReportLayout: React.FC = () => {
                 }}
                 size="small"
               >
-                <MenuItem value="">
+                <MenuItem value="DefaultScatter">
                   <em>Select X-axis field</em>
                 </MenuItem>
                 {Object.keys(menuItemsData).map((key) =>
@@ -552,7 +587,7 @@ const ReportLayout: React.FC = () => {
               <Select
                 fullWidth
                 displayEmpty
-                value={chart.yAxis || ""}
+                value={chart.yAxis || "DefaultScatter"}
                 onChange={(e) => handleChange(e, "yAxis")}
                 sx={{
                   mt: 0.5,
@@ -566,7 +601,7 @@ const ReportLayout: React.FC = () => {
                 }}
                 size="small"
               >
-                <MenuItem value="">
+                <MenuItem value="DefaultScatter">
                   <em>Select Y-axis field</em>
                 </MenuItem>
 
@@ -613,23 +648,20 @@ const ReportLayout: React.FC = () => {
                   Select Numeric Columns
                 </Typography>
 
-
-                {renderSelect(0, chart)} {/* Render the first select */}
+                {/* 
+                // Initial Logic for Dynamic Rendering of Select Boxes.
+                {renderSelect(0, chart)} // Render the first select
                 {(selectedChart?.NumericColumns ?? []).map((_, index) => 
                   index > 0 && renderSelect(index, chart) // Render additional selects only when the previous one is populated
                 )}
+                */}
 
-              </Box>
-              {/* Row Input 1 */}
-              <Box sx={{ mb: 1 }}>
-                <Typography variant="caption" fontWeight="bold">
-                  Value
-                </Typography>
+                 {/*This should be dynamic, changing depending on if previous select is populated, not hardcoded as 3 selects */}
                 <Select
                   fullWidth
                   displayEmpty
-                  value={chart.yAxis || ""}
-                  onChange={(e) => handleChange(e, "aAxis")}
+                  value={chart.NumericColumns ? chart.NumericColumns[0] || "" : ""}
+                  onChange={(e) => handleChange(e, "NumericColumns", 0)}
                   sx={{
                     mt: 0.5,
                     bgcolor: "#f8f9fa",
@@ -643,13 +675,145 @@ const ReportLayout: React.FC = () => {
                   size="small"
                 >
                   <MenuItem value="">
-                    <em>Select Y-axis field</em>
+                    <em>Select Numeric Column</em>
                   </MenuItem>
                   {Object.keys(menuItemsData).map((key) =>
-                    key ? (
+                  // Check if the values in the menuItemsData[key] array are numeric
+                    menuItemsData[key].every((item) => typeof item === 'number') ? (
                       <MenuItem key={key} value={key}>
                         {key}
                       </MenuItem>
+                    ) : null
+                  )}
+                </Select>
+                <Select
+                  fullWidth
+                  displayEmpty
+                  value={chart.NumericColumns ? chart.NumericColumns[1] || "" : ""}
+                  onChange={(e) => handleChange(e, "NumericColumns", 1)}
+                  sx={{
+                    mt: 0.5,
+                    bgcolor: "#f8f9fa",
+                    border: "1px solid #adb5bd",
+                    borderRadius: "4px",
+                    "& .MuiSelect-select": {
+                      padding: "6px 8px",
+                      fontSize: "0.75rem",
+                    },
+                  }}
+                  size="small"
+                >
+                  <MenuItem value="">
+                    <em>Select Numeric Column</em>
+                  </MenuItem>
+                  {Object.keys(menuItemsData).map((key) =>
+                  // Check if the values in the menuItemsData[key] array are numeric
+                  menuItemsData[key].every((item) => typeof item === 'number') ? (
+                    <MenuItem key={key} value={key}>
+                      {key}
+                    </MenuItem>
+                  ) : null
+                )}
+                </Select>
+                <Select
+                  fullWidth
+                  displayEmpty
+                  value={chart.NumericColumns ? chart.NumericColumns[2] || "" : ""}
+                  onChange={(e) => handleChange(e, "NumericColumns", 2)}
+                  sx={{
+                    mt: 0.5,
+                    bgcolor: "#f8f9fa",
+                    border: "1px solid #adb5bd",
+                    borderRadius: "4px",
+                    "& .MuiSelect-select": {
+                      padding: "6px 8px",
+                      fontSize: "0.75rem",
+                    },
+                  }}
+                  size="small"
+                >
+                  <MenuItem value="">
+                    <em>Select Numeric Column</em>
+                  </MenuItem>
+                  {Object.keys(menuItemsData).map((key) =>
+                  // Check if the values in the menuItemsData[key] array are numeric
+                  menuItemsData[key].every((item) => typeof item === 'number') ? (
+                    <MenuItem key={key} value={key}>
+                      {key}
+                    </MenuItem>
+                  ) : null
+                )}
+                </Select>
+              
+
+              </Box>
+              {/* Row Input 1 & 2 */}
+              <Box sx={{ mb: 1 }}>
+                <Typography variant="caption" fontWeight="bold">
+                  Value
+                </Typography>
+                {/*This should be dynamic, changing depending on if previous select is populated, not hardcoded as 2 selects. 
+                Further, they should not be selects in the first place. But rather modal of table where user can select rows*/}
+                <Select
+                  fullWidth
+                  displayEmpty
+                  value={chart.RowsSelected?.[0] ?? ""} 
+                  onChange={(e) => handleChange(e, "RowsSelected", 0)}
+                  sx={{
+                    mt: 0.5,
+                    bgcolor: "#f8f9fa",
+                    border: "1px solid #adb5bd",
+                    borderRadius: "4px",
+                    "& .MuiSelect-select": {
+                      padding: "6px 8px",
+                      fontSize: "0.75rem",
+                    },
+                  }}
+                  size="small"
+                >
+                  <MenuItem value="">
+                    <em>Select a Row</em>
+                  </MenuItem>
+
+                  {Object.keys(menuItemsData).map((key) =>
+                    key ? (
+                      menuItemsData[key].map((_, index) => (
+                        <MenuItem key={`Row ${index+1}`} value={index}>
+                          Row {index+1}
+                        </MenuItem>
+                      ))
+                    ) : null
+                  )}
+                </Select>
+
+                <Select
+                  fullWidth
+                  displayEmpty
+                  value={chart.RowsSelected?.[1] ?? ""} 
+                  onChange={(e) => handleChange(e, "RowsSelected", 1)}
+                  sx={{
+                    mt: 0.5,
+                    bgcolor: "#f8f9fa",
+                    border: "1px solid #adb5bd",
+                    borderRadius: "4px",
+                    "& .MuiSelect-select": {
+                      padding: "6px 8px",
+                      fontSize: "0.75rem",
+                    },
+                  }}
+                  size="small"
+                >
+                  <MenuItem value="">
+                    <em>Select a Row</em>
+                  </MenuItem>
+
+                  {Object.keys(menuItemsData).map((key) =>
+                    key ? (
+                      menuItemsData[key].map((_, index) => (
+                        <MenuItem key={`Row ${index+1}`} value={index}>
+                          Row {index+1}
+                        </MenuItem>
+                      ))
                     ) : null
                   )}
                 </Select>

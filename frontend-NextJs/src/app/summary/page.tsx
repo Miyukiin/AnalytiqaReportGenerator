@@ -178,7 +178,7 @@ export default function SummaryPage() {
           align: 'left',
         };
         if (type === "number" || type === "boolean") {
-          column.format = (value: number | boolean) => value.toLocaleString(); // Format numbers
+          column.format = (value: number | boolean) => value.toLocaleString(); // Format numbers and boolean values
         }
         return column;
       });

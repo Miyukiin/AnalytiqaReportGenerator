@@ -68,7 +68,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         )}
 
         {/* Main Content */}
-        <main className={"flex-grow"}>
+        <main className={`${
+            isNoGlobalLayout
+              ? "flex-grow"
+              : isHomePage
+              ? "mt-8 flex-grow"
+              : "mt-0 flex-grow"
+          }`}>
           <ThemeProvider theme={theme}>
             <CssBaseline />
             <VisitorIdProvider>

@@ -44,7 +44,9 @@ interface ChartItemProps extends Chart {
     width: number,
     height: number,
     x: number,
-    y: number
+    y: number,
+    NumericColumns?: Array<string>,
+    RowsSelected?:  Array<any>,
   ) => void;
   onSelectChart: (id: number) => void;
   isSelected: boolean;
@@ -64,6 +66,8 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
   y,
   width,
   height,
+  NumericColumns,
+  RowsSelected,
   onRemove,
   onDragStop,
   onResizeStop,
@@ -229,19 +233,10 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
           >
             <PolarGrid />
             <PolarAngleAxis
-              dataKey={xAxis || "subject"}
+              dataKey={"header"}
               tick={{
                 fontSize: commonChartProps.fontSize,
                 fill: xAxisColor || "#000",
-              }}
-              label={{
-                value: xAxis,
-                position: "insideBottom",
-                offset: -10 * scalingFactor, // Dynamically adjusted offset
-                style: {
-                  fontSize: commonChartProps.fontSize,
-                  fill: xAxisColor || "#000",
-                },
               }}
             />
             <PolarRadiusAxis
@@ -250,13 +245,22 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
                 fill: yAxisColor || "#000",
               }}
             />
+            {/*This should be dynamic, changing depending on how many selects are populated, not hardcoded as Radar 1, Radar 2 */}
             <Radar
-              name={title || "Radar"}
-              dataKey="value"
+              name={RowsSelected ? `Row ${RowsSelected[0]}` : "Row1"}
+              dataKey="row1"
               stroke="#8884d8"
               fill="#8884d8"
               fillOpacity={0.6}
             />
+            <Radar
+              name={RowsSelected ? `Row ${RowsSelected[1]}` : "Row2"}
+              dataKey="row2"
+              stroke="#82ca9d" 
+              fill="#82ca9d"
+              fillOpacity={0.6}
+            />
+            
             <Tooltip {...tooltipStyle} />
             <Legend wrapperStyle={legendStyle} />
           </RadarChart>

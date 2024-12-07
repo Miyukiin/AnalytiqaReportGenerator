@@ -86,6 +86,7 @@ def upload_csv(request: HttpRequest):
         csv_file = request.FILES.get("file")
         user_uuid = request.POST.get("uuid")
         csv_file_name = request.POST.get("file_name")
+        logger.info("Printing File Name:", csv_file_name)
         
         if not csv_file or user_uuid is None:
             return JsonResponse({"error": "File and UUID are required"}, status=400)
