@@ -1,7 +1,9 @@
 import os
 import re
+from typing import Counter
 from django.conf import settings
 from django.shortcuts import get_object_or_404, render
+import numpy as np
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.http import Http404, HttpRequest, HttpResponse, HttpResponseBadRequest, JsonResponse
@@ -474,3 +476,78 @@ def delete_clean_csv(request: HttpRequest, uuid: str):
 
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+        
+        
+import pandas as pd
+import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
+
+@api_view(['POST'])
+def calculate_radial_data(request: HttpRequest):
+    def calculate_bins_for_numeric_column(column_values: np.ndarray, num_bins=5):
+        min_value = column_values.min()
+        max_value = column_values.max()
+        bins = pd.cut(column_values, bins=num_bins, right=False).categories
+        categorized_data = pd.cut(column_values, bins=bins, right=False, include_lowest=True)
+        bin_counts = categorized_data.value_counts().to_dict()
+        return bin_counts
+
+    def calculate_category_counts(column_values):
+        return dict(Counter(column_values))
+
+    if request.method == "POST":
+        try:
+            dataset = request.data.get("dataset")
+            radial_column = request.data.get("RadialColumn")
+            logger.info("Printing Dataset %s", dataset)
+            logger.info("RadialColumn: %s", radial_column)
+
+            radial_bar_data = {}
+
+            if radial_column in dataset:
+                values: list[int | str | bool] = dataset[radial_column]
+                
+                 # Check if the column is entirely boolean
+                if all(isinstance(value, bool) for value in values):
+                    # Handle boolean column
+                    boolean_counts = calculate_category_counts(values)
+                    radial_bar_data[radial_column] = boolean_counts
+                else:
+                    # Convert to numeric values using pandas, but only if not entirely boolean
+                    numeric_values: np.ndarray = pd.to_numeric(values, errors='coerce')
+
+                    # Handle NaN count
+                    nan_count = np.isnan(numeric_values).sum()  # Using numpy to check NaN
+                    logger.info("NaN count in numeric values: %d", nan_count)
+
+                    if nan_count == 0:  # If there are no NaNs, the column is entirely numeric
+                        bin_counts = calculate_bins_for_numeric_column(numeric_values)
+                        bin_ranges = {f"{bin.left}-{bin.right}": count for bin, count in bin_counts.items()}
+                        radial_bar_data[radial_column] = bin_ranges
+                    else:  # May be a mix of data types. Numeric, Categorical or Boolean or None Type.
+                        numeric_column = numeric_values[~np.isnan(numeric_values)]  # Get valid numeric values
+                        categorical_column = [value for value, isnan in zip(values, np.isnan(numeric_values)) if isnan]  # Get non-numeric values
+                        
+                        # Handle boolean values (True/False) explicitly
+                        boolean_column = [value for value in values if isinstance(value, bool)]
+
+                        # If any type of mix exist, raise an error
+                        if (numeric_column.size > 0 and len(categorical_column) > 0) or (numeric_column.size > 0 and len(boolean_column) > 0) or (len(categorical_column) > 0 and len(boolean_column) > 0):
+                            return Response({"error": "Cannot process column with mixed data types of numeric and categorical, boolean or None"}, status=400)
+                                         
+                        if categorical_column:
+                            category_counts = calculate_category_counts(categorical_column)
+                            radial_bar_data[radial_column] = category_counts
+                        else:
+                            return Response({"error": "No valid data found in the column or Cannot process column with mixed data types of numeric and categorical, boolean or None"}, status=400)
+                    
+                logger.info(radial_bar_data)
+            return Response({"radialBarData": radial_bar_data}, status=200)
+
+        except Exception as e:
+            logger.error(f"Error processing data: {e}")
+            return Response({"error": str(e)}, status=500)
+
+

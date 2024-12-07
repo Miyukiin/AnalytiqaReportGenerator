@@ -1,6 +1,7 @@
 // src/components/chartData.tsx
 import { Chart, ScatterDataPoint, HistogramDataPoint, RadarDataPoint, StackedLineDataPoint, RadialBarDataPoint } from "@/types";
 import { generateSampleData } from "@/utils/chartUtils";
+import { fetchCsrfToken } from "./csrfToken";
 
 const isScatterData = (data: any): data is ScatterDataPoint[] => {
   return Array.isArray(data) && data.every(point => 'x' in point && 'y' in point);
@@ -19,7 +20,7 @@ const isStackedLineData = (data: any): data is StackedLineDataPoint[] => {
 };
 
 const isRadialBarData = (data: any): data is RadialBarDataPoint[] => {
-  return Array.isArray(data) && data.every(point => 'name' in point && 'uv' in point && 'pv' in point && 'fill' in point);
+  return Array.isArray(data) && data.every(point => 'name' in point && 'value' in point && 'fill' in point);
 };
 
 const constructScatterPlotData = (
@@ -80,8 +81,6 @@ const constructRadarData = (
   RowsSelected: Array<number> | undefined
 ): RadarDataPoint[] => {  // Ensure the return type is an array of RadarDataPoint
 
-
-
   // Check if RowsSelected is null, undefined, or empty
   if (!RowsSelected || RowsSelected.length === 0) {
     // If so, set row1 and row2 to 0
@@ -120,25 +119,59 @@ const constructRadarData = (
   return radarData as RadarDataPoint[]; 
 };
 
-
-
 const constructStackedLineData = () => {
   const newDataPoint: StackedLineDataPoint[] = []
   return newDataPoint
 
 }
 
-const constructRadialBarData = () => {
-  const newDataPoint: RadialBarDataPoint[] = []
-  return newDataPoint
+const constructRadialBarData = async (
+  dataset: Record<string, string[]>,
+  RadialColumn: string | undefined) : Promise<RadialBarDataPoint[]> => {
+    let RadialBarData: RadialBarDataPoint[] = []
 
+    if(RadialColumn && dataset){
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/report/calculate-radial-data/", {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': await fetchCsrfToken(),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ RadialColumn, dataset }),
+        });
+    
+        const data = await response.json();
+        const column_values_data: NameValueData = data['radialBarData']
+
+        interface NameValueData {
+          [key: string]: number;
+        }
+        const name_values_data = column_values_data[RadialColumn]
+        console.log("PRINTING", RadialBarData)
+        const colors = ['#8884d8', '#83a6ed', '#8dd1e1', '#82ca9d', '#a4de6c']; 
+        Object.entries(name_values_data).forEach(([name, value], i) => {
+          RadialBarData.push({
+            name: name,
+            value: value as number,
+            fill: colors[i % colors.length],  // Cycle through colors array
+          });
+        });
+
+
+        
+      } catch (error) {
+        console.error('Error sending chart data:', error);
+      }
+    }
+    return RadialBarData
 }
 
 const createChartData = (
   dataset: Record<string, string[]> = {}, 
   chart: Chart, 
-  { xField = undefined, yField = undefined, RadarColumns = undefined, RowsSelected = undefined}: 
-  { xField?: string | undefined, yField?: string | undefined, RadarColumns?: Array<string> | undefined, RowsSelected?: Array<number> | undefined},  
+  { xField = undefined, yField = undefined, RadarColumns = undefined, RowsSelected = undefined, RadialColumn = undefined}: 
+  { xField?: string | undefined, yField?: string | undefined, RadarColumns?: Array<string> | undefined, RowsSelected?: Array<number> | undefined, RadialColumn?: string},  
   previousData: ScatterDataPoint[],
 
   ) => {
@@ -160,8 +193,12 @@ const createChartData = (
         return constructStackedLineData() as StackedLineDataPoint[];
       
     case "RadialBar":
-
-        return constructRadialBarData() as RadialBarDataPoint[];
+      return constructRadialBarData(dataset, RadialColumn) 
+      .then((data) => data) 
+      .catch((error) => {
+        console.error('Error generating RadialBar data:', error);
+        return []; // Return an empty array in case of error
+      });
 
     default:
         return [];

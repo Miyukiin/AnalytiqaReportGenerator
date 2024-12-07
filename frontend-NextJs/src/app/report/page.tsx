@@ -334,18 +334,17 @@ const ReportLayout: React.FC = () => {
           let updatedNumericColumns;
           if (!selectedChart.NumericColumns || selectedChart.NumericColumns.length === 0) {
             // If NumericColumns is empty, initialize it with the selected value
-            updatedNumericColumns = [e.target.value as string];
+            updatedNumericColumns = [e.target.value];
           } 
           else {
             // If NumericColumns has existing values, update or append based on selectIndex
             updatedNumericColumns = [...selectedChart.NumericColumns];
       
-            // If selectIndex is within bounds, replace the value at selectIndex
-            if (selectIndex < updatedNumericColumns.length) {
+            // Replace value if updatedNumericColumns[selectIndex] already has a value.
+            if (updatedNumericColumns[selectIndex] !== undefined) {
               updatedNumericColumns[selectIndex] = e.target.value as string;
             } 
             else {
-              // If selectIndex is out of bounds, append the new value
               updatedNumericColumns.push(e.target.value as string);
             }
           }
@@ -382,6 +381,15 @@ const ReportLayout: React.FC = () => {
         
       }
     }
+    // Handle RadialBar
+    else if (property === "RadialColumn"){
+      if (selectedChart){
+        // Update the chart with the new array of numeric columns
+        await updateSelectedChart("RadialColumn", e.target.value);
+        console.log("Printing UpdatedRadialColumn!", e.target.value)
+        setIsDropdownChange(true);
+      }
+    }
   };
 
   const previousDataRef = useRef<ScatterDataPoint[]>([]); // Ref to hold previous data without causing re-renders
@@ -401,20 +409,6 @@ const ReportLayout: React.FC = () => {
         }, previousDataRef.current); // Use ref value for previous data
 
         // Step 3: Update chart data
-        updateSelectedChart('data', updatedData);
-
-        // Reset the flag after processing the update
-        setIsDropdownChange(false);
-      }
-      else if ((isHistogramData(selectedChart.data)) || (!selectedChart.data || selectedChart.data.length === 0)) {
-        // ERROR: Requires calculation of Y-Axis frequency Range, Calculation of X-axis values distribution range.
-
-        // Step 1: Calculate updatedData based on passed dataset, the selected passed xField column, and its data.
-        const updatedData = createChartData(menuItemsData, selectedChart, {
-          xField: selectedChart.xAxis1,
-        }, previousDataRef.current)
-        
-        // Step 2: Update chart data
         updateSelectedChart('data', updatedData);
 
         // Reset the flag after processing the update
@@ -440,10 +434,23 @@ const ReportLayout: React.FC = () => {
         setIsDropdownChange(false);
       }
       else if (isRadialBarData(selectedChart.data)){
-
-        // Reset the flag after processing the update
-        setIsDropdownChange(false);
-      } 
+        if (selectedChart.RadialColumn) {
+          // Step 1: Calculate updatedData based on passed dataset, and the selected passed RadialColumn.
+          Promise.resolve(createChartData(menuItemsData, selectedChart, {
+            RadialColumn: selectedChart.RadialColumn
+          }, previousDataRef.current))
+            .then(updatedData => {
+              // Step 2: Update chart data
+              console.log("UPDATED DATA RADIAL", updatedData);
+              updateSelectedChart('data', updatedData);  // Assuming this is a function to update the chart
+            })
+            .catch(error => {
+              console.error('Error updating chart data:', error);
+            });
+          // Reset the flag after processing the update
+          setIsDropdownChange(false);
+        }
+      }
     }
   }, [isDropdownChange]); // Run when Dropdown values change
 
@@ -827,13 +834,14 @@ const sendChartData = async () => {
                 {/* Name Input*/}
                 <Box sx={{ mb: 1 }}>
                   <Typography variant="caption" fontWeight="bold">
-                    Name
+                    Select Columns
                   </Typography>
+                  {/* 5 Hard Coded Select Fields for Columns */}
                   <Select
                     fullWidth
                     displayEmpty
-                    value={chart.xAxis || ""}
-                    onChange={(e) => handleChange(e, "nameAxis")}
+                    value={chart.RadialColumn ? chart.RadialColumn || "" : ""}
+                    onChange={(e) => handleChange(e, "RadialColumn")}
                     sx={{
                       mt: 0.5,
                       bgcolor: "#f8f9fa",
@@ -847,7 +855,7 @@ const sendChartData = async () => {
                     size="small"
                   >
                     <MenuItem value="">
-                      <em>Select Subject field</em>
+                      <em>Select a Column</em>
                     </MenuItem>
                     {Object.keys(menuItemsData).map((key) =>
                       key ? (
@@ -856,78 +864,7 @@ const sendChartData = async () => {
                         </MenuItem>
                       ) : null
                     )}
-                  </Select>
-    
-                </Box>
-                {/* UV Input */}
-                <Box sx={{ mb: 1 }}>
-                  <Typography variant="caption" fontWeight="bold">
-                    UV
-                  </Typography>
-                  <Select
-                    fullWidth
-                    displayEmpty
-                    value={chart.yAxis || ""}
-                    onChange={(e) => handleChange(e, "uvAxis")}
-                    sx={{
-                      mt: 0.5,
-                      bgcolor: "#f8f9fa",
-                      border: "1px solid #adb5bd",
-                      borderRadius: "4px",
-                      "& .MuiSelect-select": {
-                        padding: "6px 8px",
-                        fontSize: "0.75rem",
-                      },
-                    }}
-                    size="small"
-                  >
-                    <MenuItem value="">
-                      <em>Select Y-axis field</em>
-                    </MenuItem>
-                    {Object.keys(menuItemsData).map((key) =>
-                      key ? (
-                        <MenuItem key={key} value={key}>
-                          {key}
-                        </MenuItem>
-                      ) : null
-                    )}
-                  </Select>
-  
-                </Box>
-                {/* PV Input */}
-                <Box sx={{ mb: 1 }}>
-                  <Typography variant="caption" fontWeight="bold">
-                    PV
-                  </Typography>
-                  <Select
-                    fullWidth
-                    displayEmpty
-                    value={chart.yAxis || ""}
-                    onChange={(e) => handleChange(e, "pvAxis")}
-                    sx={{
-                      mt: 0.5,
-                      bgcolor: "#f8f9fa",
-                      border: "1px solid #adb5bd",
-                      borderRadius: "4px",
-                      "& .MuiSelect-select": {
-                        padding: "6px 8px",
-                        fontSize: "0.75rem",
-                      },
-                    }}
-                    size="small"
-                  >
-                    <MenuItem value="">
-                      <em>Select Y-axis field</em>
-                    </MenuItem>
-                    {Object.keys(menuItemsData).map((key) =>
-                      key ? (
-                        <MenuItem key={key} value={key}>
-                          {key}
-                        </MenuItem>
-                      ) : null
-                    )}
-                  </Select>
-  
+                  </Select>         
                 </Box>
               </>
             );

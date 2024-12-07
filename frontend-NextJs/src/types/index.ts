@@ -27,8 +27,7 @@ export interface StackedLineDataPoint {
 
 export interface RadialBarDataPoint {
   name: string;
-  uv: number;
-  pv: number;
+  value: number;
   fill?: string;
 }
 
@@ -58,6 +57,9 @@ export interface Chart {
   
   NumericColumns?: Array<string>;   // Radar All Numeric Columns Selected
   RowsSelected?:  Array<number>;    // Radar All Rows indexes Selected To be Shown in Radar
+  
+  RadialColumn?: string;  // Radial Bar Selected Column
+
 
   nameAxis?: string;    
   aAxis?: string;      

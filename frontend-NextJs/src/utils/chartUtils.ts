@@ -35,13 +35,13 @@ export const generateSampleData = (type: ChartType): any[] => {
       { name: "Page G", uv: 3490, pv: 4300 },
     ],
     RadialBar: [
-      { name: "18-24", uv: 31.47, pv: 2400, fill: "#8884d8" },
-      { name: "25-29", uv: 26.69, pv: 4567, fill: "#83a6ed" },
-      { name: "30-34", uv: 15.69, pv: 1398, fill: "#8dd1e1" },
-      { name: "35-39", uv: 8.22, pv: 9800, fill: "#82ca9d" },
-      { name: "40-49", uv: 8.63, pv: 3908, fill: "#a4de6c" },
-      { name: "50+", uv: 2.63, pv: 4800, fill: "#d0ed57" },
-      { name: "Unknown", uv: 6.67, pv: 4800, fill: "#ffc658" },
+      { name: "18-24", value: 31.47, fill: "#8884d8" },
+      { name: "25-29", value: 26.69, fill: "#83a6ed" },
+      { name: "30-34", value: 15.69, fill: "#8dd1e1" },
+      { name: "35-39", value: 8.22, fill: "#82ca9d" },
+      { name: "40-49", value: 8.63, fill: "#a4de6c" },
+      { name: "50+", value: 2.63, fill: "#d0ed57" },
+      { name: "Unknown", value: 6.67, fill: "#ffc658" },
     ],
   };
   return sampleData[type] || [];

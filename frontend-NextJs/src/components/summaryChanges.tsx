@@ -25,7 +25,6 @@ const SummaryChanges: React.FC<{ summaryChangesData: SummaryChangesData }> = ({ 
     if (isClean) {
         return <div><span>Your data is already clean! (<b>No Duplicates</b>, <b>Non-Ascii Values</b> or <b>Any Missing Values found</b>.)</span></div>;
     }
-
     return (
 
     <div>
@@ -39,7 +38,7 @@ const SummaryChanges: React.FC<{ summaryChangesData: SummaryChangesData }> = ({ 
             {non_ascii_values && non_ascii_values !== null ? <span>Step 3: We removed non-ascii characters from <b>{non_ascii_values}</b> cells.</span> : <span> Step 3: No cells containing non-ascii values found. </span>}
         </Typography>
         <Typography variant="body1" sx={{ color: 'grey.800', marginBottom: 0, lineHeight: '1.8' }}>
-            {column_changes && Object.keys(column_changes).length > 0 ? <span>Step 4: We identified all columns we changed below, with a count of values or cells modified.</span> : <span> Step 3: No changes to any values of columns found. </span>}
+            {column_changes && Object.keys(column_changes).length > 0 ? <span>Step 4: We identified all columns we changed below, with a count of values or cells modified.</span> : <span> Step 4: No changes to any values of columns found. </span>}
         </Typography>
         {column_changes && Object.entries(column_changes).map(([column, changes]) => (
             <Typography key={column} variant="body1" sx={{ color: 'grey.700', marginBottom: 0, marginLeft: 2 }}>
