@@ -98,7 +98,7 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
       top: marginSize,
       right: marginSize,
       bottom: marginSize,
-      left: marginSize,
+      left: marginSize + 14 * scalingFactor, // Increased left margin
     },
     style: { backgroundColor: "transparent" },
     fontSize: baseFontSize * scalingFactor,
@@ -118,20 +118,22 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
         return (
           <ScatterChart {...commonChartProps}>
             <CartesianGrid strokeDasharray="3 3" />
+            margin
             <XAxis
               type="number"
+
               dataKey="x"
               label={{
                 value: xAxis,
                 offset: -10 * scalingFactor, // Dynamically adjusted offset
                 position: "insideBottom",
                 style: {
-                  fontSize: commonChartProps.fontSize,
+                  fontSize: commonChartProps.fontSize*0.85,
                   fill: xAxisColor || "#000",
                 },
               }}
               tick={{
-                fontSize: commonChartProps.fontSize,
+                fontSize: commonChartProps.fontSize*0.7,
                 fill: xAxisColor || "#000",
               }}
             />
@@ -139,21 +141,21 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
               type="number"
               dataKey="y"
               label={{
+                angle: -90, // Rotate the label to display it vertically
                 value: yAxis,
-                offset: -10 * scalingFactor, // Dynamically adjusted offset
+                offset: -25 * scalingFactor, // Dynamically adjusted offset
                 position: "insideLeft",
                 style: {
-                  fontSize: commonChartProps.fontSize,
+                  fontSize: commonChartProps.fontSize*0.85 ,
                   fill: yAxisColor || "#000",
                 },
               }}
               tick={{
-                fontSize: commonChartProps.fontSize,
+                fontSize: commonChartProps.fontSize *0.7,
                 fill: yAxisColor || "#000",
               }}
             />
             <Tooltip {...tooltipStyle} />
-            <Legend wrapperStyle={legendStyle} />
             <Scatter name={title ? title : "Placeholder Title"} data={data as ScatterDataPoint[]} fill="#8884d8"/>
           </ScatterChart>
         );
