@@ -343,6 +343,7 @@ def get_summary_changes(request: HttpRequest, query_object: Visitors):
                     if changes_in_column.any():
                         comparison_result["column_changes"][column] = int(changes_in_column.sum())
 
+
             # Return the comparison summary
             return JsonResponse(comparison_result)
 
