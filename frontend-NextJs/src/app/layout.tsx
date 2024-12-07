@@ -52,13 +52,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {/* Upload CSV Button on the right, hidden on /home */}
               {!isHomePage && (
                 <div>
-                  <Link href="/upload">
+                  <Link href="/home">
                     <button
                       className="flex items-center bg-mainblue-default hover:bg-[#2c5056] text-white px-4 py-2 rounded-md transition"
                       aria-label="Upload CSV"
                     >
                       <UploadFileIcon className="w-5 h-5 mr-2" />
-                      Upload CSV
+                      Upload Another CSV
                     </button>
                   </Link>
                 </div>
