@@ -40,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between py-4">
               {/* Logo on the left, center it when on the home page */}
               <div className={`flex-shrink-0 ${isHomePage ? "mx-auto" : ""}`}>
+
                 <Link href="/">
                   <img
                     src="/images/analytiqa_header.png"
@@ -58,7 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                       aria-label="Upload New CSV"
                     >
                       <UploadFileIcon className="w-5 h-5 mr-2" />
-                      Upload New CSV
+                      Upload Another CSV
                     </button>
                   </Link>
                 </div>
@@ -69,6 +70,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         {/* Main Content */}
         <main
+
           className={`${
             isNoGlobalLayout
               ? "flex-grow"

@@ -68,13 +68,15 @@ export default function CleanPreviewPage() {
       missing_values_replaced: number | null;
       column_changes: { [key: string]: number | null };
       removed_columns: string[];
+      non_ascii_values: number | null;
     };
   }>({
     data: {
       rows_removed: null,
       missing_values_replaced: null,
       column_changes: {},
-      removed_columns: []
+      removed_columns: [],
+      non_ascii_values: null,
     }
   });
 
@@ -190,6 +192,34 @@ export default function CleanPreviewPage() {
       setStatus({ error: 'Failed to download the file.', success: '' });
     }
   }
+
+  // Handle Go Back Button Logic of Deleting Clean CSV, and Redirecting
+  const handleDeleteAndNavigate = async (uuid: string) => {
+    setStatus({ error: '', success: '' }); 
+    try {
+      const csrfToken = await fetchCsrfToken();
+      const response = await fetch(`http://127.0.0.1:8000/api/csv/delete-clean-csv/${uuid}/`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRFToken': csrfToken,
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        setStatus({ error: 'Failed to delete the clean CSV file.', success: '' });
+      } else {
+        setStatus({ error: '', success: 'Deleting Clean CSV Successful' });
+        console.log("Deletion Successful")
+        router.push("/summary")
+      }
+    } catch (error) {
+      console.error('Error Deleting Clean CSV:', error);
+      setStatus({ error: 'Failed to delete the clean CSV file.', success: '' });
+    }
+  };
   
   // Original Table and Cleaned Table Pagination States
   // Original Table Pagination state
@@ -684,26 +714,25 @@ export default function CleanPreviewPage() {
             gap: 2,
           }}
         >
-          <Link href="/summary">
-            <Button
-              disableElevation
-              variant="outlined"
-              sx={{
-                borderColor: "primary.main", 
-                color: "grey.800", 
-                "&:hover": {
-                  backgroundColor: "primary.main", 
-                  color: "white",
-                  borderColor: "primary.main",
-                },
-                fontWeight: "bold",
-                padding: "5px 15px",
-                width: { xs: "100%", sm: "auto" }, 
-              }}
-            >
-              Go Back
-            </Button>
-          </Link>
+          <Button
+            disableElevation
+            variant="outlined"
+            onClick={() => handleDeleteAndNavigate(visitorId)}
+            sx={{
+              borderColor: "primary.main", // Custom border color
+              color: "grey.800", // Custom text color
+              "&:hover": {
+                backgroundColor: "primary.main", // Custom hover border color
+                color: "white", // Custom hover text color
+                borderColor: "primary.main",
+              },
+              fontWeight: "bold",
+              padding: "5px 15px",
+              width: { xs: "100%", sm: "auto" }, // Full width on mobile
+            }}
+          >
+            Go Back
+          </Button>
           <Button
             disableElevation
             variant="outlined"
@@ -726,6 +755,7 @@ export default function CleanPreviewPage() {
           <Button
             disableElevation
             variant="contained"
+            onClick={() => router.push("/report")}
             sx={{
               backgroundColor: "grey.700", // Uses theme's primary.main
               "&:hover": { backgroundColor: "primary.main" }, // Uses theme's primary.dark

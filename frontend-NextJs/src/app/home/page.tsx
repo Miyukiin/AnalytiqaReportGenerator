@@ -24,7 +24,7 @@ export default function DataReportGenerator() {
 
   const validateFile = (file: File) => {
     const fileType = file.name.split(".").pop()?.toLowerCase();
-    const maxFileSize = 1024 ** 3; // 1GB in bytes
+    const maxFileSize = 50 * 1024 ** 2; // 50 MB in bytes
 
     if (fileType !== "csv") return "Unsupported file format. Please upload a .csv file.";
     if (file.size > maxFileSize) return "File size exceeds 1GB limit.";
@@ -54,7 +54,7 @@ export default function DataReportGenerator() {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("uuid", uuid);
-      formData.append('file_name', fileData.name)
+      formData.append('file_name', file.name ? file.name : fileData.name)
 
       const response = await fetch("http://127.0.0.1:8000/api/csv-upload/", { // pass to api
         method: "PUT",
@@ -156,7 +156,7 @@ export default function DataReportGenerator() {
           </div>
         </label>
         <p className="text-gray-500 text-sm">or drag your file here</p>
-        <p className="text-gray-500 text-sm">Max file size 1GB. <br /> File must be in .csv format and comma-separated.</p>
+        <p className="text-gray-500 text-sm">Max file size 50 MB. <br /> File must be in .csv format and comma-separated.</p>
         {fileData.size && <p className="text-gray-500 text-sm">File size: {(fileData.size / 1024 ** 2).toFixed(2)} MB</p>}
         {status.error && <p className="text-red-500 text-sm mt-2">{status.error}</p>}
         {status.success && <p className="text-green-500 text-sm mt-2">{status.success}</p>}
