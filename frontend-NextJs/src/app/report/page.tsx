@@ -1042,7 +1042,7 @@ const sendChartData = async () => {
       role="presentation"
     >
       <Typography variant="h6" fontWeight="bold" align="center">
-        VISUALIZATIONS
+        VISUALIZATIONSVISUALIZATIONS
       </Typography>
       <FullWidthDivider />
       <Grid container spacing={1} sx={{ mb: 2 }} flexDirection="column">
@@ -1135,8 +1135,13 @@ const sendChartData = async () => {
   );
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", bgcolor: "#ECECEC" }}>
-      {/* Left Sidebar */}
+    <Box
+      sx={{
+        minHeight: isSmallScreen ? "260vh" : "200vh", // 200vh for small screens, 100vh otherwise
+        display: "flex",
+        bgcolor: "#ECECEC",
+      }}
+>      {/* Left Sidebar */}
       {!isSmallScreen ? (
         <Paper
           sx={{
@@ -1378,7 +1383,7 @@ const sendChartData = async () => {
                 flexGrow: 1,
                 width: "100%",
                 position: "relative",
-                paddingBottom: "100px", // Space for remarks
+                paddingBottom: isSmallScreen ? "670px" : "500px" , // Space for remarks
               }}
             >
               <MainCanvas
