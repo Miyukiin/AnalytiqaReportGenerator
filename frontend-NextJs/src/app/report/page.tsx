@@ -61,7 +61,7 @@ const icons = [
   { icon: <ScatterPlotIcon />, label: "Scatter" },
   { icon: <BarChartIcon />, label: "Histogram" },
   { icon: <RadarIcon />, label: "Radar" },
-  { icon: <ShowChartIcon />, label: "Stacked Line" },
+  { icon: <ShowChartIcon />, label: "StackedLine" },
   { icon: <LayersIcon />, label: "RadialBar" },
 ];
 
@@ -359,39 +359,39 @@ const ReportLayout: React.FC = () => {
     }
   }, [isDropdownChange]); // Run when Dropdown values change
 
-  // Generate AI Remarks
-  const sendChartData = async () => {
-    const chartData = [
-      { x: 34.5, y: 7.8292 },
-      { x: 47, y: 7 },
-      { x: 62, y: 9.6875 },
-      { x: 27, y: 8.6625 },
-      { x: 22, y: 12.2875 },
-      // ... TEMPORARY SHOULD GET FROM SELECTED CHART
-    ];
+// Generate AI Remarks
+const sendChartData = async () => {
+  // Extract the charts for the current page
+  const currentPage = pages[currentPageIndex]; // Access the current page using currentPageIndex
+  if (!currentPage || !currentPage.charts) {
+    console.error('No charts found on the current page.');
+    return;
+  }
 
-    const chartType = "scatter";  // TEMPORARY SHOULD GET FROM SELECTED CHART
+  const chart_array_on_page = currentPage.charts.map(chart => ({
+    data: chart.data,
+    type: chart.type,
+    title: chart.title,
+  }));
 
-    try {
-      const response = await fetch("http://127.0.0.1:8000/api/report/generate-ai-remarks/", {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': await fetchCsrfToken(),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          chart_type: chartType,
-          chart_data: chartData,
-        }),
-      });
+  console.log("Printing Chart Array On Page", chart_array_on_page)
 
-      const aiRemarks = await response.json();
-      handleRemarkChange(aiRemarks.remarks)
+  try {
+    const response = await fetch("http://127.0.0.1:8000/api/report/generate-ai-remarks/", {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': await fetchCsrfToken(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ chart_array_on_page, menuItemsData}),
+    });
 
-    } catch (error) {
-      console.error('Error sending chart data:', error);
-    }
-  };
+    const aiRemarks = await response.json();
+    handleRemarkChange(aiRemarks.remarks);
+  } catch (error) {
+    console.error('Error sending chart data:', error);
+  }
+};
 
   // Function to render chart-specific fields based on chart type
   const renderChartSpecificFields = (chart: Chart) => {
@@ -774,7 +774,7 @@ const ReportLayout: React.FC = () => {
                   </Box>
                 </>
               );
-      case "Stacked Line":
+      case "StackedLine":
                 return (
                   <>
                     {/* Line 1 Input */}

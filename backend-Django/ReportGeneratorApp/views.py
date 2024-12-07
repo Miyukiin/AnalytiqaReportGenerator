@@ -382,34 +382,69 @@ def retrieve_chart_data(request: HttpRequest, query_object: Visitors):
 def csrf_token_view(request: HttpRequest):
     return JsonResponse({"csrfToken": get_token(request)})
 
+from django.http import JsonResponse
+from rest_framework.decorators import api_view
+import logging
+
+# Set up logging
+logger = logging.getLogger(__name__)
+
 @api_view(['POST'])
-def generate_ai_remarks(request: HttpRequest):
+def generate_ai_remarks(request:HttpRequest):
     if request.method == "POST":
-        chart_type:str = request.data.get("chart_type")
-        chart_data:list[dict] = request.data.get("chart_data")
-        
-        logger.info(chart_type)
-        logger.info(chart_data)
-        
-        if not chart_type or not chart_data:
-                return JsonResponse({'error': "No Chart Type or Chart Data provided"}, status=400)
+        # Get chart data from request
+        chart_array = request.data.get("chart_array_on_page")
+        dataset = request.data.get("entire_dataset")
 
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        if not chart_array or not isinstance(chart_array, list):
+            return JsonResponse({'error': "Invalid or missing chart data"}, status=400)
 
-        prompt = f"Given the following chart data that I used in chart type {chart_type}, generate remarks and insights in the form of one paragraph, with a minimum of five sentences:\n"
-        for item in chart_data:
-            prompt += f"Point: x = {item['x']}, y = {item['y']}\n"
-        
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        response = model.generate_content([prompt])
-        
+        logger.info(f"Received chart data: {chart_array}")
+
         try:
-            remarks = response.text
-        except AttributeError:
-            return JsonResponse({'error': 'Unexpected response format or no content found'}, status=500)
+            # Initialize the Gemini model
+            model = genai.GenerativeModel("gemini-1.5-flash")
+            remarks = ""
 
-        # Return the AI-generated remarks
-        return JsonResponse({'remarks': remarks}, status=200)
+            # Iterate over each chart in the array
+            for index, chart in enumerate(chart_array):
+                chart_type = chart.get("type", "Unknown")
+                chart_name = chart.get("title", "Untitled")
+                chart_data = chart.get("data", [])
+
+                if not chart_data:
+                    remarks += f"For Chart Name: {chart_name} with Chart Type {chart_type}.\nNo data available for analysis.\n"
+                    continue
+
+                # Build the prompt for the current chart
+                prompt = (
+                    f"I am using Python. I am building a Data Report Generator. I am tasking you to generates, insights, relationships and remarks between the data I provide to you."
+                    f"Respond in the form of one paragraph, with a minimum of five sentences. "
+                    f"Data is {chart_data}, sourced from {dataset}. The Data Chart type is {chart_type} and Chart Name is {chart_name}. If I have specified no name, you must use \"Chart Number {index+1}\"#\n"
+                    f"Follow the response format:\n"
+                    f"Begin with Specifying the Chart Name and Chart Type.\n"
+                    f"As an example\n"
+                    f"For Chart Name: <Chart Name Value here or the default that I have specified>\n"
+                    f"For Chart Type: <Chart Type Value here>\n"
+                    f"Then your insights in a newline.\n"
+                )
+
+                # Generate content using the Gemini model
+                response = model.generate_content([prompt])
+
+                # Append the response to the remarks
+                if response and hasattr(response, "text"):
+                    remarks += f"\n{response.text.strip()}\n"
+                else:
+                    remarks += f"For Chart Name: {chart_name} with Chart Type {chart_type}.\nUnable to generate insights for this chart.\n"
+
+            # Return the concatenated remarks
+            return JsonResponse({'remarks': remarks}, status=200)
+
+        except Exception as e:
+            logger.error(f"Error generating AI remarks: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+
     
 @api_view(['DELETE'])
 def delete_clean_csv(request: HttpRequest, uuid: str):
