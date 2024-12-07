@@ -37,17 +37,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Render Global Header only if not in noGlobalLayoutRoutes */}
         {!isNoGlobalLayout && (
           <header className="bg-white shadow-md top-0 left-0 right-0 z-10">
-
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between py-4">
               {/* Logo on the left, center it when on the home page */}
-              <div className={`flex-shrink-0 ${isHomePage ? "mx-auto" : ""}`}>
-                <Link href="/">
-                  <img
-                    src="/images/analytiqa_header.png"
-                    alt="Analytiqa Logo"
-                    className="h-10 w-auto"
-                  />
-                </Link>
+              <div className={`flex-shrink-0 ${isHomePage ? "mx-auto" : ""} flex justify-center`}>
+                <img
+                  src="/images/analytiqa_header.png"
+                  alt="Analytiqa Logo"
+                  className="h-10 w-auto sm:h-12 md:h-14 lg:h-16" // Adjust height based on screen size
+                />
               </div>
 
               {/* Upload CSV Button on the right, hidden on /home */}
@@ -55,11 +52,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <div>
                   <Link href="/home">
                     <button
-                      className="flex items-center bg-mainblue-default hover:bg-[#2c5056] text-white px-4 py-2 rounded-md transition transform hover:scale-105"
+                      className="flex items-center bg-mainblue-default hover:bg-[#2c5056] text-white px-2 py-1 rounded-md transition transform hover:scale-105 text-xs sm:text-sm md:text-base"
                       aria-label="Upload New CSV"
                     >
-                      <UploadFileIcon className="w-5 h-5 mr-2" />
-                      Upload Another CSV
+                      <UploadFileIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                      Upload New CSV
                     </button>
                   </Link>
                 </div>
@@ -69,17 +66,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         )}
 
         {/* Main Content */}
-
         <main
-
           className={`${
-
             isNoGlobalLayout
               ? "flex-grow"
               : isHomePage
-              ? "mt-8 flex-grow"
+              ? "mt-0 flex-grow"
               : "mt-0 flex-grow"
-
           }`}
         >
           <ThemeProvider theme={theme}>
