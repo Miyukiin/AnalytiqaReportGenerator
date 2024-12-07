@@ -14,5 +14,6 @@ urlpatterns = [
     path('api/report/retrieve-chart-data/', retrieve_chart_data, name="retrieve_chart_data"),
     path('api/report/generate-ai-remarks/', generate_ai_remarks, name="generate_ai_remarks"),
     path('api/csv/delete-clean-csv/<uuid:uuid>/', delete_clean_csv, name='delete-clean-csv'),
+    path('api/report/calculate-radial-data/', calculate_radial_data, name='calculate-radial-data'),
 
 ]

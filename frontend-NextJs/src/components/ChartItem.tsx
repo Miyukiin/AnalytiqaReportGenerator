@@ -320,7 +320,7 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
             outerRadius={radialOuterRadius}
           >
             <RadialBar
-              dataKey="uv"
+              dataKey="value"
               fill="#8884d8"
               background
               label={{
