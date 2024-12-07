@@ -107,7 +107,8 @@ export default function DataReportGenerator() {
 
       </Head>
 
-      <h2 className="text-4xl sm:text-4xl font-bold text-gray-600 my-6">DATA REPORT GENERATOR</h2>
+      <h2 className="text-4xl sm:text-4xl font-bold text-gray-600 my-6 mt-16">DATA REPORT GENERATOR</h2>
+
 
       {/* Full-screen Loading Overlay */}
       {loading && (
@@ -156,6 +157,7 @@ export default function DataReportGenerator() {
           </div>
         </label>
         <p className="text-gray-500 text-sm">or drag your file here</p>
+
         <p className="text-gray-500 text-sm">Max file size 50 MB. <br /> File must be in .csv format and comma-separated.</p>
         {fileData.size && <p className="text-gray-500 text-sm">File size: {(fileData.size / 1024 ** 2).toFixed(2)} MB</p>}
         {status.error && <p className="text-red-500 text-sm mt-2">{status.error}</p>}

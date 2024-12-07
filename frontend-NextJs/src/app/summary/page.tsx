@@ -108,6 +108,7 @@ export default function SummaryPage() {
     // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-table-preview-data/`, uuid, csrfToken, setStatus);
     if (data) {
       setPreviewData(data);
+      console.log("Getting Preview Data", data)
       setStatus({ error: '', success: 'Getting Preview Data Successful' });
     }
   };
@@ -121,6 +122,7 @@ export default function SummaryPage() {
     // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-summary-statistics/`, uuid, csrfToken, setStatus);
     if (data) {
       setSummaryData(data);
+
       setStatus({ error: '', success: 'Getting Summary Statistics Successful' });
     }
   };
@@ -162,7 +164,7 @@ export default function SummaryPage() {
     label: string;
     minWidth?: number;
     align?: 'left';
-    format?: (value: number) => string;
+    format?: (value: number | boolean) => string;
   }
   
   // Hook for column mapping, and setting visible columns to all columns of passed API Data.
@@ -176,8 +178,8 @@ export default function SummaryPage() {
           minWidth: 170,
           align: 'left',
         };
-        if (type === "number") {
-          column.format = (value: number) => value.toLocaleString(); // Format numbers
+        if (type === "number" || type === "boolean") {
+          column.format = (value: number | boolean) => value.toLocaleString(); // Format numbers and boolean values
         }
         return column;
       });

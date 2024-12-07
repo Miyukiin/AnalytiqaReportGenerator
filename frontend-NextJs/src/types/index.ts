@@ -9,13 +9,13 @@ export interface ScatterDataPoint {
 
 export interface HistogramDataPoint { 
   name: string;
-  A: number;
+  value: number;
 }
 
 export interface RadarDataPoint {
-  subject: string;
-  A: number;
-  fullMark?: number;
+  header: string;
+  row1: number;
+  row2: number;
 }
 
 export interface StackedLineDataPoint {
@@ -53,6 +53,12 @@ export interface Chart {
   line2Axis?: string;      // For StackedLine chart's Line 2
   line3Axis?: string;      // For StackedLine chart's Line 3
   subjectAxis?: string;
+
+  xAxis1?: string;         // Histogram First x Axis.
+  
+  NumericColumns?: Array<string>;   // Radar All Numeric Columns Selected
+  RowsSelected?:  Array<number>;    // Radar All Rows indexes Selected To be Shown in Radar
+
   nameAxis?: string;    
   aAxis?: string;      
   data: ChartData;

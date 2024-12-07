@@ -168,6 +168,7 @@ def upload_csv(request: HttpRequest):
         csv_file = request.FILES.get("file")
         user_uuid = request.POST.get("uuid")
         csv_file_name = request.POST.get("file_name")
+        logger.info("Printing File Name:", csv_file_name)
         
         if not csv_file or user_uuid is None:
             return JsonResponse({"error": "File and UUID are required"}, status=400)
@@ -342,6 +343,8 @@ def get_summary_changes(request: HttpRequest, query_object: Visitors):
                     
                     if changes_in_column.any():
                         comparison_result["column_changes"][column] = int(changes_in_column.sum())
+                        
+                    logger.info(comparison_result)
 
 
             # Return the comparison summary

@@ -256,32 +256,41 @@ export default function CleanPreviewPage() {
     label: string;
     minWidth?: number;
     align?: 'left';
-    format?: (value: number) => string;
+    format?: (value: number | boolean) => string;
   }
   
   // Hook for column mapping, and setting visible columns to all columns of passed API Data.
   useEffect(() => {
     if (origPreviewData.headers_types && cleanedPreviewData.headers_types) {
       const generateColumns = (headers: { [key: string]: string | number | boolean | null }): Column[] => {
-        return Object.entries(headers).map(([key, type]) => ({
-          id: key,
-          label: key,
-          minWidth: 170,
-          align: 'left',
-          ...(type === "number" && { format: (value: number) => value.toLocaleString() }) // Conditionally add the format function
-        }));
+        return Object.entries(headers).map(([key, type]) => {
+          const column: Column = {
+            id: key,
+            label: key,
+            minWidth: 170,
+            align: 'left',
+          };
+  
+          // Conditionally add the format function for number or boolean types
+          if (type === "number" || type === "boolean") {
+            column.format = (value: number | boolean) => value.toLocaleString();
+          }
+  
+          return column;
+        });
       };
-      
+  
       const OrigRenderedColumns = generateColumns(origPreviewData.headers_types);
       const CleanedRenderedColumns = generateColumns(cleanedPreviewData.headers_types);
-
-      setColumnsOrigTable(OrigRenderedColumns); // Then we set our columns after creating the Column Objects we need.
-      setVisibleColumnsOrigTable(CleanedRenderedColumns.map(col => col.id)); // Here we set all Column Objects as our visible columns. Initial state if passed API data contains columns.
+  
+      setColumnsOrigTable(OrigRenderedColumns); // Set columns for original table
+      setVisibleColumnsOrigTable(OrigRenderedColumns.map(col => col.id)); // Set visible columns for original table
       
-      setColumnsCleanedTable(CleanedRenderedColumns); 
-      setVisibleColumnsCleanedTable(CleanedRenderedColumns.map(col => col.id)); 
+      setColumnsCleanedTable(CleanedRenderedColumns); // Set columns for cleaned table
+      setVisibleColumnsCleanedTable(CleanedRenderedColumns.map(col => col.id)); // Set visible columns for cleaned table
     }
-  }, [origPreviewData, cleanedPreviewData]); // When previewDatas change, run this hook. Ensures that columns are visible when previewDatas are loaded.
+  }, [origPreviewData, cleanedPreviewData]); // When previewDatas change, run this hook
+  
 
   // State handling column management. NOT IMPLEMENTED. REFACTORING NEEDED
   // Original Table
@@ -717,7 +726,9 @@ export default function CleanPreviewPage() {
           <Button
             disableElevation
             variant="outlined"
+
             onClick={() => handleDeleteAndNavigate(visitorId)}
+
             sx={{
               borderColor: "primary.main", // Custom border color
               color: "grey.800", // Custom text color

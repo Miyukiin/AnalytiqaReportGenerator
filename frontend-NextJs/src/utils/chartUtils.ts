@@ -21,12 +21,9 @@ export const generateSampleData = (type: ChartType): any[] => {
       { name: "F", value: 189 },
     ],
     Radar: [
-      { subject: "Math", value: 120 },
-      { subject: "Chinese", value: 98 },
-      { subject: "English", value: 86 },
-      { subject: "Geography", value: 99 },
-      { subject: "Physics", value: 85 },
-      { subject: "History", value: 65 },
+      { header: "Math", row1: 12, row2: 45},
+      { header: "Chinese", row1: 98, row2: 65 },
+      { header: "English", row1: 86, row2: 23},
     ],
     StackedLine: [ // Retaining "StackedLine"
       { name: "Page A", uv: 4000, pv: 2400 },
