@@ -23,7 +23,7 @@ const SummaryChanges: React.FC<{ summaryChangesData: SummaryChangesData }> = ({ 
     const isClean = rows_removed === null && missing_values_replaced === null && Object.keys(column_changes).length === 0 && removed_columns.length === 0 && non_ascii_values === null;
 
     if (isClean) {
-        return <div><span>Your data is already clean! (<b>No Duplicates</b>, or <b>Any Missing Values found</b>.)</span></div>;
+        return <div><span>Your data is already clean! (<b>No Duplicates</b>, <b>Non-Ascii Values</b> or <b>Any Missing Values found</b>.)</span></div>;
     }
 
     return (
