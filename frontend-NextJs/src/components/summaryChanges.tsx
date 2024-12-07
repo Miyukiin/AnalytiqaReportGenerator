@@ -7,6 +7,7 @@ interface SummaryChangesData {
     missing_values_replaced: number | null;
     column_changes: { [key: string]: number | null };
     removed_columns: string[];
+    non_ascii_values: number | null;
   };
 }
 
@@ -16,21 +17,13 @@ const SummaryChanges: React.FC<{ summaryChangesData: SummaryChangesData }> = ({ 
     if (!summaryChangesData.data) {
         return <div>Loading...</div>;  
     }
-    const {rows_removed, missing_values_replaced, column_changes, removed_columns} = summaryChangesData.data;
-    console.log(rows_removed === null || rows_removed === 0)
-    console.log(missing_values_replaced === null || missing_values_replaced === 0)
-    console.log(Object.keys(column_changes).length === 0)
-    console.log(removed_columns.length === 0)
+    const {rows_removed, missing_values_replaced, column_changes, removed_columns, non_ascii_values } = summaryChangesData.data;
 
     // Check if everything is null or empty
-    const isClean = 
-        (rows_removed === null || rows_removed === 0) && 
-        (missing_values_replaced === null || missing_values_replaced === 0) && 
-        (Object.keys(column_changes).length === 0) && 
-        (removed_columns.length === 0)
+    const isClean = rows_removed === null && missing_values_replaced === null && Object.keys(column_changes).length === 0 && removed_columns.length === 0 && non_ascii_values === null;
 
     if (isClean) {
-        return <div><span>Your data is already clean! (<b>No Duplicates</b>, or <b>Any Missing Values found</b>.)</span></div>;
+        return <div><span>Your data is already clean! (<b>No Duplicates</b>, <b>Non-Ascii Values</b> or <b>Any Missing Values found</b>.)</span></div>;
     }
 
     return (
@@ -41,6 +34,9 @@ const SummaryChanges: React.FC<{ summaryChangesData: SummaryChangesData }> = ({ 
         </Typography>
         <Typography variant="body1" sx={{ color: 'grey.800', marginBottom: 0, lineHeight: '1.8' }}>
             {missing_values_replaced && missing_values_replaced !== null ? <span>Step 2: We replaced <b>{missing_values_replaced}</b> missing values.</span> : <span> Step 2: No missing values found. </span>}
+        </Typography>
+        <Typography variant="body1" sx={{ color: 'grey.800', marginBottom: 0, lineHeight: '1.8' }}>
+            {non_ascii_values && non_ascii_values !== null ? <span>Step 3: We removed non-ascii characters from <b>{non_ascii_values}</b> cells.</span> : <span> Step 3: No cells containing non-ascii values found. </span>}
         </Typography>
         <Typography variant="body1" sx={{ color: 'grey.800', marginBottom: 0, lineHeight: '1.8' }}>
             {column_changes && Object.keys(column_changes).length > 0 ? <span>Step 4: We identified all columns we changed below, with a count of values or cells modified.</span> : <span> Step 3: No changes to any values of columns found. </span>}

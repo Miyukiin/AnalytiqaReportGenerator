@@ -3,14 +3,16 @@
 "use client"; // Ensure this is a Client Component
 
 import React, { useState, useEffect, ChangeEvent, useMemo } from "react";
-import { redirect, useRouter } from 'next/navigation';
-import { Box, Typography, Paper, Button, IconButton, CircularProgress } from "@mui/material";
+import { useRouter } from 'next/navigation';
+import { Box, Typography, Button, IconButton} from "@mui/material";
 import ExpandIcon from "@/components/icons/ExpandIcon"; // Adjust the path as needed
 import { useVisitorId } from "@/context/visitorIDManager";
 import { fetchCsrfToken } from '../../components/csrfToken'
-import FullscreenModal from "@/components/FullscreenModal";
 import DataTable from "@/components/DataTable";
 import SummaryChanges from "@/components/summaryChanges"
+import FullscreenModal from "@/components/FullscreenModal";
+import ManageColumnsDialog from "@/components/ManageColumnsDialog";
+import Link from 'next/link';
 
 
 // Shared fetch function
@@ -66,13 +68,15 @@ export default function CleanPreviewPage() {
       missing_values_replaced: number | null;
       column_changes: { [key: string]: number | null };
       removed_columns: string[];
+      non_ascii_values: number | null;
     };
   }>({
     data: {
       rows_removed: null,
       missing_values_replaced: null,
       column_changes: {},
-      removed_columns: []
+      removed_columns: [],
+      non_ascii_values: null,
     }
   });
 
@@ -188,6 +192,34 @@ export default function CleanPreviewPage() {
       setStatus({ error: 'Failed to download the file.', success: '' });
     }
   }
+
+  // Handle Go Back Button Logic of Deleting Clean CSV, and Redirecting
+  const handleDeleteAndNavigate = async (uuid: string) => {
+    setStatus({ error: '', success: '' }); 
+    try {
+      const csrfToken = await fetchCsrfToken();
+      const response = await fetch(`http://127.0.0.1:8000/api/csv/delete-clean-csv/${uuid}/`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRFToken': csrfToken,
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        setStatus({ error: 'Failed to delete the clean CSV file.', success: '' });
+      } else {
+        setStatus({ error: '', success: 'Deleting Clean CSV Successful' });
+        console.log("Deletion Successful")
+        router.push("/summary")
+      }
+    } catch (error) {
+      console.error('Error Deleting Clean CSV:', error);
+      setStatus({ error: 'Failed to delete the clean CSV file.', success: '' });
+    }
+  };
   
   // Original Table and Cleaned Table Pagination States
   // Original Table Pagination state
@@ -266,11 +298,22 @@ export default function CleanPreviewPage() {
 
   const handleManageColumnsOpenOrigTable = () => setIsManageColumnsOpenOrigTable(true);
   const handleManageColumnsCloseOrigTable = () => setIsManageColumnsOpenOrigTable(false);
+  
   const toggleColumnOrigTable = (columnId: string) => {
     setVisibleColumnsOrigTable(prev =>
       prev.includes(columnId) ? prev.filter(id => id !== columnId) : [...prev, columnId]
     );
   };
+  const toggleColumn = (columnId: string) => {
+    setVisibleColumns(prev =>
+      prev.includes(columnId) ? prev.filter(id => id !== columnId) : [...prev, columnId]
+    );
+  };
+
+
+  // Initialization of Columns
+  const [columns, setColumns] = useState<Column[]>([]); 
+  const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
 
   // Cleaned Table
   const [isManageColumnsOpenCleanedTable, setIsManageColumnsOpenCleanedTable] = useState(false);
@@ -284,6 +327,15 @@ export default function CleanPreviewPage() {
   };
 
   // Select All functionality. NOT IMPLEMENTED. REFACTORING NEEDED
+  const allSelected = visibleColumns.length === columns.length; // If the number of visible columns is equal to the full length of columns, it means that all columns are visible.
+  const handleSelectAll = () => {
+    if (allSelected) {
+      setVisibleColumns([]);
+    } else {
+      setVisibleColumns(columns.map(col => col.id));
+    }
+  };
+  
   // Original Table
   const allSelectedOrigTable = visibleColumnsOrigTable.length === columnsOrigTable.length; // If the number of visible columns is equal to the full length of columns, it means that all columns are visible.
   const handleSelectAllOrigTable = () => {
@@ -352,7 +404,10 @@ export default function CleanPreviewPage() {
   ), [cleanedPreviewData.data, comparatorCleanedTable]);
 
   
-  // Fullscreen state. NOT IMPLEMENTED. REFACTORING NEEDED
+  // Fullscreen state
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const toggleFullscreen = () => setIsFullscreen(prev => !prev);
+
   // Original Table
   const [isFullscreenOrigTable, setIsFullscreenOrigTable] = useState(false);
   const toggleFullscreenOrigTable = () => setIsFullscreenOrigTable(prev => !prev);
@@ -377,7 +432,6 @@ export default function CleanPreviewPage() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isFullscreenCleanedTable]);
 
-
   return (
     <Box
       sx={{
@@ -397,91 +451,240 @@ export default function CleanPreviewPage() {
           paddingY: 4,
         }}
       >
-        {/* Original Data Section */}
-        <Box sx={{ marginBottom: 5 }}>
-          <Typography
-            variant="h5"
-            align="center"
+      {/* Original Data Section */}
+      <Box sx={{ marginBottom: 5 }}>
+        <Typography
+          variant="h5"
+          align="center"
+          sx={{
+            fontWeight: "bold",
+            color: "grey.800",
+            textTransform: "uppercase",
+            marginBottom: 2,
+            fontSize: "2.25rem",
+          }}
+        >
+          Original {fileName}
+        </Typography>
+
+        {/* Manage Columns Button and Fullscreen Toggle Button below the title */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center", 
+            gap: 2, 
+            marginBottom: 3,
+            flexDirection: { xs: "column", sm: "row" },
+          }}
+        >
+          {/* Manage Columns Button */}
+          <Button
+            variant="outlined"
+            onClick={handleManageColumnsOpenOrigTable}
+            aria-controls={isManageColumnsOpenOrigTable ? 'manage-columns-dialog' : undefined}
+            aria-haspopup="true"
+            aria-expanded={isManageColumnsOpenOrigTable ? 'true' : undefined}
             sx={{
+              backgroundColor: "grey.700",
+              "&:hover": { backgroundColor: "primary.main" },
+              color: "white",
               fontWeight: "bold",
-              color: "grey.800", // Uses theme's grey.800
-              textTransform: "uppercase",
-              marginBottom: 2,
-              fontSize: "1.75rem",
+              padding: "5px 12px",
+              width: { xs: "100%", sm: "auto" },
             }}
           >
-            Original {fileName}
-          </Typography>
-    
-          <div className={`rounded-lg w-full shadow-sm transition-all duration-300 overflow-x-auto`}>
-            <DataTable
-              columns={columnsOrigTable}
-              data={sortedDataOrigTable}
-              visibleColumns={visibleColumnsOrigTable}
-              order={orderOrigTable}
-              orderBy={orderByOrigTable}
-              onRequestSort={handleRequestSortOrigTable}
-              page={pageOrigTable}
-              rowsPerPage={rowsPerPageOrigTable}
-              onPageChange={handleChangePageOrigTable}
-              onRowsPerPageChange={handleChangeRowsPerPageOrigTable}
-            />
-          </div>
-            
-            <IconButton
-              sx={{
-                position: "absolute",
-                top: 8,
-                right: 8,
-                color: "grey.700", // Uses theme's grey.700
-              }}
-            >
-              <ExpandIcon />
-            </IconButton>
-        </Box>
+            Manage Columns
+          </Button>
 
-        {/* Cleaned Data Section */}
-        <Box sx={{ marginBottom: 5 }}>
-          <Typography
-            variant="h5"
-            align="center"
+          {/* Fullscreen Toggle Button */}
+          <Button
+            variant="outlined"
+            onClick={toggleFullscreen}
+            aria-label={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
             sx={{
+              backgroundColor: "grey.700",
+              "&:hover": { backgroundColor: "primary.main" },
+              color: "white",
               fontWeight: "bold",
-              color: "grey.700", // Uses theme's grey.800
-              textTransform: "uppercase",
-              marginBottom: 2,
-              fontSize: "1.75rem",
+              padding: "5px 12px",
+              width: { xs: "100%", sm: "auto" },
             }}
           >
-            Cleaned {fileName}
-          </Typography>
-          
-
-          <div className={`rounded-lg w-full shadow-sm transition-all duration-300 overflow-x-auto`}>
-            <DataTable
-              columns={columnsCleanedTable}
-              data={sortedDataCleanedTable}
-              visibleColumns={visibleColumnsCleanedTable}
-              order={orderCleanedTable}
-              orderBy={orderByCleanedTable}
-              onRequestSort={handleRequestSortCleanedTable}
-              page={pageCleanedTable}
-              rowsPerPage={rowsPerPageCleanedTable}
-              onPageChange={handleChangePageCleanedTable}
-              onRowsPerPageChange={handleChangeRowsPerPageCleanedTable}
-            />
-          </div>
-            <IconButton
-              sx={{
-                position: "absolute",
-                top: 8,
-                right: 8,
-                color: "grey.700", // Uses theme's grey.700
-              }}
-            >
-              <ExpandIcon />
-            </IconButton>
+            {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+          </Button>
         </Box>
+
+        <div className={`rounded-lg w-full shadow-sm transition-all duration-300 overflow-x-auto`}>
+          <DataTable
+            columns={columnsOrigTable}
+            data={sortedDataOrigTable}
+            visibleColumns={visibleColumnsOrigTable}
+            order={orderOrigTable}
+            orderBy={orderByOrigTable}
+            onRequestSort={handleRequestSortOrigTable}
+            page={pageOrigTable}
+            rowsPerPage={rowsPerPageOrigTable}
+            onPageChange={handleChangePageOrigTable}
+            onRowsPerPageChange={handleChangeRowsPerPageOrigTable}
+          />
+        </div>
+
+        <IconButton
+          sx={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            color: "grey.700", // Uses theme's grey.700
+          }}
+        >
+          <ExpandIcon />
+        </IconButton>
+      </Box>
+
+      {/* Fullscreen Modal */}
+      <FullscreenModal
+        open={isFullscreen}
+        onClose={toggleFullscreen}
+        columns={columnsOrigTable}
+        data={sortedDataOrigTable}
+        visibleColumns={visibleColumnsOrigTable}
+        order={orderOrigTable}
+        orderBy={orderByOrigTable}
+        onRequestSort={handleRequestSortOrigTable}
+        page={pageOrigTable}
+        rowsPerPage={rowsPerPageOrigTable}
+        onPageChange={handleChangePageOrigTable}
+        onRowsPerPageChange={handleChangeRowsPerPageOrigTable}
+      />
+
+      {/* Manage Columns Dialog */}
+      <ManageColumnsDialog
+        open={isManageColumnsOpenOrigTable}
+        onClose={handleManageColumnsCloseOrigTable}
+        columns={columnsOrigTable}
+        visibleColumns={visibleColumnsOrigTable}
+        toggleColumn={toggleColumnOrigTable}
+        allSelected={allSelectedOrigTable}
+        handleSelectAll={handleSelectAllOrigTable}
+      />
+
+      {/* Cleaned Data Section */}
+      <Box sx={{ marginBottom: 5 }}>
+        <Typography
+          variant="h5"
+          align="center"
+          sx={{
+            fontWeight: "bold",
+            color: "grey.700", // Uses theme's grey.700
+            textTransform: "uppercase",
+            marginBottom: 2,
+            fontSize: "2.25rem",
+          }}
+        >
+          Cleaned {fileName}
+        </Typography>
+
+        {/* Manage Columns Button and Fullscreen Toggle Button below the title */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center", // Center the buttons horizontally
+            gap: 2, // Space between buttons
+            marginBottom: 3, // Space between title and table
+            flexDirection: { xs: "column", sm: "row" }, // Stack buttons on smaller screens
+          }}
+        >
+          {/* Manage Columns Button */}
+          <Button
+            variant="outlined"
+            onClick={handleManageColumnsOpenCleanedTable}
+            aria-controls={isManageColumnsOpenCleanedTable ? 'manage-columns-dialog' : undefined}
+            aria-haspopup="true"
+            aria-expanded={isManageColumnsOpenCleanedTable ? 'true' : undefined}
+            sx={{
+              backgroundColor: "grey.700",
+              "&:hover": { backgroundColor: "primary.main" },
+              color: "white",
+              fontWeight: "bold",
+              padding: "5px 12px",
+              width: { xs: "100%", sm: "auto" },
+            }}
+          >
+            Manage Columns
+          </Button>
+
+          {/* Fullscreen Toggle Button */}
+          <Button
+            variant="outlined"
+            onClick={toggleFullscreen}
+            aria-label={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+            sx={{
+              backgroundColor: "grey.700",
+              "&:hover": { backgroundColor: "primary.main" },
+              color: "white",
+              fontWeight: "bold",
+              padding: "5px 12px",
+              width: { xs: "100%", sm: "auto" },
+            }}
+          >
+            {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+          </Button>
+        </Box>
+
+        {/* Table for Cleaned Data */}
+        <div className={`rounded-lg w-full shadow-sm transition-all duration-300 overflow-x-auto`}>
+          <DataTable
+            columns={columnsCleanedTable}
+            data={sortedDataCleanedTable}
+            visibleColumns={visibleColumnsCleanedTable}
+            order={orderCleanedTable}
+            orderBy={orderByCleanedTable}
+            onRequestSort={handleRequestSortCleanedTable}
+            page={pageCleanedTable}
+            rowsPerPage={rowsPerPageCleanedTable}
+            onPageChange={handleChangePageCleanedTable}
+            onRowsPerPageChange={handleChangeRowsPerPageCleanedTable}
+          />
+        </div>
+
+        <IconButton
+          sx={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            color: "grey.700", // Uses theme's grey.700
+          }}
+        >
+          <ExpandIcon />
+        </IconButton>
+      </Box>
+
+      {/* Fullscreen Modal for Cleaned Data */}
+      <FullscreenModal
+        open={isFullscreen}
+        onClose={toggleFullscreen}
+        columns={columnsCleanedTable}
+        data={sortedDataCleanedTable}
+        visibleColumns={visibleColumnsCleanedTable}
+        order={orderCleanedTable}
+        orderBy={orderByCleanedTable}
+        onRequestSort={handleRequestSortCleanedTable}
+        page={pageCleanedTable}
+        rowsPerPage={rowsPerPageCleanedTable}
+        onPageChange={handleChangePageCleanedTable}
+        onRowsPerPageChange={handleChangeRowsPerPageCleanedTable}
+      />
+
+      {/* Manage Columns Dialog for Cleaned Data */}
+      <ManageColumnsDialog
+        open={isManageColumnsOpenCleanedTable}
+        onClose={handleManageColumnsCloseCleanedTable}
+        columns={columnsCleanedTable}
+        visibleColumns={visibleColumnsCleanedTable}
+        toggleColumn={toggleColumnCleanedTable}
+        allSelected={allSelectedCleanedTable}
+        handleSelectAll={handleSelectAllCleanedTable}
+      />
 
         {/* Summary of Changes Section */}
         <Box sx={{ marginBottom: 6 }}>
@@ -523,7 +726,9 @@ export default function CleanPreviewPage() {
           <Button
             disableElevation
             variant="outlined"
-            onClick={() => router.push("/home")}
+
+            onClick={() => handleDeleteAndNavigate(visitorId)}
+
             sx={{
               borderColor: "primary.main", // Custom border color
               color: "grey.800", // Custom text color
@@ -544,16 +749,16 @@ export default function CleanPreviewPage() {
             variant="outlined"
             onClick={() => handleDownloadCleanedCSV(visitorId)}
             sx={{
-              borderColor: "primary.main", // Custom border color
-              color: "grey.800", // Custom text color
+              borderColor: "primary.main", 
+              color: "grey.800", 
               "&:hover": {
-                backgroundColor: "primary.main", // Custom hover border color
-                color: "white", // Custom hover text color
+                backgroundColor: "primary.main",
+                color: "white", 
                 borderColor: "primary.main",
               },
               fontWeight: "bold",
               padding: "5px 15px",
-              width: { xs: "100%", sm: "auto" }, // Full width on mobile
+              width: { xs: "100%", sm: "auto" },
             }}
           >
             Save as CSV File

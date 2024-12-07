@@ -122,13 +122,14 @@ export default function SummaryPage() {
     // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-summary-statistics/`, uuid, csrfToken, setStatus);
     if (data) {
       setSummaryData(data);
-      console.log("Getting Summary Data:", data)
+
       setStatus({ error: '', success: 'Getting Summary Statistics Successful' });
     }
   };
 
   // CleanCSV API Call
   const clean_csv = async (uuid: string) => {
+    console.log("Calling Clean API")
     setStatus({ error: '', success: '' });
     const csrfToken = await fetchCsrfToken(); 
     const data = await fetchData(
@@ -304,7 +305,7 @@ export default function SummaryPage() {
     <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
       {/* Left Panel */}
       <div className="flex-1 p-6 lg:p-12 bg-gray-100 overflow-hidden">
-        <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-6">Summary</h1>
+        <h1 className="text-5xl lg:text-4xl font-bold text-gray-800 mb-6">DATA SUMMARY</h1>
         {/* Gen Stats */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-y-4 gap-x-8">
           {GenStats.map((stat, idx) => (

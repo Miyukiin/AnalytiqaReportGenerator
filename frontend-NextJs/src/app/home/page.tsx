@@ -157,7 +157,8 @@ export default function DataReportGenerator() {
           </div>
         </label>
         <p className="text-gray-500 text-sm">or drag your file here</p>
-        <p className="text-gray-500 text-sm">Max file size 50MB. <br /> File must be in .csv format and comma-separated.</p>
+
+        <p className="text-gray-500 text-sm">Max file size 50 MB. <br /> File must be in .csv format and comma-separated.</p>
         {fileData.size && <p className="text-gray-500 text-sm">File size: {(fileData.size / 1024 ** 2).toFixed(2)} MB</p>}
         {status.error && <p className="text-red-500 text-sm mt-2">{status.error}</p>}
         {status.success && <p className="text-green-500 text-sm mt-2">{status.success}</p>}
