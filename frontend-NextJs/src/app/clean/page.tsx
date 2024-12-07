@@ -190,6 +190,34 @@ export default function CleanPreviewPage() {
       setStatus({ error: 'Failed to download the file.', success: '' });
     }
   }
+
+  // Handle Go Back Button Logic of Deleting Clean CSV, and Redirecting
+  const handleDeleteAndNavigate = async (uuid: string) => {
+    setStatus({ error: '', success: '' }); 
+    try {
+      const csrfToken = await fetchCsrfToken();
+      const response = await fetch(`http://127.0.0.1:8000/api/csv/delete-clean-csv/${uuid}/`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRFToken': csrfToken,
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        setStatus({ error: 'Failed to delete the clean CSV file.', success: '' });
+      } else {
+        setStatus({ error: '', success: 'Deleting Clean CSV Successful' });
+        console.log("Deletion Successful")
+        router.push("/summary")
+      }
+    } catch (error) {
+      console.error('Error Deleting Clean CSV:', error);
+      setStatus({ error: 'Failed to delete the clean CSV file.', success: '' });
+    }
+  };
   
   // Original Table and Cleaned Table Pagination States
   // Original Table Pagination state
@@ -516,6 +544,7 @@ export default function CleanPreviewPage() {
           <Button
             disableElevation
             variant="outlined"
+            onClick={() => handleDeleteAndNavigate(visitorId)}
             sx={{
               borderColor: "primary.main", // Custom border color
               color: "grey.800", // Custom text color

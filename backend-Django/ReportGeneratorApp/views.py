@@ -1,7 +1,7 @@
 import os
 import re
 from django.conf import settings
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.http import Http404, HttpRequest, HttpResponse, HttpResponseBadRequest, JsonResponse
@@ -410,3 +410,28 @@ def generate_ai_remarks(request: HttpRequest):
 
         # Return the AI-generated remarks
         return JsonResponse({'remarks': remarks}, status=200)
+    
+@api_view(['DELETE'])
+def delete_clean_csv(request: HttpRequest, uuid: str):
+    if request.method == "DELETE":
+        try:
+            # Retrieve the visitor object
+            query_object = get_object_or_404(Visitors, uuid=uuid)
+
+            # Check if the visitor has a clean CSV file
+            if query_object.clean_csv_file:
+                # Remove the clean CSV file from the file system
+                clean_csv_file_path = query_object.clean_csv_file.path
+                if os.path.exists(clean_csv_file_path):
+                    os.remove(clean_csv_file_path)
+                
+                # Remove the file reference in the database
+                query_object.clean_csv_file = None
+                query_object.save()  # Save the updated Visitor instance
+
+                return Response({"message": "Clean CSV file deleted successfully."}, status=200)
+            else:
+                return Response({"message": "No clean CSV file found for this visitor."}, status=404)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
