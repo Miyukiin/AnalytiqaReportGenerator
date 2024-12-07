@@ -134,20 +134,26 @@ To get a local copy up and running follow these simple example steps.
    ```sh
    pip install -r requirements.txt
    ```
-7. Next, we setup our Frontend, navigate to our root Frontend directory where we have package.json.
+7. Then create .env folder in backend directoy
+   ```sh
+   touch .env # Linux
+   echo some_text > .env #Windows
+   ```
+8. Then request the contents to be put into that env from me.
+9. Next, we setup our Frontend, navigate to our root Frontend directory where we have package.json.
    ```sh
    cd Frontend
    ```
-8. Install the required dependencies.
+10. Install the required dependencies.
    ```sh
    npm install
    ```
-9. Verify that everything is working. Create a terminal for Backend and Frontend. Navigate them to:
+11. Verify that everything is working. Create a terminal for Backend and Frontend. Navigate them to:
    ```sh
    cd Backend
    cd Frontend
    ```
-10. Now, with both the Django and Next.js servers running, you should be able to:
+12. Now, with both the Django and Next.js servers running, you should be able to:
     ```sh
     py manage.py runserver # In backend terminal
     npm run dev # In frontend terminal
@@ -155,6 +161,9 @@ To get a local copy up and running follow these simple example steps.
     Access the Django API via http://127.0.0.1:8000.
     Access the Next.js frontend via http://localhost:3000.
     Test the communication between the frontend and backend by accessing http://localhost:3000/api/sample.
+
+
+Note: You may need to update your mariaDB version to work with Django if you use XAMPP out of the box.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
