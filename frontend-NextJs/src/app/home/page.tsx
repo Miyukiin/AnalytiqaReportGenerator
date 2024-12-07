@@ -54,7 +54,7 @@ export default function DataReportGenerator() {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("uuid", uuid);
-      formData.append('file_name', fileData.name)
+      formData.append('file_name', file.name ? file.name : fileData.name)
 
       const response = await fetch("http://127.0.0.1:8000/api/csv-upload/", { // pass to api
         method: "PUT",
