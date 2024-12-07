@@ -347,7 +347,7 @@ export default function SummaryPage() {
         <div className="mt-7 flex flex-col items-start">
           <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4 space-y-4 md:space-y-0">
             <h2 className="text-gray-800 font-bold text-lg text-center">
-              Preview of CSV File
+              Preview of "{summaryData?.name}"
             </h2>
             <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 space-y-2 sm:space-y-0 w-full sm:w-auto">
               {/* Manage Columns Button */}

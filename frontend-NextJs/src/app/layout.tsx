@@ -73,8 +73,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             isNoGlobalLayout
               ? "flex-grow"
               : isHomePage
-              ? "mt-0 flex-grow"
-              : "mt-16 flex-grow"
+              ? "mt-8 flex-grow"
+              : "mt-0 flex-grow"
           }`}
         >
           <ThemeProvider theme={theme}>

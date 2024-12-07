@@ -419,13 +419,13 @@ export default function CleanPreviewPage() {
           align="center"
           sx={{
             fontWeight: "bold",
-            color: "grey.800", // Uses theme's grey.800
+            color: "grey.800",
             textTransform: "uppercase",
             marginBottom: 2,
             fontSize: "2.25rem",
           }}
         >
-          Original Data {fileName}
+          Original {fileName}
         </Typography>
 
         {/* Manage Columns Button and Fullscreen Toggle Button below the title */}
@@ -542,7 +542,7 @@ export default function CleanPreviewPage() {
             fontSize: "2.25rem",
           }}
         >
-          Cleaned Data {fileName}
+          Cleaned {fileName}
         </Typography>
 
         {/* Manage Columns Button and Fullscreen Toggle Button below the title */}
