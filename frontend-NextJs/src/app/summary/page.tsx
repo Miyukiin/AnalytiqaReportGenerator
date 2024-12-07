@@ -248,7 +248,7 @@ export default function SummaryPage() {
   // Handlers for navigation
   const handleCleanData = () => {
     clean_csv(visitorId)
-    //router.push("/clean");
+    router.push("/clean");
   };
 
   const handleCreateReport = () => {
