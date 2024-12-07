@@ -553,6 +553,7 @@ export default function CleanPreviewPage() {
           <Button
             disableElevation
             variant="contained"
+            onClick={() => router.push("/report")}
             sx={{
               backgroundColor: "grey.700", // Uses theme's primary.main
               "&:hover": { backgroundColor: "primary.main" }, // Uses theme's primary.dark
