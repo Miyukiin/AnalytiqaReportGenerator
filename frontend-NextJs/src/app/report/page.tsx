@@ -390,7 +390,61 @@ const ReportLayout: React.FC = () => {
         setIsDropdownChange(true);
       }
     }
-  };
+    // Handle StackedLine Chart
+    else if (property === "StackedLineColumns" || property === "LineXAxes"){
+      if (property === "LineXAxes"){
+        if (selectedChart && typeof selectIndex === "number") {
+          let updatedLineXAxes;
+          if (!selectedChart.LineXAxes || selectedChart.LineXAxes.length === 0) {
+            // If LineXAxes is empty, initialize it with the selected value
+            updatedLineXAxes = [Number(e.target.value)];
+          } 
+          else {
+            // If LineXAxes has existing values, update or append based on selectIndex
+            updatedLineXAxes = [...selectedChart.LineXAxes];
+      
+            // Replace value if updatedLineXAxes[selectIndex] already has a value.
+            if (updatedLineXAxes[selectIndex] !== undefined) {
+              updatedLineXAxes[selectIndex] = Number(e.target.value);
+            } 
+            else {
+              updatedLineXAxes.push(Number(e.target.value));
+            }
+          }
+          // Update the chart with the new array of line axes
+          await updateSelectedChart("LineXAxes", updatedLineXAxes);
+          setIsDropdownChange(true);
+        }
+      }
+      else if (property === "StackedLineColumns"){
+        if (selectedChart && typeof selectIndex === "number"){
+          let updatedStackedLineColumns;
+          if (!selectedChart.StackedLineColumns || selectedChart.StackedLineColumns.length === 0) {
+            // If StackedLineColumns is empty, initialize it with the selected value
+            updatedStackedLineColumns = [e.target.value];
+          } 
+          else {
+            // If StackedLineColumns has existing values, update or append based on selectIndex
+            updatedStackedLineColumns = [...selectedChart.StackedLineColumns];
+      
+            // Replace value if updatedStackedLineColumns[selectIndex] already has a value.
+            if (updatedStackedLineColumns[selectIndex] !== undefined) {
+              updatedStackedLineColumns[selectIndex] = e.target.value as string;
+            } 
+            else {
+              updatedStackedLineColumns.push(e.target.value as string);
+            }
+          }
+
+          // Update the chart with the new array of numeric columns
+          await updateSelectedChart("StackedLineColumns", updatedStackedLineColumns);
+          setIsDropdownChange(true);
+        }
+      }
+
+    }
+    
+  }
 
   const previousDataRef = useRef<ScatterDataPoint[]>([]); // Ref to hold previous data without causing re-renders
   useEffect(() => {
@@ -429,7 +483,15 @@ const ReportLayout: React.FC = () => {
         setIsDropdownChange(false);
       }
       else if (isStackedLineData(selectedChart.data)){
-
+        // Possible to update chart with no rows selected (StackedLineColumn only value), and possible to update chart if both StackedLineColumn and LineXAxes are defined.
+        if (selectedChart.StackedLineColumns || (selectedChart.StackedLineColumns && selectedChart.LineXAxes)){
+          // Step 1: Calculate updatedData based on passed dataset, the selected passed StackedLineColumn, and the column specific data of selected rows.
+           const updatedData = createChartData(menuItemsData, selectedChart, {
+            StackedLineColumns: selectedChart.StackedLineColumns, LineXAxes: selectedChart.LineXAxes
+          }, previousDataRef.current)
+          // Step 2: Update chart data
+          updateSelectedChart('data', updatedData);
+        }
         // Reset the flag after processing the update
         setIsDropdownChange(false);
       }
@@ -911,16 +973,122 @@ const sendChartData = async () => {
       case "StackedLine":
                 return (
                   <>
-                    {/* Line 1 Input */}
+                    {/* Numeric Column for Stacked Line Chart's Values */}
                     <Box sx={{ mb: 1 }}>
                       <Typography variant="caption" fontWeight="bold">
-                        Line 1
+                        Numeric Column 1
                       </Typography>
                       <Select
                         fullWidth
                         displayEmpty
-                        value={chart.yAxis || ""}
-                        onChange={(e) => handleChange(e, "line1Axis")}
+                        value={chart.StackedLineColumns ? chart.StackedLineColumns [0] || "" : ""}
+                        onChange={(e) => handleChange(e, "StackedLineColumns", 0)}
+                        sx={{
+                          mt: 0.5,
+                          bgcolor: "#f8f9fa",
+                          border: "1px solid #adb5bd",
+                          borderRadius: "4px",
+                          "& .MuiSelect-select": {
+                            padding: "6px 8px",
+                            fontSize: "0.75rem",
+                          },
+                        }}
+                        size="small"
+                      >
+                        <MenuItem value="">
+                          <em>Select a Numeric Column</em>
+                        </MenuItem>
+                        {Object.keys(menuItemsData).map((key) =>
+                        // Check if the values in the menuItemsData[key] array are numeric
+                          menuItemsData[key].every((item) => typeof item === 'number') ? (
+                            <MenuItem key={key} value={key}>
+                              {key}
+                            </MenuItem>
+                          ) : null
+                        )}
+                      </Select>
+                    </Box>
+                    <Box sx={{ mb: 1 }}>
+                      <Typography variant="caption" fontWeight="bold">
+                        Numeric Column 2
+                      </Typography>
+                      <Select
+                        fullWidth
+                        displayEmpty
+                        value={chart.StackedLineColumns ? chart.StackedLineColumns [1] || "" : ""}
+                        onChange={(e) => handleChange(e, "StackedLineColumns", 1)}
+                        sx={{
+                          mt: 0.5,
+                          bgcolor: "#f8f9fa",
+                          border: "1px solid #adb5bd",
+                          borderRadius: "4px",
+                          "& .MuiSelect-select": {
+                            padding: "6px 8px",
+                            fontSize: "0.75rem",
+                          },
+                        }}
+                        size="small"
+                      >
+                        <MenuItem value="">
+                          <em>Select a Numeric Column</em>
+                        </MenuItem>
+                        {Object.keys(menuItemsData).map((key) =>
+                        // Check if the values in the menuItemsData[key] array are numeric
+                          menuItemsData[key].every((item) => typeof item === 'number') ? (
+                            <MenuItem key={key} value={key}>
+                              {key}
+                            </MenuItem>
+                          ) : null
+                        )}
+                      </Select>
+                    </Box>
+                    <Box sx={{ mb: 1 }}>
+                      <Typography variant="caption" fontWeight="bold">
+                        Numeric Column 3
+                      </Typography>
+                      <Select
+                        fullWidth
+                        displayEmpty
+                        value={chart.StackedLineColumns ? chart.StackedLineColumns [2] || "" : ""}
+                        onChange={(e) => handleChange(e, "StackedLineColumns", 2)}
+                        sx={{
+                          mt: 0.5,
+                          bgcolor: "#f8f9fa",
+                          border: "1px solid #adb5bd",
+                          borderRadius: "4px",
+                          "& .MuiSelect-select": {
+                            padding: "6px 8px",
+                            fontSize: "0.75rem",
+                          },
+                        }}
+                        size="small"
+                      >
+                        <MenuItem value="">
+                          <em>Select a Numeric Column</em>
+                        </MenuItem>
+                        {Object.keys(menuItemsData).map((key) =>
+                        // Check if the values in the menuItemsData[key] array are numeric
+                          menuItemsData[key].every((item) => typeof item === 'number') ? (
+                            <MenuItem key={key} value={key}>
+                              {key}
+                            </MenuItem>
+                          ) : null
+                        )}
+                      </Select>
+                    </Box>
+
+                    {/* Line Input 1*/}
+                    <Box sx={{ mb: 1 }}>
+                      <Typography variant="caption" fontWeight="bold">
+                        Data Point 1
+                      </Typography>
+
+                      {/* Hardcoded as Five Possible Lines */}
+                      <Select
+                        fullWidth
+                        displayEmpty
+                        value={chart.LineXAxes?.[0] ?? ""} 
+                        onChange={(e) => handleChange(e, "LineXAxes", 1)}
                         sx={{
                           mt: 0.5,
                           bgcolor: "#f8f9fa",
@@ -937,25 +1105,27 @@ const sendChartData = async () => {
                           <em>Select Y-axis field</em>
                         </MenuItem>
                         {Object.keys(menuItemsData).map((key) =>
-                          key ? (
-                            <MenuItem key={key} value={key}>
-                              {key}
+                        key ? (
+                          menuItemsData[key].map((_, index) => (
+                            <MenuItem key={`Row ${index+1}`} value={index}>
+                              Row {index+1}
                             </MenuItem>
-                          ) : null
-                        )}
+                          ))
+                        ) : null
+                      )}
                       </Select>
-      
                     </Box>
-                    {/* Line 2 Input */}
-                    <Box sx={{ mb: 1 }}>
+                      {/* Line Input 2*/}
+                      <Box sx={{ mb: 1 }}>
                       <Typography variant="caption" fontWeight="bold">
-                        Line 2
+                        Data Point 2
                       </Typography>
+                      {/* Hardcoded as Five Possible Lines */}
                       <Select
                         fullWidth
                         displayEmpty
-                        value={chart.yAxis || ""}
-                        onChange={(e) => handleChange(e, "line2Axis")}
+                        value={chart.LineXAxes?.[1] ?? ""} 
+                        onChange={(e) => handleChange(e, "LineXAxes", 1)}
                         sx={{
                           mt: 0.5,
                           bgcolor: "#f8f9fa",
@@ -972,25 +1142,28 @@ const sendChartData = async () => {
                           <em>Select Y-axis field</em>
                         </MenuItem>
                         {Object.keys(menuItemsData).map((key) =>
-                          key ? (
-                            <MenuItem key={key} value={key}>
-                              {key}
+                        key ? (
+                          menuItemsData[key].map((_, index) => (
+                            <MenuItem key={`Row ${index+1}`} value={index}>
+                              Row {index+1}
                             </MenuItem>
-                          ) : null
-                        )}
+                          ))
+                        ) : null
+                      )}
                       </Select>
-      
                     </Box>
-                    {/* Line 3 Input */}
+                    {/* Line Input 3*/}
                     <Box sx={{ mb: 1 }}>
                       <Typography variant="caption" fontWeight="bold">
-                        Line 3
+                        Data Point 3
                       </Typography>
+
+                      {/* Hardcoded as Five Possible Lines */}
                       <Select
                         fullWidth
                         displayEmpty
-                        value={chart.yAxis || ""}
-                        onChange={(e) => handleChange(e, "line3Axis")}
+                        value={chart.LineXAxes?.[2] ?? ""} 
+                        onChange={(e) => handleChange(e, "LineXAxes", 2)}
                         sx={{
                           mt: 0.5,
                           bgcolor: "#f8f9fa",
@@ -1007,15 +1180,92 @@ const sendChartData = async () => {
                           <em>Select Y-axis field</em>
                         </MenuItem>
                         {Object.keys(menuItemsData).map((key) =>
-                          key ? (
-                            <MenuItem key={key} value={key}>
-                              {key}
+                        key ? (
+                          menuItemsData[key].map((_, index) => (
+                            <MenuItem key={`Row ${index+1}`} value={index}>
+                              Row {index+1}
                             </MenuItem>
-                          ) : null
-                        )}
+                          ))
+                        ) : null
+                      )}
                       </Select>
-      
                     </Box>
+                    {/* Line Input 4 */}
+                    <Box sx={{ mb: 1 }}>
+                      <Typography variant="caption" fontWeight="bold">
+                        Data Point 4
+                      </Typography>
+
+                      {/* Hardcoded as Five Possible Lines */}
+                      <Select
+                        fullWidth
+                        displayEmpty
+                        value={chart.LineXAxes?.[3] ?? ""} 
+                        onChange={(e) => handleChange(e, "LineXAxes", 3)}
+                        sx={{
+                          mt: 0.5,
+                          bgcolor: "#f8f9fa",
+                          border: "1px solid #adb5bd",
+                          borderRadius: "4px",
+                          "& .MuiSelect-select": {
+                            padding: "6px 8px",
+                            fontSize: "0.75rem",
+                          },
+                        }}
+                        size="small"
+                      >
+                        <MenuItem value="">
+                          <em>Select Y-axis field</em>
+                        </MenuItem>
+                        {Object.keys(menuItemsData).map((key) =>
+                        key ? (
+                          menuItemsData[key].map((_, index) => (
+                            <MenuItem key={`Row ${index+1}`} value={index}>
+                              Row {index+1}
+                            </MenuItem>
+                          ))
+                        ) : null
+                      )}
+                      </Select>
+                    </Box>
+                    {/* Line Input 5*/}
+                    <Box sx={{ mb: 1 }}>
+                      <Typography variant="caption" fontWeight="bold">
+                        Data Point 5
+                      </Typography>
+
+                      {/* Hardcoded as Five Possible Lines */}
+                      <Select
+                        fullWidth
+                        displayEmpty
+                        value={chart.LineXAxes?.[4] ?? ""} 
+                        onChange={(e) => handleChange(e, "LineXAxes", 4)}
+                        sx={{
+                          mt: 0.5,
+                          bgcolor: "#f8f9fa",
+                          border: "1px solid #adb5bd",
+                          borderRadius: "4px",
+                          "& .MuiSelect-select": {
+                            padding: "6px 8px",
+                            fontSize: "0.75rem",
+                          },
+                        }}
+                        size="small"
+                      >
+                        <MenuItem value="">
+                          <em>Select Y-axis field</em>
+                        </MenuItem>
+                        {Object.keys(menuItemsData).map((key) =>
+                        key ? (
+                          menuItemsData[key].map((_, index) => (
+                            <MenuItem key={`Row ${index+1}`} value={index}>
+                              Row {index+1}
+                            </MenuItem>
+                          ))
+                        ) : null
+                      )}
+                      </Select>
+                    </Box>                
                   </>
                 );
     

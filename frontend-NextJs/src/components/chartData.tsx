@@ -16,7 +16,7 @@ const isRadarData = (data: any): data is RadarDataPoint[] => {
 };
 
 const isStackedLineData = (data: any): data is StackedLineDataPoint[] => {
-  return Array.isArray(data) && data.every(point => 'name' in point && 'uv' in point && 'pv' in point);
+  return Array.isArray(data) && data.every(point => 'SLname' in point && ('SLvalue1' in point || 'SLvalue2' in point || 'SLvalue3' in point || 'SLvalue4' in point || 'SLvalue5'));
 };
 
 const isRadialBarData = (data: any): data is RadialBarDataPoint[] => {
@@ -119,11 +119,68 @@ const constructRadarData = (
   return radarData as RadarDataPoint[]; 
 };
 
-const constructStackedLineData = () => {
-  const newDataPoint: StackedLineDataPoint[] = []
-  return newDataPoint
+const constructStackedLineData = ( 
+  dataset: Record<string, string[]>, 
+  StackedLineColumns: Array<string> | undefined, 
+  LineXAxes: Array<number> | undefined
+): StackedLineDataPoint[] => {  
+  // Check if StackedLineColumns is undefined or empty
+  if (!StackedLineColumns || StackedLineColumns.length === 0) {
+    console.error("StackedLineColumns is undefined. Cannot construct data.");
+    return [];
+  }
+  console.log("Printing StackedLineColumns:", StackedLineColumns);
+  console.log("Printing LineXAxes:", LineXAxes);
 
-}
+  const newDataPoint: StackedLineDataPoint[] = [];
+
+  // If LineXAxes is undefined or empty, populate with default 0 values
+  if (!LineXAxes || LineXAxes.length === 0) {
+    console.log("No rows selected for LineXAxes, creating default data with SLvalues set to 0.");
+    for (let i = 0; i < StackedLineColumns.length; i++) {
+      const dataPoint: StackedLineDataPoint = { 
+        SLname: `Row ${i + 1}`,
+        SLvalue1: 0, // Default value for SLvalue1 because its the only one required, it will be updated later.
+       };
+
+      StackedLineColumns.forEach((_, colIndex) => {
+        (dataPoint as any)[`SLvalue${colIndex + 1}`] = 0; // Set all SLvalues to 0
+      });
+
+      newDataPoint.push(dataPoint);
+    }
+    return newDataPoint; // Return the default data
+  }
+
+  // Loop through each row (student) index specified in LineXAxes
+  LineXAxes.forEach((rowIndex) => {
+    const dataPoint: StackedLineDataPoint = { 
+      SLname: `Row ${rowIndex + 1}`,
+      SLvalue1: 0, // Default value for SLvalue1 because its the only one required, it will be updated later.
+    } 
+
+    // Loop through each column (subject) specified in StackedLineColumns
+    StackedLineColumns.forEach((column, colIndex) => {
+      // Retrieve the column value for the given row
+      const rowData = dataset[column]?.[rowIndex];
+
+      // Convert the value to a number or use 0 if invalid
+      const value = Number(rowData) || 0;
+
+      // Assign the value to the corresponding SLvalue property
+      (dataPoint as any)[`SLvalue${colIndex + 1}`] = value;
+    });
+
+    newDataPoint.push(dataPoint);
+  });
+
+  console.log("Constructed StackedLineDataPoint Array:", newDataPoint);
+  return newDataPoint;
+};
+
+
+
+
 
 const constructRadialBarData = async (
   dataset: Record<string, string[]>,
@@ -148,7 +205,6 @@ const constructRadialBarData = async (
           [key: string]: number;
         }
         const name_values_data = column_values_data[RadialColumn]
-        console.log("PRINTING", RadialBarData)
         const colors = ['#8884d8', '#83a6ed', '#8dd1e1', '#82ca9d', '#a4de6c']; 
         Object.entries(name_values_data).forEach(([name, value], i) => {
           RadialBarData.push({
@@ -170,8 +226,10 @@ const constructRadialBarData = async (
 const createChartData = (
   dataset: Record<string, string[]> = {}, 
   chart: Chart, 
-  { xField = undefined, yField = undefined, RadarColumns = undefined, RowsSelected = undefined, RadialColumn = undefined}: 
-  { xField?: string | undefined, yField?: string | undefined, RadarColumns?: Array<string> | undefined, RowsSelected?: Array<number> | undefined, RadialColumn?: string},  
+  { xField = undefined, yField = undefined, RadarColumns = undefined, RowsSelected = undefined, RadialColumn = undefined, StackedLineColumns = undefined, LineXAxes = undefined}: 
+  { xField?: string | undefined, yField?: string | undefined, RadarColumns?: Array<string> | undefined, RowsSelected?: Array<number> | undefined, RadialColumn?: string
+    StackedLineColumns?: Array<string> | undefined, LineXAxes?: Array<number> | undefined
+  },  
   previousData: ScatterDataPoint[],
 
   ) => {
@@ -189,8 +247,7 @@ const createChartData = (
         return constructRadarData(dataset, RadarColumns, RowsSelected) as RadarDataPoint[];
       
     case "StackedLine":
-
-        return constructStackedLineData() as StackedLineDataPoint[];
+        return constructStackedLineData(dataset, StackedLineColumns, LineXAxes) as StackedLineDataPoint[];
       
     case "RadialBar":
       return constructRadialBarData(dataset, RadialColumn) 
