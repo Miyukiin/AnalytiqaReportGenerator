@@ -30,7 +30,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import {
   Chart,
   ScatterDataPoint,
-  HistogramDataPoint,
+  PositiveNegativeBarDataPoint,
   RadarDataPoint,
   StackedLineDataPoint,
   RadialBarDataPoint,
@@ -165,11 +165,11 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
           </ScatterChart>
         );
 
-      case "Histogram":
+      case "PositiveNegativeBar":
         return (
           <BarChart 
             {...commonChartProps} 
-            data={data as HistogramDataPoint[]} 
+            data={data as PositiveNegativeBarDataPoint[]} 
             barCategoryGap="1%" // Removes space between categories
             barGap="0%" // Removes space between bars
           >
@@ -273,6 +273,7 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
         );
 
       case "StackedLine":
+        console.log("isStackedLineData:", StackedLineColumns?.[0]); 
         return (
           <LineChart {...commonChartProps} data={data as StackedLineDataPoint[]}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -281,11 +282,11 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
             />
             <Tooltip {...tooltipStyle} />
             {/* Access index, only if corresponding StackedLineColumn index is defined . Check is isStackedlineData before accessing its SLname as the name of the line*/}
-            {StackedLineColumns?.[0]? <Line type="monotone" dataKey={`SLvalue1`} name={isStackedLineData(data) ? data[0].SLname : ""} stroke="#8884d8" /> : null}
-            {StackedLineColumns?.[1]? <Line type="monotone" dataKey={`SLvalue2`} name={isStackedLineData(data) ? data[0].SLname : ""} stroke='#83a6ed' /> : null}
-            {StackedLineColumns?.[2]? <Line type="monotone" dataKey={`SLvalue3`} name={isStackedLineData(data) ? data[0].SLname : ""} stroke='#8dd1e1' />: null}
-            {StackedLineColumns?.[3]? <Line type="monotone" dataKey={`SLvalue4`} name={isStackedLineData(data) ? data[0].SLname : ""} stroke='#82ca9d' /> : null}
-            {StackedLineColumns?.[4]? <Line type="monotone" dataKey={`SLvalue5`} name={isStackedLineData(data) ? data[0].SLname : ""} stroke='#a4de6c' /> : null}
+            {StackedLineColumns?.[0]? <Line type="monotone" dataKey={`SLvalue1`} name={StackedLineColumns[0]} stroke="#8884d8" /> : null}
+            {StackedLineColumns?.[1]? <Line type="monotone" dataKey={`SLvalue2`} name={StackedLineColumns[1]} stroke='#83a6ed' /> : null}
+            {StackedLineColumns?.[2]? <Line type="monotone" dataKey={`SLvalue3`} name={StackedLineColumns[2]} stroke='#8dd1e1' />: null}
+            {StackedLineColumns?.[3]? <Line type="monotone" dataKey={`SLvalue4`} name={StackedLineColumns[4]} stroke='#82ca9d' /> : null}
+            {StackedLineColumns?.[4]? <Line type="monotone" dataKey={`SLvalue5`} name={StackedLineColumns[5]} stroke='#a4de6c' /> : null}
 
             <Legend wrapperStyle={legendStyle} />
           </LineChart>
