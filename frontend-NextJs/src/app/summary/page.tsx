@@ -15,6 +15,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Snackbar, 
+  Alert
 } from '@mui/material';
 
 
@@ -128,8 +130,12 @@ export default function SummaryPage() {
   };
 
   // CleanCSV API Call
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  
   const clean_csv = async (uuid: string) => {
-    console.log("Calling Clean API")
+    console.log("Calling Clean API");
     setStatus({ error: '', success: '' });
     const csrfToken = await fetchCsrfToken(); 
     const data = await fetchData(
@@ -139,11 +145,19 @@ export default function SummaryPage() {
       setStatus,
       'PUT' 
     );
-
+  
     if (data) {
       setStatus({ error: '', success: 'Cleaning successful' });
+      setSnackbarMessage('Successfull Data Cleaning!');
+      setSnackbarSeverity('success');
+      setOpenSnackbar(true); 
+    } else {
+      setSnackbarMessage('Error Data Cleaning!');
+      setSnackbarSeverity('error');
+      setOpenSnackbar(true);
     }
   };
+  
 
   // Pagination state
   const [page, setPage] = useState(0);
@@ -249,8 +263,10 @@ export default function SummaryPage() {
 
   // Handlers for navigation
   const handleCleanData = () => {
-    clean_csv(visitorId)
-    router.push("/clean");
+    clean_csv(visitorId);
+    setTimeout(() => {
+      router.push("/clean");
+    }, 3000);
   };
 
   const handleCreateReport = () => {
@@ -409,6 +425,24 @@ export default function SummaryPage() {
 
       {/* Right Panel */}
       <div className="w-full lg:w-96 p-6 lg:p-12 bg-gray-200 flex-shrink-0">
+          {/* Snackbar for feedback */}
+            <Snackbar
+            open={openSnackbar}
+            autoHideDuration={3000}
+            onClose={() => setOpenSnackbar(false)}
+            message={snackbarMessage}
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            sx={{
+              '& .MuiSnackbarContent-root': {
+                backgroundColor: 'green',
+                color: 'white',
+              },
+            }}
+          >
+            <Alert onClose={() => setOpenSnackbar(false)} severity={snackbarSeverity}>
+              {snackbarMessage}
+            </Alert>
+          </Snackbar>
         <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">NEXT STEPS</h2>
         <NextStepSection
           title="Data Cleaning"
