@@ -129,6 +129,7 @@ export default function SummaryPage() {
     }
   };
 
+
   // CleanCSV API Call
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -137,18 +138,21 @@ export default function SummaryPage() {
   const clean_csv = async (uuid: string) => {
     console.log("Calling Clean API");
     setStatus({ error: '', success: '' });
-    const csrfToken = await fetchCsrfToken(); 
+
+    // Fetch CSRF token
+    const csrfToken = await fetchCsrfToken();
+
+    // Make the API request
     const data = await fetchData(
       "http://127.0.0.1:8000/api/csv/clean/",
       uuid,
       csrfToken,
       setStatus,
-      'PUT' 
+      'PUT'
     );
-  
     if (data) {
       setStatus({ error: '', success: 'Cleaning successful' });
-      setSnackbarMessage('Successfull Data Cleaning!');
+      setSnackbarMessage('Successful Data Cleaning!');
       setSnackbarSeverity('success');
       setOpenSnackbar(true); 
     } else {
@@ -156,8 +160,8 @@ export default function SummaryPage() {
       setSnackbarSeverity('error');
       setOpenSnackbar(true);
     }
+
   };
-  
 
   // Pagination state
   const [page, setPage] = useState(0);
