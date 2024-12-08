@@ -166,7 +166,6 @@ export default function CleanPreviewPage() {
   }
 
   // Handle summary changes between original and cleaned table
-
   const get_summary_changes = async (uuid: string) => {
     setStatus({ error: '', success: '' }); 
     try {

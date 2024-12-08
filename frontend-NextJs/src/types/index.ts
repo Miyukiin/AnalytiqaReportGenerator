@@ -1,15 +1,19 @@
 // src/types/index.ts
 
-export type ChartType = "Scatter" | "Histogram" | "Radar" | "StackedLine" | "RadialBar";
+export type ChartType = "Scatter" | "PositiveNegativeBar" | "Radar" | "StackedLine" | "RadialBar";
 
 export interface ScatterDataPoint {
   x: number;
   y: number;
 }
 
-export interface HistogramDataPoint { 
-  name: string;
-  value: number;
+export interface PositiveNegativeBarDataPoint { 
+  PNBname: string;
+  PNBvalue1: number;
+  PNBvalue2?: number;
+  PNBvalue3?: number;
+  PNBvalue4?: number;
+  PNBvalue5?: number;
 }
 
 export interface RadarDataPoint {
@@ -35,7 +39,7 @@ export interface RadialBarDataPoint {
 
 export type ChartData =
   | ScatterDataPoint[]
-  | HistogramDataPoint[]
+  | PositiveNegativeBarDataPoint[]
   | RadarDataPoint[]
   | StackedLineDataPoint[]
   | RadialBarDataPoint[];
@@ -54,8 +58,15 @@ export interface Chart {
   line2Axis?: string;      // For StackedLine chart's Line 2
   line3Axis?: string;      // For StackedLine chart's Line 3
   subjectAxis?: string;
+  nameAxis?: string;    
+  aAxis?: string;      
+  data: ChartData;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 
-  xAxis1?: string;                  // Histogram First x Axis.
+  xAxis1?: string;                  // PositiveNegativeBar First x Axis.
   
   NumericColumns?: Array<string>;   // Radar All Numeric Columns Selected
   RowsSelected?:  Array<number>;    // Radar All Rows indexes Selected To be Shown in Radar
@@ -65,13 +76,8 @@ export interface Chart {
   StackedLineColumns?: Array<string>;       // Stacked Line Selected Numeric Column
   LineXAxes?: Array<number>         // StackedLine All X Axis Row Indexes
 
-  nameAxis?: string;    
-  aAxis?: string;      
-  data: ChartData;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  PNBColumns?: Array<string>;       // PositiveNegativeBar Selected Numeric Column
+  PNBLineXAxes?: Array<number>         // PositiveNegativeBar All X Axis Row Indexes
 }
 
 export interface Page {

@@ -23,14 +23,15 @@ import {
   RadialBar,
   Legend,
   ResponsiveContainer,
-  LabelList, // Import LabelList for displaying values
+  LabelList,
+  ReferenceLine, // Import LabelList for displaying values
 } from "recharts";
 import { IconButton, Typography, Box } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import {
   Chart,
   ScatterDataPoint,
-  HistogramDataPoint,
+  PositiveNegativeBarDataPoint,
   RadarDataPoint,
   StackedLineDataPoint,
   RadialBarDataPoint,
@@ -49,7 +50,9 @@ interface ChartItemProps extends Chart {
     NumericColumns?: Array<string>,
     RowsSelected?:  Array<number>,
     StackedLineColumns?: Array<string>,
-    LineXAxes?: Array<number>
+    LineXAxes?: Array<number>,
+    PNBColumns?: Array<string>,
+    PNBLineXAxes?: Array<number>
   ) => void;
   onSelectChart: (id: number) => void;
   isSelected: boolean;
@@ -73,6 +76,8 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
   RowsSelected,
   LineXAxes,
   StackedLineColumns,
+  PNBColumns,
+  PNBLineXAxes,
   onRemove,
   onDragStop,
   onResizeStop,
@@ -165,65 +170,33 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
           </ScatterChart>
         );
 
-      case "Histogram":
+      case "PositiveNegativeBar":
         return (
           <BarChart 
             {...commonChartProps} 
-            data={data as HistogramDataPoint[]} 
-            barCategoryGap="1%" // Removes space between categories
-            barGap="0%" // Removes space between bars
+            data={data as PositiveNegativeBarDataPoint[]} 
+            margin={{
+              top: 5,
+              right: 30,
+              left: 20,
+              bottom: 5,
+            }}
           >
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey="name"
-              scale="band" // Using band scale for categorical data
-              padding={{ left: 0, right: 0 }} // Reduced padding for compact bars
-              label={{
-                value: xAxis, // Using xAxis prop for label
-                position: "insideBottomRight",
-                offset: -10 * scalingFactor, // Dynamically adjusted offset
-                style: {
-                  fontSize: commonChartProps.fontSize,
-                  fill: xAxisColor || "#000",
-                },
-              }}
-              tick={{
-                fontSize: commonChartProps.fontSize,
-                fill: xAxisColor || "#000",
-              }}
-            />
-            <YAxis
-              label={{
-                value: yAxis,
-                angle: -90,
-                position: "insideLeft",
-                offset: -10 * scalingFactor, // Dynamically adjusted offset
-                style: {
-                  fontSize: commonChartProps.fontSize,
-                  fill: yAxisColor || "#000",
-                },
-              }}
-              tick={{
-                fontSize: commonChartProps.fontSize,
-                fill: yAxisColor || "#000",
-              }}
-            />
+            <XAxis dataKey="PNBname"/>
+            <YAxis/>
             <Tooltip {...tooltipStyle} />
-            <Bar 
-              dataKey="value" 
-              fill="#82ca9d" 
-              background={{ fill: "#eee" }} // Background for better visual separation
-            >
-              <LabelList 
-                dataKey="value" 
-                position="top" // Position labels above the bars
-                style={{ 
-                  fontSize: baseFontSize * scalingFactor, 
-                  fill: yAxisColor || "#000" 
-                }} 
-              />
-            </Bar>
             <Legend wrapperStyle={legendStyle} />
+            <ReferenceLine y={0} stroke="#000" />
+
+            {/* Access index, only if corresponding PNBColumn index is defined . Check is isStackedlineData before accessing its PNBname as the name of the line*/}
+            {/* Added fallback in the case that a new chart is added of PNB. When newly added, there is no PNBColumn, so fallback condition is to still display a two bars whose PNBvalue1 and PNBvalue2 is from generatesampledata.*/}
+            {PNBColumns?.[0]? <Bar type="monotone" dataKey={`PNBvalue1`} name={PNBColumns[0]} fill="#8884d8" /> : <Bar type="monotone" dataKey={`PNBvalue1`} name={"Sample"} fill="#8884d8" />}
+            {PNBColumns?.[1]? <Bar type="monotone" dataKey={`PNBvalue2`} name={PNBColumns[1]} fill='#83a6ed' /> : <Bar type="monotone" dataKey={`PNBvalue1`} name={"Sample"} fill='#83a6ed' />}
+            {PNBColumns?.[2]? <Bar type="monotone" dataKey={`PNBvalue3`} name={PNBColumns[2]} fill='#8dd1e1' />: null}
+            {PNBColumns?.[3]? <Bar type="monotone" dataKey={`PNBvalue4`} name={PNBColumns[4]} fill='#82ca9d' /> : null}
+            {PNBColumns?.[4]? <Bar type="monotone" dataKey={`PNBvalue5`} name={PNBColumns[5]} fill='#a4de6c' /> : null}
+
           </BarChart>
         );
 
@@ -273,6 +246,7 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
         );
 
       case "StackedLine":
+        console.log("isStackedLineData:", StackedLineColumns?.[0]); 
         return (
           <LineChart {...commonChartProps} data={data as StackedLineDataPoint[]}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -281,11 +255,12 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
             />
             <Tooltip {...tooltipStyle} />
             {/* Access index, only if corresponding StackedLineColumn index is defined . Check is isStackedlineData before accessing its SLname as the name of the line*/}
-            {StackedLineColumns?.[0]? <Line type="monotone" dataKey={`SLvalue1`} name={isStackedLineData(data) ? data[0].SLname : ""} stroke="#8884d8" /> : null}
-            {StackedLineColumns?.[1]? <Line type="monotone" dataKey={`SLvalue2`} name={isStackedLineData(data) ? data[0].SLname : ""} stroke='#83a6ed' /> : null}
-            {StackedLineColumns?.[2]? <Line type="monotone" dataKey={`SLvalue3`} name={isStackedLineData(data) ? data[0].SLname : ""} stroke='#8dd1e1' />: null}
-            {StackedLineColumns?.[3]? <Line type="monotone" dataKey={`SLvalue4`} name={isStackedLineData(data) ? data[0].SLname : ""} stroke='#82ca9d' /> : null}
-            {StackedLineColumns?.[4]? <Line type="monotone" dataKey={`SLvalue5`} name={isStackedLineData(data) ? data[0].SLname : ""} stroke='#a4de6c' /> : null}
+            {/* Added fallback in the case that a new chart is added of StackedLine. When newly added, there is no StackedLineColumn, so fallback condition is to still display a line whose SLvalue1 is from generatesampledata.*/}
+            {StackedLineColumns?.[0]? <Line type="monotone" dataKey={`SLvalue1`} name={StackedLineColumns[0]} stroke="#8884d8" /> : <Line type="monotone" dataKey={`SLvalue1`} name={"Sample"} stroke="#8884d8" />}
+            {StackedLineColumns?.[1]? <Line type="monotone" dataKey={`SLvalue2`} name={StackedLineColumns[1]} stroke='#83a6ed' /> : null}
+            {StackedLineColumns?.[2]? <Line type="monotone" dataKey={`SLvalue3`} name={StackedLineColumns[2]} stroke='#8dd1e1' />: null}
+            {StackedLineColumns?.[3]? <Line type="monotone" dataKey={`SLvalue4`} name={StackedLineColumns[4]} stroke='#82ca9d' /> : null}
+            {StackedLineColumns?.[4]? <Line type="monotone" dataKey={`SLvalue5`} name={StackedLineColumns[5]} stroke='#a4de6c' /> : null}
 
             <Legend wrapperStyle={legendStyle} />
           </LineChart>
