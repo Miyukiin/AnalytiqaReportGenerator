@@ -11,6 +11,25 @@ const RemarkSection: React.FC<RemarkSectionProps> = ({ remark, onChange }) => {
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [fontSize, setFontSize] = useState(14); // Default font size
   const [isEditing, setIsEditing] = useState(false);
+  const renderRemarkText = (text: string) => {
+    if (!text) return null;
+
+    const phrasesToBold = ["For Chart Name", "For Chart Type:"];
+
+    // Create a regex to match the phrases
+    const regex = new RegExp(`(${phrasesToBold.join("|")})`, 'g');
+
+    // Split the text by the phrases, keeping the phrases in the result
+    const parts = text.split(regex);
+
+    return parts.map((part, index) =>
+      phrasesToBold.includes(part) ? (
+        <strong key={index}>{part}</strong>
+      ) : (
+        <React.Fragment key={index}>{part}</React.Fragment>
+      )
+    );
+  };
 
   // Function to dynamically resize text if it exceeds the container
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,7 +54,7 @@ const RemarkSection: React.FC<RemarkSectionProps> = ({ remark, onChange }) => {
         bottom: 0,
         left: 0,
         right: 0,
-        height: isSmallScreen ? "200px" : "170px", // Increased height for full visibility
+        height: isSmallScreen ? "700px" : "530px", // Increased height for full visibility
         borderTop: "1px solid #adb5bd",
         bgcolor: "#f8f9fa",
         p: 2, // Padding for better spacing
@@ -59,7 +78,7 @@ const RemarkSection: React.FC<RemarkSectionProps> = ({ remark, onChange }) => {
           inputProps={{
             style: {
               fontSize: `${fontSize}px`,
-              lineHeight: "1.5",
+              lineHeight: "1",
               whiteSpace: "pre-wrap", // Preserve whitespace and allow wrapping
               wordBreak: "break-word", // Break long words if necessary
             },
@@ -96,14 +115,14 @@ const RemarkSection: React.FC<RemarkSectionProps> = ({ remark, onChange }) => {
             whiteSpace: "pre-wrap",
             wordBreak: "break-word",
             cursor: "pointer",
-            fontSize: `${fontSize}px`,
-            lineHeight: "1.5",
-            fontStyle: "italic",
+            fontSize: isSmallScreen ? "10px": `11px`,
+            lineHeight: "1.05",
+            fontStyle: "",
             flexGrow: 1, // Allow the text to take up available space
           }}
           onDoubleClick={() => setIsEditing(true)}
         >
-          {remark || "Add your chart remarks here... (Double-click to edit)"}
+          {renderRemarkText(remark) || "Add your chart remarks here... (Double-click to edit)"}
         </Typography>
       )}
     </Box>
