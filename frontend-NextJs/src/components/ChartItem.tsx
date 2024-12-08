@@ -265,7 +265,6 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
               fill="#82ca9d"
               fillOpacity={0.6}
             />
-            
             <Tooltip {...tooltipStyle} />
             <Legend wrapperStyle={legendStyle} />
           </RadarChart>
@@ -284,7 +283,7 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
             {StackedLineColumns?.[1]? <Line type="monotone" dataKey={`SLvalue2`} name={isStackedLineData(data) ? data[0].SLname : ""} stroke='#83a6ed' /> : null}
             {StackedLineColumns?.[2]? <Line type="monotone" dataKey={`SLvalue3`} name={isStackedLineData(data) ? data[0].SLname : ""} stroke='#8dd1e1' />: null}
             {StackedLineColumns?.[3]? <Line type="monotone" dataKey={`SLvalue4`} name={isStackedLineData(data) ? data[0].SLname : ""} stroke='#82ca9d' /> : null}
-            {StackedLineColumns?.[4]? <Line type="monotone" dataKey={`SLvalue5`}name={isStackedLineData(data) ? data[0].SLname : ""} stroke='#a4de6c' /> : null}
+            {StackedLineColumns?.[4]? <Line type="monotone" dataKey={`SLvalue5`} name={isStackedLineData(data) ? data[0].SLname : ""} stroke='#a4de6c' /> : null}
 
             <Legend wrapperStyle={legendStyle} />
           </LineChart>

@@ -127,23 +127,35 @@ export default function SummaryPage() {
     }
   };
 
-  // CleanCSV API Call
-  const clean_csv = async (uuid: string) => {
-    console.log("Calling Clean API")
+// CleanCSV API Call
+const clean_csv = async (uuid: string) => {
+  try {
+    console.log("Calling Clean API");
     setStatus({ error: '', success: '' });
-    const csrfToken = await fetchCsrfToken(); 
+
+    // Fetch CSRF token
+    const csrfToken = await fetchCsrfToken();
+
+    // Make the API request
     const data = await fetchData(
       "http://127.0.0.1:8000/api/csv/clean/",
       uuid,
       csrfToken,
       setStatus,
-      'PUT' 
+      'PUT'
     );
 
+    // If the API request was successful, update status
     if (data) {
       setStatus({ error: '', success: 'Cleaning successful' });
     }
-  };
+  } catch (error) {
+    // Handle errors and display them
+    console.error("Error during CleanCSV API call:", error);
+    setStatus({ error: 'An error occurred during the cleaning process.', success: '' });
+  }
+};
+
 
   // Pagination state
   const [page, setPage] = useState(0);
