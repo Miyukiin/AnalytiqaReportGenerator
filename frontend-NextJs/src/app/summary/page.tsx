@@ -152,11 +152,11 @@ export default function SummaryPage() {
     );
     if (data) {
       setStatus({ error: '', success: 'Cleaning successful' });
-      setSnackbarMessage('Successful Data Cleaning!');
+      setSnackbarMessage('Auto-cleaning Successful!');
       setSnackbarSeverity('success');
       setOpenSnackbar(true); 
     } else {
-      setSnackbarMessage('Error Data Cleaning!');
+      setSnackbarMessage('Failed to Auto-clean CSV! Please try manually cleaning your data.');
       setSnackbarSeverity('error');
       setOpenSnackbar(true);
     }

@@ -35,7 +35,7 @@ import {
   Settings as SettingsIcon,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
-import { ChartType, Page, Chart, ScatterDataPoint, HistogramDataPoint, RadarDataPoint, StackedLineDataPoint, RadialBarDataPoint } from "../../types";
+import { ChartType, Page, Chart, ScatterDataPoint, PositiveNegativeBarDataPoint, RadarDataPoint, StackedLineDataPoint, RadialBarDataPoint } from "../../types";
 import FullWidthDivider from "../../components/FullWidthDivider";
 import MainCanvas from "../../components/MainCanvas";
 import RightSidebar from "../../components/RightSidebar";
@@ -57,11 +57,11 @@ import { useVisitorId } from "@/context/visitorIDManager";
 import { useRouter } from "next/navigation";
 import { fetchCsrfToken } from '../../components/csrfToken'
 import { ChartData } from "../../types";
-import { createChartData, isScatterData, isHistogramData, isRadarData, isStackedLineData, isRadialBarData } from "../../components/chartData"
+import { createChartData, isScatterData, isPositiveNegativeBarData, isRadarData, isStackedLineData, isRadialBarData } from "../../components/chartData"
 
 const icons = [
   { icon: <ScatterPlotIcon />, label: "Scatter" },
-  { icon: <BarChartIcon />, label: "Histogram" },
+  { icon: <BarChartIcon />, label: "PositiveNegativeBar" },
   { icon: <RadarIcon />, label: "Radar" },
   { icon: <ShowChartIcon />, label: "StackedLine" },
   { icon: <LayersIcon />, label: "RadialBar" },
@@ -322,7 +322,7 @@ const ReportLayout: React.FC = () => {
         setIsDropdownChange(true); 
       }
     } 
-    // Handle Histogram
+    // Handle PositiveNegativeBar
     else if (property === "xAxis1"){
       await updateSelectedChart("xAxis1", e.target.value);
       setIsDropdownChange(true);
@@ -441,9 +441,58 @@ const ReportLayout: React.FC = () => {
           setIsDropdownChange(true);
         }
       }
-
     }
-    
+    // Handle Positive Negative Bar Chart
+    else if (property === "PNBColumns" || property ==="PNBLineXAxes"){
+      if (property === "PNBLineXAxes"){
+        if (selectedChart && typeof selectIndex === "number") {
+          let updatedPNBLineXAxes;
+          if (!selectedChart.PNBLineXAxes || selectedChart.PNBLineXAxes.length === 0) {
+            // If LineXAxes is empty, initialize it with the selected value
+            updatedPNBLineXAxes = [Number(e.target.value)];
+          } 
+          else {
+            // If LineXAxes has existing values, update or append based on selectIndex
+            updatedPNBLineXAxes = [...selectedChart.PNBLineXAxes];
+      
+            // Replace value if updatedLineXAxes[selectIndex] already has a value.
+            if (updatedPNBLineXAxes[selectIndex] !== undefined) {
+              updatedPNBLineXAxes[selectIndex] = Number(e.target.value);
+            } 
+            else {
+              updatedPNBLineXAxes.push(Number(e.target.value));
+            }
+          }
+          // Update the chart with the new array of line axes
+          await updateSelectedChart("PNBLineXAxes", updatedPNBLineXAxes);
+          setIsDropdownChange(true);
+        }
+      }
+      else if (property === "PNBColumns"){
+        if (selectedChart && typeof selectIndex === "number"){
+          let updatedPNBColumns;
+          if (!selectedChart.PNBColumns || selectedChart.PNBColumns.length === 0) {
+            // If PNBColumns is empty, initialize it with the selected value
+            updatedPNBColumns = [e.target.value];
+          } 
+          else {
+            // If PNBColumns has existing values, update or append based on selectIndex
+            updatedPNBColumns = [...selectedChart.PNBColumns];
+      
+            // Replace value if updatedPNBColumns[selectIndex] already has a value.
+            if (updatedPNBColumns[selectIndex] !== undefined) {
+              updatedPNBColumns[selectIndex] = e.target.value as string;
+            } 
+            else {
+              updatedPNBColumns.push(e.target.value as string);
+            }
+          }
+          // Update the chart with the new array of numeric columns
+          await updateSelectedChart("PNBColumns", updatedPNBColumns);
+          setIsDropdownChange(true);
+        }
+      }
+    }
   }
 
   const previousDataRef = useRef<ScatterDataPoint[]>([]); // Ref to hold previous data without causing re-renders
@@ -490,6 +539,7 @@ const ReportLayout: React.FC = () => {
             StackedLineColumns: selectedChart.StackedLineColumns, LineXAxes: selectedChart.LineXAxes
           }, previousDataRef.current)
           // Step 2: Update chart data
+          console.log("UPDATED DATA STACKED", updatedData);
           updateSelectedChart('data', updatedData);
         }
         // Reset the flag after processing the update
@@ -503,7 +553,6 @@ const ReportLayout: React.FC = () => {
           }, previousDataRef.current))
             .then(updatedData => {
               // Step 2: Update chart data
-              console.log("UPDATED DATA RADIAL", updatedData);
               updateSelectedChart('data', updatedData);  // Assuming this is a function to update the chart
             })
             .catch(error => {
@@ -512,6 +561,20 @@ const ReportLayout: React.FC = () => {
           // Reset the flag after processing the update
           setIsDropdownChange(false);
         }
+      }
+      else if (isPositiveNegativeBarData(selectedChart.data)){
+         // Possible to update chart with no rows selected (PNBColumn only value), and possible to update chart if both PNBColumn and PNBLineXAxes are defined.
+         if (selectedChart.PNBColumns || (selectedChart.PNBColumns && selectedChart.PNBLineXAxes)){
+          // Step 1: Calculate updatedData based on passed dataset, the selected passed PNBColumn, and the column specific data of selected rows.
+           const updatedData = createChartData(menuItemsData, selectedChart, {
+            PNBColumns: selectedChart.PNBColumns, PNBLineXAxes: selectedChart.PNBLineXAxes
+          }, previousDataRef.current)
+          // Step 2: Update chart data
+          console.log("UPDATED DATA PNB", updatedData);
+          updateSelectedChart('data', updatedData);
+        }
+        // Reset the flag after processing the update
+        setIsDropdownChange(false);
       }
     }
   }, [isDropdownChange]); // Run when Dropdown values change
@@ -664,565 +727,787 @@ const sendChartData = async () => {
           </>
         );
       case "Radar":
-          return (
-            <>
-              {/* Numeric Column Input*/}
-              <Box sx={{ mb: 1 }}>
-                <Typography variant="caption" fontWeight="bold">
-                  Select Numeric Columns
-                </Typography>
+        return (
+          <>
+            {/* Numeric Column Input*/}
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="caption" fontWeight="bold">
+                Select Numeric Columns
+              </Typography>
 
-                {/* 
-                // Initial Logic for Dynamic Rendering of Select Boxes.
-                {renderSelect(0, chart)} // Render the first select
-                {(selectedChart?.NumericColumns ?? []).map((_, index) => 
-                  index > 0 && renderSelect(index, chart) // Render additional selects only when the previous one is populated
-                )}
-                */}
+              {/* 
+              // Initial Logic for Dynamic Rendering of Select Boxes.
+              {renderSelect(0, chart)} // Render the first select
+              {(selectedChart?.NumericColumns ?? []).map((_, index) => 
+                index > 0 && renderSelect(index, chart) // Render additional selects only when the previous one is populated
+              )}
+              */}
 
-                 {/*This should be dynamic, changing depending on if previous select is populated, not hardcoded as 3 selects */}
-                <Select
-                  fullWidth
-                  displayEmpty
-                  value={chart.NumericColumns ? chart.NumericColumns[0] || "" : ""}
-                  onChange={(e) => handleChange(e, "NumericColumns", 0)}
-                  sx={{
-                    mt: 0.5,
-                    bgcolor: "#f8f9fa",
-                    border: "1px solid #adb5bd",
-                    borderRadius: "4px",
-                    "& .MuiSelect-select": {
-                      padding: "6px 8px",
-                      fontSize: "0.75rem",
-                    },
-                  }}
-                  size="small"
-                >
-                  <MenuItem value="">
-                    <em>Select Numeric Column</em>
-                  </MenuItem>
-                  {Object.keys(menuItemsData).map((key) =>
-                  // Check if the values in the menuItemsData[key] array are numeric
-                    menuItemsData[key].every((item) => typeof item === 'number') ? (
-                      <MenuItem key={key} value={key}>
-                        {key}
-                      </MenuItem>
-                    ) : null
-                  )}
-                </Select>
-                <Select
-                  fullWidth
-                  displayEmpty
-                  value={chart.NumericColumns ? chart.NumericColumns[1] || "" : ""}
-                  onChange={(e) => handleChange(e, "NumericColumns", 1)}
-                  sx={{
-                    mt: 0.5,
-                    bgcolor: "#f8f9fa",
-                    border: "1px solid #adb5bd",
-                    borderRadius: "4px",
-                    "& .MuiSelect-select": {
-                      padding: "6px 8px",
-                      fontSize: "0.75rem",
-                    },
-                  }}
-                  size="small"
-                >
-                  <MenuItem value="">
-                    <em>Select Numeric Column</em>
-                  </MenuItem>
-                  {Object.keys(menuItemsData).map((key) =>
-                  // Check if the values in the menuItemsData[key] array are numeric
+              {/*This should be dynamic, changing depending on if previous select is populated, not hardcoded as 3 selects */}
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.NumericColumns ? chart.NumericColumns[0] || "" : ""}
+                onChange={(e) => handleChange(e, "NumericColumns", 0)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select Numeric Column</em>
+                </MenuItem>
+                {Object.keys(menuItemsData).map((key) =>
+                // Check if the values in the menuItemsData[key] array are numeric
                   menuItemsData[key].every((item) => typeof item === 'number') ? (
                     <MenuItem key={key} value={key}>
                       {key}
                     </MenuItem>
                   ) : null
                 )}
-                </Select>
-                <Select
-                  fullWidth
-                  displayEmpty
-                  value={chart.NumericColumns ? chart.NumericColumns[2] || "" : ""}
-                  onChange={(e) => handleChange(e, "NumericColumns", 2)}
-                  sx={{
-                    mt: 0.5,
-                    bgcolor: "#f8f9fa",
-                    border: "1px solid #adb5bd",
-                    borderRadius: "4px",
-                    "& .MuiSelect-select": {
-                      padding: "6px 8px",
-                      fontSize: "0.75rem",
-                    },
-                  }}
-                  size="small"
-                >
-                  <MenuItem value="">
-                    <em>Select Numeric Column</em>
+              </Select>
+
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.NumericColumns ? chart.NumericColumns[1] || "" : ""}
+                onChange={(e) => handleChange(e, "NumericColumns", 1)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select Numeric Column</em>
+                </MenuItem>
+                {Object.keys(menuItemsData).map((key) =>
+                // Check if the values in the menuItemsData[key] array are numeric
+                menuItemsData[key].every((item) => typeof item === 'number') ? (
+                  <MenuItem key={key} value={key}>
+                    {key}
                   </MenuItem>
-                  {Object.keys(menuItemsData).map((key) =>
-                  // Check if the values in the menuItemsData[key] array are numeric
-                  menuItemsData[key].every((item) => typeof item === 'number') ? (
-                    <MenuItem key={key} value={key}>
-                      {key}
-                    </MenuItem>
-                  ) : null
-                )}
-                </Select>
-              
-
-              </Box>
-              {/* Row Input 1 & 2 */}
-              <Box sx={{ mb: 1 }}>
-                <Typography variant="caption" fontWeight="bold">
-                  Value
-                </Typography>
-                {/*This should be dynamic, changing depending on if previous select is populated, not hardcoded as 2 selects. 
-                Further, they should not be selects in the first place. But rather modal of table where user can select rows*/}
-                <Select
-                  fullWidth
-                  displayEmpty
-                  value={chart.RowsSelected?.[0] ?? ""} 
-                  onChange={(e) => handleChange(e, "RowsSelected", 0)}
-                  sx={{
-                    mt: 0.5,
-                    bgcolor: "#f8f9fa",
-                    border: "1px solid #adb5bd",
-                    borderRadius: "4px",
-                    "& .MuiSelect-select": {
-                      padding: "6px 8px",
-                      fontSize: "0.75rem",
-                    },
-                  }}
-                  size="small"
-                >
-                  <MenuItem value="">
-                    <em>Select a Row</em>
+                ) : null
+              )}
+              </Select>
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.NumericColumns ? chart.NumericColumns[2] || "" : ""}
+                onChange={(e) => handleChange(e, "NumericColumns", 2)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select Numeric Column</em>
+                </MenuItem>
+                {Object.keys(menuItemsData).map((key) =>
+                // Check if the values in the menuItemsData[key] array are numeric
+                menuItemsData[key].every((item) => typeof item === 'number') ? (
+                  <MenuItem key={key} value={key}>
+                    {key}
                   </MenuItem>
+                ) : null
+              )}
+              </Select>
+            </Box>
 
-                  {Object.keys(menuItemsData).map((key) =>
-                    key ? (
-                      menuItemsData[key].map((_, index) => (
-                        <MenuItem key={`Row ${index+1}`} value={index}>
-                          Row {index+1}
-                        </MenuItem>
-                      ))
-                    ) : null
-                  )}
-                </Select>
+            {/* Row Input 1 & 2 */}
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="caption" fontWeight="bold">
+                Value
+              </Typography>
+              {/*This should be dynamic, changing depending on if previous select is populated, not hardcoded as 2 selects. 
+              Further, they should not be selects in the first place. But rather modal of table where user can select rows*/}
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.RowsSelected?.[0] ?? ""} 
+                onChange={(e) => handleChange(e, "RowsSelected", 0)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select a Row</em>
+                </MenuItem>
 
-                <Select
-                  fullWidth
-                  displayEmpty
-                  value={chart.RowsSelected?.[1] ?? ""} 
-                  onChange={(e) => handleChange(e, "RowsSelected", 1)}
-                  sx={{
-                    mt: 0.5,
-                    bgcolor: "#f8f9fa",
-                    border: "1px solid #adb5bd",
-                    borderRadius: "4px",
-                    "& .MuiSelect-select": {
-                      padding: "6px 8px",
-                      fontSize: "0.75rem",
-                    },
-                  }}
-                  size="small"
-                >
-                  <MenuItem value="">
-                    <em>Select a Row</em>
+                {menuItemsData[Object.keys(menuItemsData)[0]]?.map((_, index) => (
+                  <MenuItem key={`Row ${index + 1}`} value={index}>
+                    Row {index + 1}
                   </MenuItem>
+                  ))
+                }
+              </Select>
 
-                  {Object.keys(menuItemsData).map((key) =>
-                    key ? (
-                      menuItemsData[key].map((_, index) => (
-                        <MenuItem key={`Row ${index+1}`} value={index}>
-                          Row {index+1}
-                        </MenuItem>
-                      ))
-                    ) : null
-                  )}
-                </Select>
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.RowsSelected?.[1] ?? ""} 
+                onChange={(e) => handleChange(e, "RowsSelected", 1)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select a Row</em>
+                </MenuItem>
 
-              </Box>
-            </>
-          );
+                {menuItemsData[Object.keys(menuItemsData)[0]]?.map((_, index) => (
+                  <MenuItem key={`Row ${index + 1}`} value={index}>
+                    Row {index + 1}
+                  </MenuItem>
+                  ))
+                }
+              </Select>
+
+            </Box>
+          </>
+        );
       case "RadialBar":
-            return (
-              <>
-                {/* Name Input*/}
-                <Box sx={{ mb: 1 }}>
-                  <Typography variant="caption" fontWeight="bold">
-                    Select Columns
-                  </Typography>
-                  {/* 5 Hard Coded Select Fields for Columns */}
-                  <Select
-                    fullWidth
-                    displayEmpty
-                    value={chart.RadialColumn ? chart.RadialColumn || "" : ""}
-                    onChange={(e) => handleChange(e, "RadialColumn")}
-                    sx={{
-                      mt: 0.5,
-                      bgcolor: "#f8f9fa",
-                      border: "1px solid #adb5bd",
-                      borderRadius: "4px",
-                      "& .MuiSelect-select": {
-                        padding: "6px 8px",
-                        fontSize: "0.75rem",
-                      },
-                    }}
-                    size="small"
-                  >
-                    <MenuItem value="">
-                      <em>Select a Column</em>
+        return (
+          <>
+            {/* Name Input*/}
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="caption" fontWeight="bold">
+                Select Columns
+              </Typography>
+              {/* 5 Hard Coded Select Fields for Columns */}
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.RadialColumn ? chart.RadialColumn || "" : ""}
+                onChange={(e) => handleChange(e, "RadialColumn")}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select a Column</em>
+                </MenuItem>
+                {Object.keys(menuItemsData).map((key) =>
+                  key ? (
+                    <MenuItem key={key} value={key}>
+                      {key}
                     </MenuItem>
-                    {Object.keys(menuItemsData).map((key) =>
-                      key ? (
-                        <MenuItem key={key} value={key}>
-                          {key}
-                        </MenuItem>
-                      ) : null
-                    )}
-                  </Select>         
-                </Box>
-              </>
-            );
-      case "Histogram":
-              return (
-                <>
-                  {/* Name Input*/}
-                  <Box sx={{ mb: 1 }}>
-                    <Typography variant="caption" fontWeight="bold">
-                      First X Axis
-                    </Typography>
-                    <Select
-                      fullWidth
-                      displayEmpty
-                      value={chart.xAxis1 || ""}
-                      onChange={(e) => handleChange(e, "xAxis1")}
-                      sx={{
-                        mt: 0.5,
-                        bgcolor: "#f8f9fa",
-                        border: "1px solid #adb5bd",
-                        borderRadius: "4px",
-                        "& .MuiSelect-select": {
-                          padding: "6px 8px",
-                          fontSize: "0.75rem",
-                        },
-                      }}
-                      size="small"
-                    >
-                      <MenuItem value="">
-                        <em>Select First X Axis</em>
-                      </MenuItem>
-                      {Object.keys(menuItemsData).map((key) =>
-                        key ? (
-                          <MenuItem key={key} value={key}>
-                            {key}
-                          </MenuItem>
-                        ) : null
-                      )}
-                    </Select>
-      
-                  </Box>
-                </>
-              );
+                  ) : null
+                )}
+              </Select>         
+            </Box>
+          </>
+        );
+      case "PositiveNegativeBar":
+        return (
+          <>
+            {/* Numeric Column for Positive Negative Bar Chart's Values */}
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="caption" fontWeight="bold">
+                Numeric Column 1
+              </Typography>
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.PNBColumns ? chart.PNBColumns [0] || "" : ""}
+                onChange={(e) => handleChange(e, "PNBColumns", 0)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select a Numeric Column</em>
+                </MenuItem>
+                {Object.keys(menuItemsData).map((key) =>
+                // Check if the values in the menuItemsData[key] array are numeric
+                  menuItemsData[key].every((item) => typeof item === 'number') ? (
+                    <MenuItem key={key} value={key}>
+                      {key}
+                    </MenuItem>
+                  ) : null
+                )}
+              </Select>
+            </Box>
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="caption" fontWeight="bold">
+                Numeric Column 2
+              </Typography>
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.PNBColumns ? chart.PNBColumns [1] || "" : ""}
+                onChange={(e) => handleChange(e, "PNBColumns", 1)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select a Numeric Column</em>
+                </MenuItem>
+                {Object.keys(menuItemsData).map((key) =>
+                // Check if the values in the menuItemsData[key] array are numeric
+                  menuItemsData[key].every((item) => typeof item === 'number') ? (
+                    <MenuItem key={key} value={key}>
+                      {key}
+                    </MenuItem>
+                  ) : null
+                )}
+              </Select>
+            </Box>
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="caption" fontWeight="bold">
+                Numeric Column 3
+              </Typography>
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.PNBColumns ? chart.PNBColumns[2] || "" : ""}
+                onChange={(e) => handleChange(e, "PNBColumns", 2)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select a Numeric Column</em>
+                </MenuItem>
+                {Object.keys(menuItemsData).map((key) =>
+                // Check if the values in the menuItemsData[key] array are numeric
+                  menuItemsData[key].every((item) => typeof item === 'number') ? (
+                    <MenuItem key={key} value={key}>
+                      {key}
+                    </MenuItem>
+                  ) : null
+                )}
+              </Select>
+            </Box>
+
+            {/* Line Input 1*/}
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="caption" fontWeight="bold">
+                Data Point 1
+              </Typography>
+
+              {/* Hardcoded as Five Possible Lines */}
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.PNBLineXAxes?.[0] ?? ""} 
+                onChange={(e) => handleChange(e, "PNBLineXAxes", 1)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select Y-axis field</em>
+                </MenuItem>
+                {menuItemsData[Object.keys(menuItemsData)[0]]?.map((_, index) => (
+                  <MenuItem key={`Row ${index + 1}`} value={index}>
+                    Row {index + 1}
+                  </MenuItem>
+                  ))
+                }
+              </Select>
+            </Box>
+              {/* Line Input 2*/}
+              <Box sx={{ mb: 1 }}>
+              <Typography variant="caption" fontWeight="bold">
+                Data Point 2
+              </Typography>
+              {/* Hardcoded as Five Possible Lines */}
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.PNBLineXAxes?.[1] ?? ""} 
+                onChange={(e) => handleChange(e, "PNBLineXAxes", 1)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select Y-axis field</em>
+                </MenuItem>
+                {menuItemsData[Object.keys(menuItemsData)[0]]?.map((_, index) => (
+                  <MenuItem key={`Row ${index + 1}`} value={index}>
+                    Row {index + 1}
+                  </MenuItem>
+                  ))
+                }
+              </Select>
+            </Box>
+            {/* Line Input 3*/}
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="caption" fontWeight="bold">
+                Data Point 3
+              </Typography>
+
+              {/* Hardcoded as Five Possible Lines */}
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.PNBLineXAxes?.[2] ?? ""} 
+                onChange={(e) => handleChange(e, "PNBLineXAxes", 2)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select Y-axis field</em>
+                </MenuItem>
+                {menuItemsData[Object.keys(menuItemsData)[0]]?.map((_, index) => (
+                  <MenuItem key={`Row ${index + 1}`} value={index}>
+                    Row {index + 1}
+                  </MenuItem>
+                  ))
+                }
+              </Select>
+            </Box>
+            {/* Line Input 4 */}
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="caption" fontWeight="bold">
+                Data Point 4
+              </Typography>
+
+              {/* Hardcoded as Five Possible Lines */}
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.PNBLineXAxes?.[3] ?? ""} 
+                onChange={(e) => handleChange(e, "PNBLineXAxes", 3)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select Y-axis field</em>
+                </MenuItem>
+                {menuItemsData[Object.keys(menuItemsData)[0]]?.map((_, index) => (
+                  <MenuItem key={`Row ${index + 1}`} value={index}>
+                    Row {index + 1}
+                  </MenuItem>
+                  ))
+                }
+              </Select>
+            </Box>
+            {/* Line Input 5*/}
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="caption" fontWeight="bold">
+                Data Point 5
+              </Typography>
+
+              {/* Hardcoded as Five Possible Lines */}
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.PNBLineXAxes?.[4] ?? ""} 
+                onChange={(e) => handleChange(e, "PNBLineXAxes", 4)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select Y-axis field</em>
+                </MenuItem>
+                {menuItemsData[Object.keys(menuItemsData)[0]]?.map((_, index) => (
+                  <MenuItem key={`Row ${index + 1}`} value={index}>
+                    Row {index + 1}
+                  </MenuItem>
+                  ))
+                }
+              </Select>
+            </Box>                
+          </>
+        );
       case "StackedLine":
-                return (
-                  <>
-                    {/* Numeric Column for Stacked Line Chart's Values */}
-                    <Box sx={{ mb: 1 }}>
-                      <Typography variant="caption" fontWeight="bold">
-                        Numeric Column 1
-                      </Typography>
-                      <Select
-                        fullWidth
-                        displayEmpty
-                        value={chart.StackedLineColumns ? chart.StackedLineColumns [0] || "" : ""}
-                        onChange={(e) => handleChange(e, "StackedLineColumns", 0)}
-                        sx={{
-                          mt: 0.5,
-                          bgcolor: "#f8f9fa",
-                          border: "1px solid #adb5bd",
-                          borderRadius: "4px",
-                          "& .MuiSelect-select": {
-                            padding: "6px 8px",
-                            fontSize: "0.75rem",
-                          },
-                        }}
-                        size="small"
-                      >
-                        <MenuItem value="">
-                          <em>Select a Numeric Column</em>
-                        </MenuItem>
-                        {Object.keys(menuItemsData).map((key) =>
-                        // Check if the values in the menuItemsData[key] array are numeric
-                          menuItemsData[key].every((item) => typeof item === 'number') ? (
-                            <MenuItem key={key} value={key}>
-                              {key}
-                            </MenuItem>
-                          ) : null
-                        )}
-                      </Select>
-                    </Box>
-                    <Box sx={{ mb: 1 }}>
-                      <Typography variant="caption" fontWeight="bold">
-                        Numeric Column 2
-                      </Typography>
-                      <Select
-                        fullWidth
-                        displayEmpty
-                        value={chart.StackedLineColumns ? chart.StackedLineColumns [1] || "" : ""}
-                        onChange={(e) => handleChange(e, "StackedLineColumns", 1)}
-                        sx={{
-                          mt: 0.5,
-                          bgcolor: "#f8f9fa",
-                          border: "1px solid #adb5bd",
-                          borderRadius: "4px",
-                          "& .MuiSelect-select": {
-                            padding: "6px 8px",
-                            fontSize: "0.75rem",
-                          },
-                        }}
-                        size="small"
-                      >
-                        <MenuItem value="">
-                          <em>Select a Numeric Column</em>
-                        </MenuItem>
-                        {Object.keys(menuItemsData).map((key) =>
-                        // Check if the values in the menuItemsData[key] array are numeric
-                          menuItemsData[key].every((item) => typeof item === 'number') ? (
-                            <MenuItem key={key} value={key}>
-                              {key}
-                            </MenuItem>
-                          ) : null
-                        )}
-                      </Select>
-                    </Box>
-                    <Box sx={{ mb: 1 }}>
-                      <Typography variant="caption" fontWeight="bold">
-                        Numeric Column 3
-                      </Typography>
-                      <Select
-                        fullWidth
-                        displayEmpty
-                        value={chart.StackedLineColumns ? chart.StackedLineColumns [2] || "" : ""}
-                        onChange={(e) => handleChange(e, "StackedLineColumns", 2)}
-                        sx={{
-                          mt: 0.5,
-                          bgcolor: "#f8f9fa",
-                          border: "1px solid #adb5bd",
-                          borderRadius: "4px",
-                          "& .MuiSelect-select": {
-                            padding: "6px 8px",
-                            fontSize: "0.75rem",
-                          },
-                        }}
-                        size="small"
-                      >
-                        <MenuItem value="">
-                          <em>Select a Numeric Column</em>
-                        </MenuItem>
-                        {Object.keys(menuItemsData).map((key) =>
-                        // Check if the values in the menuItemsData[key] array are numeric
-                          menuItemsData[key].every((item) => typeof item === 'number') ? (
-                            <MenuItem key={key} value={key}>
-                              {key}
-                            </MenuItem>
-                          ) : null
-                        )}
-                      </Select>
-                    </Box>
+        return (
+          <>
+            {/* Numeric Column for Stacked Line Chart's Values */}
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="caption" fontWeight="bold">
+                Numeric Column 1
+              </Typography>
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.StackedLineColumns ? chart.StackedLineColumns [0] || "" : ""}
+                onChange={(e) => handleChange(e, "StackedLineColumns", 0)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select a Numeric Column</em>
+                </MenuItem>
+                {Object.keys(menuItemsData).map((key) =>
+                // Check if the values in the menuItemsData[key] array are numeric
+                  menuItemsData[key].every((item) => typeof item === 'number') ? (
+                    <MenuItem key={key} value={key}>
+                      {key}
+                    </MenuItem>
+                  ) : null
+                )}
+              </Select>
+            </Box>
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="caption" fontWeight="bold">
+                Numeric Column 2
+              </Typography>
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.StackedLineColumns ? chart.StackedLineColumns [1] || "" : ""}
+                onChange={(e) => handleChange(e, "StackedLineColumns", 1)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select a Numeric Column</em>
+                </MenuItem>
+                {Object.keys(menuItemsData).map((key) =>
+                // Check if the values in the menuItemsData[key] array are numeric
+                  menuItemsData[key].every((item) => typeof item === 'number') ? (
+                    <MenuItem key={key} value={key}>
+                      {key}
+                    </MenuItem>
+                  ) : null
+                )}
+              </Select>
+            </Box>
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="caption" fontWeight="bold">
+                Numeric Column 3
+              </Typography>
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.StackedLineColumns ? chart.StackedLineColumns [2] || "" : ""}
+                onChange={(e) => handleChange(e, "StackedLineColumns", 2)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select a Numeric Column</em>
+                </MenuItem>
+                {Object.keys(menuItemsData).map((key) =>
+                // Check if the values in the menuItemsData[key] array are numeric
+                  menuItemsData[key].every((item) => typeof item === 'number') ? (
+                    <MenuItem key={key} value={key}>
+                      {key}
+                    </MenuItem>
+                  ) : null
+                )}
+              </Select>
+            </Box>
 
-                    {/* Line Input 1*/}
-                    <Box sx={{ mb: 1 }}>
-                      <Typography variant="caption" fontWeight="bold">
-                        Data Point 1
-                      </Typography>
+            {/* Line Input 1*/}
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="caption" fontWeight="bold">
+                Data Point 1
+              </Typography>
 
-                      {/* Hardcoded as Five Possible Lines */}
-                      <Select
-                        fullWidth
-                        displayEmpty
-                        value={chart.LineXAxes?.[0] ?? ""} 
-                        onChange={(e) => handleChange(e, "LineXAxes", 1)}
-                        sx={{
-                          mt: 0.5,
-                          bgcolor: "#f8f9fa",
-                          border: "1px solid #adb5bd",
-                          borderRadius: "4px",
-                          "& .MuiSelect-select": {
-                            padding: "6px 8px",
-                            fontSize: "0.75rem",
-                          },
-                        }}
-                        size="small"
-                      >
-                        <MenuItem value="">
-                          <em>Select Y-axis field</em>
-                        </MenuItem>
-                        {Object.keys(menuItemsData).map((key) =>
-                        key ? (
-                          menuItemsData[key].map((_, index) => (
-                            <MenuItem key={`Row ${index+1}`} value={index}>
-                              Row {index+1}
-                            </MenuItem>
-                          ))
-                        ) : null
-                      )}
-                      </Select>
-                    </Box>
-                      {/* Line Input 2*/}
-                      <Box sx={{ mb: 1 }}>
-                      <Typography variant="caption" fontWeight="bold">
-                        Data Point 2
-                      </Typography>
-                      {/* Hardcoded as Five Possible Lines */}
-                      <Select
-                        fullWidth
-                        displayEmpty
-                        value={chart.LineXAxes?.[1] ?? ""} 
-                        onChange={(e) => handleChange(e, "LineXAxes", 1)}
-                        sx={{
-                          mt: 0.5,
-                          bgcolor: "#f8f9fa",
-                          border: "1px solid #adb5bd",
-                          borderRadius: "4px",
-                          "& .MuiSelect-select": {
-                            padding: "6px 8px",
-                            fontSize: "0.75rem",
-                          },
-                        }}
-                        size="small"
-                      >
-                        <MenuItem value="">
-                          <em>Select Y-axis field</em>
-                        </MenuItem>
-                        {Object.keys(menuItemsData).map((key) =>
-                        key ? (
-                          menuItemsData[key].map((_, index) => (
-                            <MenuItem key={`Row ${index+1}`} value={index}>
-                              Row {index+1}
-                            </MenuItem>
-                          ))
-                        ) : null
-                      )}
-                      </Select>
-                    </Box>
-                    {/* Line Input 3*/}
-                    <Box sx={{ mb: 1 }}>
-                      <Typography variant="caption" fontWeight="bold">
-                        Data Point 3
-                      </Typography>
+              {/* Hardcoded as Five Possible Lines */}
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.LineXAxes?.[0] ?? ""} 
+                onChange={(e) => handleChange(e, "LineXAxes", 1)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select Y-axis field</em>
+                </MenuItem>
+                {menuItemsData[Object.keys(menuItemsData)[0]]?.map((_, index) => (
+                  <MenuItem key={`Row ${index + 1}`} value={index}>
+                    Row {index + 1}
+                  </MenuItem>
+                  ))
+                }
+              </Select>
+            </Box>
+              {/* Line Input 2*/}
+              <Box sx={{ mb: 1 }}>
+              <Typography variant="caption" fontWeight="bold">
+                Data Point 2
+              </Typography>
+              {/* Hardcoded as Five Possible Lines */}
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.LineXAxes?.[1] ?? ""} 
+                onChange={(e) => handleChange(e, "LineXAxes", 1)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select Y-axis field</em>
+                </MenuItem>
+                {menuItemsData[Object.keys(menuItemsData)[0]]?.map((_, index) => (
+                  <MenuItem key={`Row ${index + 1}`} value={index}>
+                    Row {index + 1}
+                  </MenuItem>
+                  ))
+                }
+              </Select>
+            </Box>
+            {/* Line Input 3*/}
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="caption" fontWeight="bold">
+                Data Point 3
+              </Typography>
 
-                      {/* Hardcoded as Five Possible Lines */}
-                      <Select
-                        fullWidth
-                        displayEmpty
-                        value={chart.LineXAxes?.[2] ?? ""} 
-                        onChange={(e) => handleChange(e, "LineXAxes", 2)}
-                        sx={{
-                          mt: 0.5,
-                          bgcolor: "#f8f9fa",
-                          border: "1px solid #adb5bd",
-                          borderRadius: "4px",
-                          "& .MuiSelect-select": {
-                            padding: "6px 8px",
-                            fontSize: "0.75rem",
-                          },
-                        }}
-                        size="small"
-                      >
-                        <MenuItem value="">
-                          <em>Select Y-axis field</em>
-                        </MenuItem>
-                        {Object.keys(menuItemsData).map((key) =>
-                        key ? (
-                          menuItemsData[key].map((_, index) => (
-                            <MenuItem key={`Row ${index+1}`} value={index}>
-                              Row {index+1}
-                            </MenuItem>
-                          ))
-                        ) : null
-                      )}
-                      </Select>
-                    </Box>
-                    {/* Line Input 4 */}
-                    <Box sx={{ mb: 1 }}>
-                      <Typography variant="caption" fontWeight="bold">
-                        Data Point 4
-                      </Typography>
+              {/* Hardcoded as Five Possible Lines */}
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.LineXAxes?.[2] ?? ""} 
+                onChange={(e) => handleChange(e, "LineXAxes", 2)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select Y-axis field</em>
+                </MenuItem>
+                {menuItemsData[Object.keys(menuItemsData)[0]]?.map((_, index) => (
+                  <MenuItem key={`Row ${index + 1}`} value={index}>
+                    Row {index + 1}
+                  </MenuItem>
+                  ))
+                }
+              </Select>
+            </Box>
+            {/* Line Input 4 */}
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="caption" fontWeight="bold">
+                Data Point 4
+              </Typography>
 
-                      {/* Hardcoded as Five Possible Lines */}
-                      <Select
-                        fullWidth
-                        displayEmpty
-                        value={chart.LineXAxes?.[3] ?? ""} 
-                        onChange={(e) => handleChange(e, "LineXAxes", 3)}
-                        sx={{
-                          mt: 0.5,
-                          bgcolor: "#f8f9fa",
-                          border: "1px solid #adb5bd",
-                          borderRadius: "4px",
-                          "& .MuiSelect-select": {
-                            padding: "6px 8px",
-                            fontSize: "0.75rem",
-                          },
-                        }}
-                        size="small"
-                      >
-                        <MenuItem value="">
-                          <em>Select Y-axis field</em>
-                        </MenuItem>
-                        {Object.keys(menuItemsData).map((key) =>
-                        key ? (
-                          menuItemsData[key].map((_, index) => (
-                            <MenuItem key={`Row ${index+1}`} value={index}>
-                              Row {index+1}
-                            </MenuItem>
-                          ))
-                        ) : null
-                      )}
-                      </Select>
-                    </Box>
-                    {/* Line Input 5*/}
-                    <Box sx={{ mb: 1 }}>
-                      <Typography variant="caption" fontWeight="bold">
-                        Data Point 5
-                      </Typography>
+              {/* Hardcoded as Five Possible Lines */}
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.LineXAxes?.[3] ?? ""} 
+                onChange={(e) => handleChange(e, "LineXAxes", 3)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select Y-axis field</em>
+                </MenuItem>
+                {menuItemsData[Object.keys(menuItemsData)[0]]?.map((_, index) => (
+                  <MenuItem key={`Row ${index + 1}`} value={index}>
+                    Row {index + 1}
+                  </MenuItem>
+                  ))
+                }
+              </Select>
+            </Box>
+            {/* Line Input 5*/}
+            <Box sx={{ mb: 1 }}>
+              <Typography variant="caption" fontWeight="bold">
+                Data Point 5
+              </Typography>
 
-                      {/* Hardcoded as Five Possible Lines */}
-                      <Select
-                        fullWidth
-                        displayEmpty
-                        value={chart.LineXAxes?.[4] ?? ""} 
-                        onChange={(e) => handleChange(e, "LineXAxes", 4)}
-                        sx={{
-                          mt: 0.5,
-                          bgcolor: "#f8f9fa",
-                          border: "1px solid #adb5bd",
-                          borderRadius: "4px",
-                          "& .MuiSelect-select": {
-                            padding: "6px 8px",
-                            fontSize: "0.75rem",
-                          },
-                        }}
-                        size="small"
-                      >
-                        <MenuItem value="">
-                          <em>Select Y-axis field</em>
-                        </MenuItem>
-                        {Object.keys(menuItemsData).map((key) =>
-                        key ? (
-                          menuItemsData[key].map((_, index) => (
-                            <MenuItem key={`Row ${index+1}`} value={index}>
-                              Row {index+1}
-                            </MenuItem>
-                          ))
-                        ) : null
-                      )}
-                      </Select>
-                    </Box>                
-                  </>
-                );
+              {/* Hardcoded as Five Possible Lines */}
+              <Select
+                fullWidth
+                displayEmpty
+                value={chart.LineXAxes?.[4] ?? ""} 
+                onChange={(e) => handleChange(e, "LineXAxes", 4)}
+                sx={{
+                  mt: 0.5,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #adb5bd",
+                  borderRadius: "4px",
+                  "& .MuiSelect-select": {
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                  },
+                }}
+                size="small"
+              >
+                <MenuItem value="">
+                  <em>Select Y-axis field</em>
+                </MenuItem>
+                {menuItemsData[Object.keys(menuItemsData)[0]]?.map((_, index) => (
+                  <MenuItem key={`Row ${index + 1}`} value={index}>
+                    Row {index + 1}
+                  </MenuItem>
+                  ))
+                }
+              </Select>
+            </Box>                
+          </>
+        );
     
       default:
         return (

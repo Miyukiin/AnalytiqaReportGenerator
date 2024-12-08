@@ -1,13 +1,13 @@
 // src/components/chartData.tsx
-import { Chart, ScatterDataPoint, HistogramDataPoint, RadarDataPoint, StackedLineDataPoint, RadialBarDataPoint } from "@/types";
+import { Chart, ScatterDataPoint, PositiveNegativeBarDataPoint, RadarDataPoint, StackedLineDataPoint, RadialBarDataPoint } from "@/types";
 import { generateSampleData } from "@/utils/chartUtils";
 import { fetchCsrfToken } from "./csrfToken";
 
 const isScatterData = (data: any): data is ScatterDataPoint[] => {
   return Array.isArray(data) && data.every(point => 'x' in point && 'y' in point);
 };
-const isHistogramData = (data: any): data is HistogramDataPoint[] => {
-  return Array.isArray(data) && data.every(point => 'name' in point && 'value' in point);
+const isPositiveNegativeBarData = (data: any): data is PositiveNegativeBarDataPoint[] => {
+  return Array.isArray(data) && data.every(point => 'PNBname' in point && ('PNBvalue1' in point || 'PNBvalue2' in point || 'PNBvalue3' in point || 'PNBvalue4' in point || 'PNBvalue5'));
 };
 
 {/*This should be dynamic, changing the check depending on how many rows are selected, not hardcoded as row1 and row 2 */}
@@ -28,7 +28,7 @@ const constructScatterPlotData = (
   xField: string | undefined,
   yField: string | undefined,
   previousData: ScatterDataPoint[] // To retain previous values
-) => {
+): ScatterDataPoint[] => {
   // Validate the dataset for the given field
   const dataForField = (field: string | undefined) =>
     field && Array.isArray(dataset[field]) ? dataset[field] : undefined;
@@ -59,21 +59,64 @@ const constructScatterPlotData = (
     return newDataPoint as ScatterDataPoint;
   }) : [];
 };
-const constructHistogramData = (
-  dataset: Record<string, string[]>,
-  xField: string | undefined,
-) => {
-  return (xField) ? dataset[(xField) as string].map((value, index) => {
+const constructPositiveNegativeBarData = (
+  dataset: Record<string, string[]>, 
+  PNBColumns: Array<string> | undefined, 
+  PNBLineXAxes: Array<number> | undefined
+): PositiveNegativeBarDataPoint[] => {  
+  // Check if PNBColumns is undefined or empty
+  if (!PNBColumns || PNBColumns.length === 0) {
+    console.error("PNBColumns is undefined. Cannot construct data.");
+    return [];
+  }
+  console.log("Printing PNBColumns:", PNBColumns);
+  console.log("Printing PNBLineXAxes:", PNBLineXAxes);
 
-    // Generate Datapoint for Column X with Structure {name: ColumnName, value: rowValue} for all rows of that column
-    const newDataPoint = {
-      name: xField,
-      value: Number(dataset[xField][index])
-    };
+  const newDataPoint: PositiveNegativeBarDataPoint[] = [];
 
-    return newDataPoint as HistogramDataPoint;
-  }) : [];
-}
+  // If PNBLineXAxes is undefined or empty, populate with default 0 values
+  if (!PNBLineXAxes || PNBLineXAxes.length === 0) {
+    console.log("No rows selected for PNBLineXAxes, creating default data with SLvalues set to 0.");
+    for (let i = 0; i < PNBColumns.length; i++) {
+      const dataPoint: PositiveNegativeBarDataPoint = { 
+        PNBname: `Row ${i + 1}`,
+        PNBvalue1: 0, // Default value for PNBvalue1 because its the only one required, it will be updated later.
+       };
+
+      PNBColumns.forEach((_, colIndex) => {
+        (dataPoint as any)[`PNBvalue${colIndex + 1}`] = 0; // Set all SLvalues to 0
+      });
+
+      newDataPoint.push(dataPoint);
+    }
+    return newDataPoint; // Return the default data
+  }
+
+  // Loop through each row (student) index specified in PNBLineXAxes
+  PNBLineXAxes.forEach((rowIndex) => {
+    const dataPoint: PositiveNegativeBarDataPoint = { 
+      PNBname: `Row ${rowIndex + 1}`,
+      PNBvalue1: 0, // Default value for SLvalue1 because its the only one required, it will be updated later.
+    } 
+
+    // Loop through each column (subject) specified in PNBColumns
+    PNBColumns.forEach((column, colIndex) => {
+      // Retrieve the column value for the given row
+      const rowData = dataset[column]?.[rowIndex];
+
+      // Convert the value to a number or use 0 if invalid
+      const value = Number(rowData) || 0;
+
+      // Assign the value to the corresponding PNBvalue property
+      (dataPoint as any)[`PNBvalue${colIndex + 1}`] = value;
+    });
+
+    newDataPoint.push(dataPoint);
+  });
+
+  console.log("Constructed PositiveNegativeBar data Array:", newDataPoint);
+  return newDataPoint;
+};
 
 const constructRadarData = (
   dataset: Record<string, string[]>,
@@ -226,9 +269,19 @@ const constructRadialBarData = async (
 const createChartData = (
   dataset: Record<string, string[]> = {}, 
   chart: Chart, 
-  { xField = undefined, yField = undefined, RadarColumns = undefined, RowsSelected = undefined, RadialColumn = undefined, StackedLineColumns = undefined, LineXAxes = undefined}: 
-  { xField?: string | undefined, yField?: string | undefined, RadarColumns?: Array<string> | undefined, RowsSelected?: Array<number> | undefined, RadialColumn?: string
-    StackedLineColumns?: Array<string> | undefined, LineXAxes?: Array<number> | undefined
+  { xField = undefined, yField = undefined, 
+    RadarColumns = undefined, RowsSelected = undefined, 
+    RadialColumn = undefined, 
+    StackedLineColumns = undefined, LineXAxes = undefined,
+    PNBColumns = undefined, PNBLineXAxes = undefined
+
+  }: 
+  { xField?: string | undefined, yField?: string | undefined, 
+    RadarColumns?: Array<string> | undefined, RowsSelected?: Array<number> | undefined, 
+    RadialColumn?: string
+    StackedLineColumns?: Array<string> | undefined, LineXAxes?: Array<number> | undefined,
+    PNBColumns?: Array<string> | undefined, PNBLineXAxes?: Array<number> | undefined,
+
   },  
   previousData: ScatterDataPoint[],
 
@@ -239,9 +292,9 @@ const createChartData = (
         // Assumes that the xfield and yfield data are numeric, or string that can be converted to numeric (0 => 0, "0" => 0)
         return constructScatterPlotData(dataset, xField, yField, previousData) as ScatterDataPoint[]
       
-    case "Histogram":
+    case "PositiveNegativeBar":
 
-        return constructHistogramData(dataset, xField) as HistogramDataPoint[];
+        return constructPositiveNegativeBarData(dataset, PNBColumns, PNBLineXAxes) as PositiveNegativeBarDataPoint[];
       
     case "Radar":
         return constructRadarData(dataset, RadarColumns, RowsSelected) as RadarDataPoint[];
@@ -262,4 +315,4 @@ const createChartData = (
   }
 };
 
-export { createChartData, isScatterData, isHistogramData, isRadarData, isStackedLineData, isRadialBarData };
+export { createChartData, isScatterData, isPositiveNegativeBarData, isRadarData, isStackedLineData, isRadialBarData };

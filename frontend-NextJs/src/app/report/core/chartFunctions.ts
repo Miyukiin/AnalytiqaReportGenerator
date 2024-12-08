@@ -35,6 +35,7 @@ export const addChart = (
   const updatedPages = pages.map((page, index) =>
     index === currentPageIndex ? { ...page, charts: [...page.charts, newChart] } : page
   );
+  console.log(newChart)
   setPages(updatedPages);
   setSelectedChartId(newChart.id);
 };

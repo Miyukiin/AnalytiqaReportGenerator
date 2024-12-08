@@ -12,20 +12,20 @@ export const generateSampleData = (type: ChartType): any[] => {
       { x: 150, y: 400 },
       { x: 110, y: 280 },
     ],
-    Histogram: [
-      { name: "A", value: 400 },
-      { name: "B", value: 300 },
-      { name: "C", value: 300 },
-      { name: "D", value: 200 },
-      { name: "E", value: 278 },
-      { name: "F", value: 189 },
+    PositiveNegativeBar: [
+      { PNBname: "A", PNBvalue1: -400, PNBvalue2: 400 },
+      { PNBname: "B", PNBvalue1: 300, PNBvalue2: -400 },
+      { PNBname: "C", PNBvalue1: -300, PNBvalue2: 400  },
+      { PNBname: "D", PNBvalue1: 200, PNBvalue2: -400  },
+      { PNBname: "E", PNBvalue1: -278, PNBvalue2: 400  },
+      { PNBname: "F", PNBvalue1: 189, PNBvalue2: -400  },
     ],
     Radar: [
       { header: "Math", row1: 12, row2: 45},
       { header: "Chinese", row1: 98, row2: 65 },
       { header: "English", row1: 86, row2: 23},
     ],
-    StackedLine: [ // Retaining "StackedLine"
+    StackedLine: [
       { SLname: "Page A", SLvalue1: 4000 },
       { SLname: "Page B", SLvalue1: 3000 },
       { SLname: "Page C", SLvalue1: 2000 },
