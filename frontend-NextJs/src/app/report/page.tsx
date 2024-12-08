@@ -1350,7 +1350,7 @@ const sendChartData = async () => {
       {!isSmallScreen ? (
         <Paper
           sx={{
-            height: "130vh",
+            height: "200vh",
             width: 200,
             display: "flex",
             flexDirection: "column",
