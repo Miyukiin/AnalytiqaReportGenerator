@@ -46,7 +46,7 @@ const SummaryChanges: React.FC<{ summaryChangesData: SummaryChangesData }> = ({ 
             </Typography>
         ))}
         <Typography variant="body1" sx={{ color: 'grey.800', marginTop: 1, lineHeight: '1.8' }}>
-            {removed_columns && removed_columns.length > 0 ? <span>Lastly, we also <b>{removed_columns.length}</b> removed columns that did not contain any data: <b>{removed_columns.join(', ')}</b></span> : <span> Step 4: No empty columns found. </span>}
+            {removed_columns && removed_columns.length > 0 ? <span>Lastly, we also <b>{removed_columns.length}</b> removed columns that did not contain any data: <b>{removed_columns.join(', ')}</b></span> : <span> Step 5: No empty columns found. </span>}
         </Typography>
         
     </div>
