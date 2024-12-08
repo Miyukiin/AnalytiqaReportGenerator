@@ -282,7 +282,8 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
             />
             <Tooltip {...tooltipStyle} />
             {/* Access index, only if corresponding StackedLineColumn index is defined . Check is isStackedlineData before accessing its SLname as the name of the line*/}
-            {StackedLineColumns?.[0]? <Line type="monotone" dataKey={`SLvalue1`} name={StackedLineColumns[0]} stroke="#8884d8" /> : null}
+            {/* Added fallback in the case that a new chart is added of StackedLine. When newly added, there is no StackedLineColumn, so fallback condition is to still display a line whose SLvalue1 is from generatesampledata.*/}
+            {StackedLineColumns?.[0]? <Line type="monotone" dataKey={`SLvalue1`} name={StackedLineColumns[0]} stroke="#8884d8" /> : <Line type="monotone" dataKey={`SLvalue1`} name={"Sample"} stroke="#8884d8" />}
             {StackedLineColumns?.[1]? <Line type="monotone" dataKey={`SLvalue2`} name={StackedLineColumns[1]} stroke='#83a6ed' /> : null}
             {StackedLineColumns?.[2]? <Line type="monotone" dataKey={`SLvalue3`} name={StackedLineColumns[2]} stroke='#8dd1e1' />: null}
             {StackedLineColumns?.[3]? <Line type="monotone" dataKey={`SLvalue4`} name={StackedLineColumns[4]} stroke='#82ca9d' /> : null}
