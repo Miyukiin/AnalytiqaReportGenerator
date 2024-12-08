@@ -997,7 +997,7 @@ const sendChartData = async () => {
       role="presentation"
     >
       <Typography variant="h6" fontWeight="bold" align="center">
-        VISUALIZATIONSVISUALIZATIONS
+        VISUALIZATIONS
       </Typography>
       <FullWidthDivider />
       <Grid container spacing={1} sx={{ mb: 2 }} flexDirection="column">
