@@ -590,7 +590,7 @@ const sendChartData = async () => {
       case "Scatter":
         return (
           <>
-            {/* X-Axis Input and Color Picker */}
+            {/* X-Axis Input */}
             <Box sx={{ mb: 1 }}>
               <Typography variant="caption" fontWeight="bold">
                 X-axis (Numeric)
@@ -624,31 +624,8 @@ const sendChartData = async () => {
                   ) : null
                 )}
               </Select>
-
-              {/* X-axis Color Customization */}
-              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
-                <Typography variant="caption" fontWeight="bold" sx={{ mr: 2 }}>
-                  Pick Color
-                </Typography>
-                <TextField
-                  type="color"
-                  value={chart.xAxisColor || "#000000"}
-                  onChange={(e) => updateSelectedChart("xAxisColor", e.target.value)}
-                  sx={{
-                    width: 90,
-                    height: 30,
-                    bgcolor: "#fff",
-                    mt: 0.5,
-                    '& input': {
-                      height: '100%',
-                      width: '100%',
-                      padding: 1,
-                    },
-                  }}
-                />
-              </Box>
             </Box>
-            {/* Y-Axis Input and Color Picker */}
+            {/* Y-Axis Input*/}
             <Box sx={{ mb: 1 }}>
               <Typography variant="caption" fontWeight="bold">
                 Y-axis (Numeric)
@@ -683,28 +660,6 @@ const sendChartData = async () => {
                   ) : null
                 )}
               </Select>
-              {/* Y-axis Color Customization */}
-              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
-                <Typography variant="caption" fontWeight="bold" sx={{ mr: 2 }}>
-                  Pick Color
-                </Typography>
-                <TextField
-                  type="color"
-                  value={chart.yAxisColor || "#000000"}
-                  onChange={(e) => updateSelectedChart("yAxisColor", e.target.value)}
-                  sx={{
-                    width: 90,
-                    height: 30,
-                    bgcolor: "#fff",
-                    mt: 0.5,
-                    '& input': {
-                      height: '100%',
-                      width: '100%',
-                      padding: 1,
-                    },
-                  }}
-                />
-              </Box>
             </Box>
           </>
         );
@@ -1385,8 +1340,13 @@ const sendChartData = async () => {
   );
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", bgcolor: "#ECECEC" }}>
-      {/* Left Sidebar */}
+    <Box
+      sx={{
+        minHeight: isSmallScreen ? "260vh" : "200vh", // 200vh for small screens, 100vh otherwise
+        display: "flex",
+        bgcolor: "#ECECEC",
+      }}
+>      {/* Left Sidebar */}
       {!isSmallScreen ? (
         <Paper
           sx={{
@@ -1628,7 +1588,7 @@ const sendChartData = async () => {
                 flexGrow: 1,
                 width: "100%",
                 position: "relative",
-                paddingBottom: "100px", // Space for remarks
+                paddingBottom: isSmallScreen ? "670px" : "500px" , // Space for remarks
               }}
             >
               <MainCanvas
