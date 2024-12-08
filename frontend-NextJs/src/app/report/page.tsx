@@ -60,11 +60,11 @@ import { ChartData } from "../../types";
 import { createChartData, isScatterData, isPositiveNegativeBarData, isRadarData, isStackedLineData, isRadialBarData } from "../../components/chartData"
 
 const icons = [
-  { icon: <ScatterPlotIcon />, label: "Scatter" },
-  { icon: <BarChartIcon />, label: "PositiveNegativeBar" },
-  { icon: <RadarIcon />, label: "Radar" },
-  { icon: <ShowChartIcon />, label: "StackedLine" },
-  { icon: <LayersIcon />, label: "RadialBar" },
+  { icon: <ScatterPlotIcon />, label: "Scatter", displayName: "Scatter Plot" },
+  { icon: <BarChartIcon />, label: "PositiveNegativeBar", displayName: "Positive-Negative Bar" },
+  { icon: <RadarIcon />, label: "Radar", displayName: "Radar Chart" },
+  { icon: <ShowChartIcon />, label: "StackedLine", displayName: "Stacked Line Chart" },
+  { icon: <LayersIcon />, label: "RadialBar", displayName: "Radial Bar" },
 ];
 
 const ReportLayout: React.FC = () => {
@@ -1566,13 +1566,13 @@ const sendChartData = async () => {
                   borderRadius: 1,
                   mr: 1,  // Space between icon and text
                 }}
-                title={item.label}
-                aria-label={`Add ${item.label} Chart`}
+                title={item.displayName}
+                aria-label={`Add ${item.displayName} Chart`}
               >
                 {item.icon}
               </IconButton>
               <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                {item.label}
+                {item.displayName}
               </Typography>
             </Box>
           </Grid>
@@ -1682,13 +1682,13 @@ const sendChartData = async () => {
                       mr: 1, // Space between icon and text
                     }}
                     title={item.label}
-                    aria-label={`Add ${item.label} Chart`}
+                    aria-label={`Add ${item.displayName} Chart`}
                   >
                     {item.icon}
                   </IconButton>
                   {/* Display the chart name next to the icon */}
                   <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                    {item.label}
+                    {item.displayName}
                   </Typography>
                 </Box>
               </Grid>
