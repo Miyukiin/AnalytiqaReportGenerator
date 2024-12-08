@@ -19,10 +19,12 @@ export interface RadarDataPoint {
 }
 
 export interface StackedLineDataPoint {
-  name: string;
-  line1: number;
-  line2: number;
-  line3: number;
+  SLname: string;
+  SLvalue1: number;
+  SLvalue2?: number;
+  SLvalue3?: number;
+  SLvalue4?: number;
+  SLvalue5?: number;
 }
 
 export interface RadialBarDataPoint {
@@ -53,13 +55,15 @@ export interface Chart {
   line3Axis?: string;      // For StackedLine chart's Line 3
   subjectAxis?: string;
 
-  xAxis1?: string;         // Histogram First x Axis.
+  xAxis1?: string;                  // Histogram First x Axis.
   
   NumericColumns?: Array<string>;   // Radar All Numeric Columns Selected
   RowsSelected?:  Array<number>;    // Radar All Rows indexes Selected To be Shown in Radar
   
-  RadialColumn?: string;  // Radial Bar Selected Column
+  RadialColumn?: string;            // Radial Bar Selected Column
 
+  StackedLineColumns?: Array<string>;       // Stacked Line Selected Numeric Column
+  LineXAxes?: Array<number>         // StackedLine All X Axis Row Indexes
 
   nameAxis?: string;    
   aAxis?: string;      

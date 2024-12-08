@@ -35,6 +35,7 @@ import {
   StackedLineDataPoint,
   RadialBarDataPoint,
 } from "../types";
+import { isStackedLineData } from "./chartData";
 
 interface ChartItemProps extends Chart {
   onRemove: (id: number) => void;
@@ -46,7 +47,9 @@ interface ChartItemProps extends Chart {
     x: number,
     y: number,
     NumericColumns?: Array<string>,
-    RowsSelected?:  Array<any>,
+    RowsSelected?:  Array<number>,
+    StackedLineColumns?: Array<string>,
+    LineXAxes?: Array<number>
   ) => void;
   onSelectChart: (id: number) => void;
   isSelected: boolean;
@@ -68,6 +71,8 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
   height,
   NumericColumns,
   RowsSelected,
+  LineXAxes,
+  StackedLineColumns,
   onRemove,
   onDragStop,
   onResizeStop,
@@ -270,41 +275,17 @@ const ChartItem: React.FC<ChartItemProps> = React.memo(({
         return (
           <LineChart {...commonChartProps} data={data as StackedLineDataPoint[]}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey={xAxis || "name"}
-              label={{
-                value: xAxis || "X-axis",
-                position: "insideBottomRight",
-                offset: -10 * scalingFactor, // Dynamically adjusted offset
-                style: {
-                  fontSize: commonChartProps.fontSize,
-                  fill: xAxisColor || "#000",
-                },
-              }}
-              tick={{
-                fontSize: commonChartProps.fontSize,
-                fill: xAxisColor || "#000",
-              }}
-            />
+            <XAxis dataKey="SLname" /> {/* Access SLname directly */}
             <YAxis
-              label={{
-                value: yAxis || "Y-axis",
-                angle: -90,
-                position: "insideLeft",
-                offset: -10 * scalingFactor, // Dynamically adjusted offset
-                style: {
-                  fontSize: commonChartProps.fontSize,
-                  fill: yAxisColor || "#000",
-                },
-              }}
-              tick={{
-                fontSize: commonChartProps.fontSize,
-                fill: yAxisColor || "#000",
-              }}
             />
             <Tooltip {...tooltipStyle} />
-            <Line type="monotone" dataKey="pv" stroke="#8884d8" />
-            <Line type="monotone" dataKey="uv" stroke="#82ca9d" />
+            {/* Access index, only if corresponding StackedLineColumn index is defined . Check is isStackedlineData before accessing its SLname as the name of the line*/}
+            {StackedLineColumns?.[0]? <Line type="monotone" dataKey={`SLvalue1`} name={isStackedLineData(data) ? data[0].SLname : ""} stroke="#8884d8" /> : null}
+            {StackedLineColumns?.[1]? <Line type="monotone" dataKey={`SLvalue2`} name={isStackedLineData(data) ? data[0].SLname : ""} stroke='#83a6ed' /> : null}
+            {StackedLineColumns?.[2]? <Line type="monotone" dataKey={`SLvalue3`} name={isStackedLineData(data) ? data[0].SLname : ""} stroke='#8dd1e1' />: null}
+            {StackedLineColumns?.[3]? <Line type="monotone" dataKey={`SLvalue4`} name={isStackedLineData(data) ? data[0].SLname : ""} stroke='#82ca9d' /> : null}
+            {StackedLineColumns?.[4]? <Line type="monotone" dataKey={`SLvalue5`}name={isStackedLineData(data) ? data[0].SLname : ""} stroke='#a4de6c' /> : null}
+
             <Legend wrapperStyle={legendStyle} />
           </LineChart>
         );
