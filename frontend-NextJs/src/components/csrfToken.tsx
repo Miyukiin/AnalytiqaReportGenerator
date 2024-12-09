@@ -1,7 +1,7 @@
 // Function that fetchess csrf token from api.
 
 export async function fetchCsrfToken(): Promise<string> {
-    const response = await fetch("http://127.0.0.1:8000/api/csrf-token/", {
+    const response = await fetch("https://miyukiin.pythonanywhere.com/api/csrf-token/", {
       credentials: "include",
     });
   
