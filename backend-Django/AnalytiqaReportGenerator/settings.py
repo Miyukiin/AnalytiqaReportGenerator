@@ -52,6 +52,7 @@ CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:3000',  # Alternate frontend ip origin port 3000 default
 ]
 
+ALLOWED_HOSTS= ['*'] # Note: Adjust in the future to allow access only to trusted hosts. This '*' allows all dns or ip addresses to be served by the api.
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -112,7 +113,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
-    {
+    {   
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
