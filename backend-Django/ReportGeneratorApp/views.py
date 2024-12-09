@@ -388,13 +388,6 @@ def retrieve_chart_data(request: HttpRequest, query_object: Visitors):
 def csrf_token_view(request: HttpRequest):
     return JsonResponse({"csrfToken": get_token(request)})
 
-from django.http import JsonResponse
-from rest_framework.decorators import api_view
-import logging
-
-# Set up logging
-logger = logging.getLogger(__name__)
-
 @api_view(['POST'])
 def generate_ai_remarks(request:HttpRequest):
     if request.method == "POST":
