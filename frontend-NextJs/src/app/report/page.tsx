@@ -1527,7 +1527,7 @@ const sendChartData = async () => {
         flexDirection: "column",
         p: 2,
         bgcolor: "#ECECEC",
-        height: "100%",
+        height: "200%",
       }}
       role="presentation"
     >
@@ -1627,7 +1627,7 @@ const sendChartData = async () => {
   return (
     <Box
       sx={{
-        minHeight: isSmallScreen ? "260vh" : "200vh", // 200vh for small screens, 100vh otherwise
+        minHeight: isSmallScreen ? "300vh" : "200vh",
         display: "flex",
         bgcolor: "#ECECEC",
       }}

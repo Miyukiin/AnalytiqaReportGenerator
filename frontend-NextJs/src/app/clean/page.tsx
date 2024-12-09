@@ -460,7 +460,13 @@ export default function CleanPreviewPage() {
             color: "grey.800",
             textTransform: "uppercase",
             marginBottom: 2,
-            fontSize: "2.25rem",
+            fontSize: {
+              xs: "1.25rem", 
+              sm: "1.75rem",
+              md: "2rem",    
+            },
+            wordWrap: "break-word",  
+            overflowWrap: "break-word",
           }}
         >
           Original {fileName}
@@ -577,7 +583,13 @@ export default function CleanPreviewPage() {
             color: "grey.700", // Uses theme's grey.700
             textTransform: "uppercase",
             marginBottom: 2,
-            fontSize: "2.25rem",
+            fontSize: {
+              xs: "1.25rem", 
+              sm: "1.75rem",
+              md: "2rem",    
+            },
+            wordWrap: "break-word",  
+            overflowWrap: "break-word",
           }}
         >
           Cleaned {fileName}

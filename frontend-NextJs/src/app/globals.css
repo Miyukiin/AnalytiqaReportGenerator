@@ -106,6 +106,14 @@ body {
   animation-delay: 0s;
 }
 
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  display: inline-block;
+}
+
 @keyframes spin-fade {
   0%, 39%, 100% {
     opacity: 0.3; /* Dim state */
