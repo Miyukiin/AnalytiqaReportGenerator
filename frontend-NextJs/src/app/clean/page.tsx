@@ -12,10 +12,11 @@ import DataTable from "@/components/DataTable";
 import SummaryChanges from "@/components/summaryChanges"
 import FullscreenModal from "@/components/FullscreenModal";
 import ManageColumnsDialog from "@/components/ManageColumnsDialog";
+import Link from 'next/link';
 
 
 // Shared fetch function
-const fetchData = async (url: string, uuid: string, csrfToken: string, setStatus: React.Dispatch<any>,  method: string = 'GET') => {
+const fetchData = async (url: string, uuid: string, csrfToken: string, setStatus: React.Dispatch<any>,  method: string = 'GET', body: any = null) => {
   try {
     const fullUrl = new URL(url);
     fullUrl.searchParams.append('uuid', uuid);
@@ -102,7 +103,7 @@ export default function CleanPreviewPage() {
   const get_preview_data = async (uuid: string) => {
     setStatus({ error: '', success: '' }); 
     const csrfToken = await fetchCsrfToken();
-    const data = await fetchData("https://miyukiin.pythonanywhere.com/api/csv/get-table-preview-data/", uuid, csrfToken, setStatus);
+    const data = await fetchData("http://127.0.0.1:8000/api/csv/get-table-preview-data/", uuid, csrfToken, setStatus);
     // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-table-preview-data/`, uuid, csrfToken, setStatus);
     if (data) {
       setOrigPreviewData(data);
@@ -114,7 +115,7 @@ export default function CleanPreviewPage() {
   const get_clean_preview_data = async (uuid: string) => {
     setStatus({ error: '', success: '' }); 
     const csrfToken = await fetchCsrfToken();
-    const data = await fetchData("https://miyukiin.pythonanywhere.com/api/csv/get-cleaned-table-preview-data/", uuid, csrfToken, setStatus);
+    const data = await fetchData("http://127.0.0.1:8000/api/csv/get-cleaned-table-preview-data/", uuid, csrfToken, setStatus);
     // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-table-preview-data/`, uuid, csrfToken, setStatus);
     if (data) {
       setCleanedPreviewData(data);
@@ -128,7 +129,7 @@ export default function CleanPreviewPage() {
     setStatus({ error: '', success: '' }); 
     try {
       const csrfToken = await fetchCsrfToken();
-      const response = await fetch(`https://miyukiin.pythonanywhere.com/api/csv/download-cleaned-csv/?uuid=${uuid}`, {
+      const response = await fetch(`http://127.0.0.1:8000/api/csv/download-cleaned-csv/?uuid=${uuid}`, {
         method: 'GET',
         headers: {
           'X-CSRFToken': csrfToken,
@@ -169,7 +170,7 @@ export default function CleanPreviewPage() {
     setStatus({ error: '', success: '' }); 
     try {
       const csrfToken = await fetchCsrfToken();
-      const response = await fetch(`https://miyukiin.pythonanywhere.com/api/csv/get-summary-changes/?uuid=${uuid}`, {
+      const response = await fetch(`http://127.0.0.1:8000/api/csv/get-summary-changes/?uuid=${uuid}`, {
         method: 'GET',
         headers: {
           'X-CSRFToken': csrfToken,
@@ -196,7 +197,7 @@ export default function CleanPreviewPage() {
     setStatus({ error: '', success: '' }); 
     try {
       const csrfToken = await fetchCsrfToken();
-      const response = await fetch(`https://miyukiin.pythonanywhere.com/api/csv/delete-clean-csv/${uuid}/`, {
+      const response = await fetch(`http://127.0.0.1:8000/api/csv/delete-clean-csv/${uuid}/`, {
         method: 'DELETE',
         headers: {
           'X-CSRFToken': csrfToken,
@@ -459,7 +460,13 @@ export default function CleanPreviewPage() {
             color: "grey.800",
             textTransform: "uppercase",
             marginBottom: 2,
-            fontSize: "2.25rem",
+            fontSize: {
+              xs: "1.25rem", 
+              sm: "1.75rem",
+              md: "2rem",    
+            },
+            wordWrap: "break-word",  
+            overflowWrap: "break-word",
           }}
         >
           Original {fileName}
@@ -576,7 +583,13 @@ export default function CleanPreviewPage() {
             color: "grey.700", // Uses theme's grey.700
             textTransform: "uppercase",
             marginBottom: 2,
-            fontSize: "2.25rem",
+            fontSize: {
+              xs: "1.25rem", 
+              sm: "1.75rem",
+              md: "2rem",    
+            },
+            wordWrap: "break-word",  
+            overflowWrap: "break-word",
           }}
         >
           Cleaned {fileName}

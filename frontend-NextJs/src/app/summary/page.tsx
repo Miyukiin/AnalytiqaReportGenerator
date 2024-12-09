@@ -106,7 +106,7 @@ export default function SummaryPage() {
   const get_preview_data = async (uuid: string) => {
     setStatus({ error: '', success: '' }); 
     const csrfToken = await fetchCsrfToken();
-    const data = await fetchData("https://miyukiin.pythonanywhere.com/api/csv/get-table-preview-data/", uuid, csrfToken, setStatus);
+    const data = await fetchData("http://127.0.0.1:8000/api/csv/get-table-preview-data/", uuid, csrfToken, setStatus);
     // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-table-preview-data/`, uuid, csrfToken, setStatus);
     if (data) {
       setPreviewData(data);
@@ -119,7 +119,7 @@ export default function SummaryPage() {
   const get_summary_statistics = async (uuid: string) => {
     setStatus({ error: '', success: '' });
     const csrfToken = await fetchCsrfToken(); 
-    const data = await fetchData("https://miyukiin.pythonanywhere.com/api/csv/get-summary-statistics/", uuid, csrfToken, setStatus);
+    const data = await fetchData("http://127.0.0.1:8000/api/csv/get-summary-statistics/", uuid, csrfToken, setStatus);
 
     // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-summary-statistics/`, uuid, csrfToken, setStatus);
     if (data) {
@@ -144,7 +144,7 @@ export default function SummaryPage() {
 
     // Make the API request
     const data = await fetchData(
-      "https://miyukiin.pythonanywhere.com/api/csv/clean/",
+      "http://127.0.0.1:8000/api/csv/clean/",
       uuid,
       csrfToken,
       setStatus,
@@ -366,10 +366,10 @@ export default function SummaryPage() {
         </div>
 
         <div className="mt-7 flex flex-col items-start">
-          <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4 space-y-4 md:space-y-0">
-            <h2 className="text-gray-800 font-bold text-lg text-center">
-              Preview of "{summaryData?.name}"
-            </h2>
+        <div className="flex flex-col md:flex-row justify-between items-center w-full mb-4 space-y-4 md:space-y-0">
+          <h2 className="text-gray-800 font-bold text-center xs:text-[1.25rem] sm:text-[1.25rem] md:text-[1.25rem] lg:text-[1.25rem] xl:text-[1.25rem] break-words overflow-hidden w-2/3">
+            Preview of "{summaryData?.name}"
+          </h2>
             <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 space-y-2 sm:space-y-0 w-full sm:w-auto">
               {/* Manage Columns Button */}
               <Button
@@ -383,7 +383,7 @@ export default function SummaryPage() {
                   "&:hover": { backgroundColor: "primary.main" },
                   color: "white",
                   fontWeight: "bold",
-                  padding: "5px 12px",
+                  padding: "5px 6px",
                   width: { xs: "100%", sm: "auto" },
                 }}
               >
@@ -502,4 +502,3 @@ export default function SummaryPage() {
     </div>
   );
 }
-

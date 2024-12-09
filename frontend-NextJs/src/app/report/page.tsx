@@ -265,7 +265,7 @@ const ReportLayout: React.FC = () => {
     if (visitorId) {
       try {
         const fetchMenuItems = async () => {
-          const fullUrl = new URL("https://miyukiin.pythonanywhere.com/api/report/retrieve-chart-data/");
+          const fullUrl = new URL("http://127.0.0.1:8000/api/report/retrieve-chart-data/");
           fullUrl.searchParams.append('uuid', visitorId);
 
           const response = await fetch(fullUrl.toString(), {
@@ -597,7 +597,7 @@ const sendChartData = async () => {
   console.log("Printing Chart Array On Page", chart_array_on_page)
 
   try {
-    const response = await fetch("https://miyukiin.pythonanywhere.com/api/report/generate-ai-remarks/", {
+    const response = await fetch("http://127.0.0.1:8000/api/report/generate-ai-remarks/", {
       method: 'POST',
       headers: {
         'X-CSRFToken': await fetchCsrfToken(),
@@ -1527,7 +1527,7 @@ const sendChartData = async () => {
         flexDirection: "column",
         p: 2,
         bgcolor: "#ECECEC",
-        height: "100%",
+        height: "200%",
       }}
       role="presentation"
     >
@@ -1627,7 +1627,7 @@ const sendChartData = async () => {
   return (
     <Box
       sx={{
-        minHeight: isSmallScreen ? "260vh" : "200vh", // 200vh for small screens, 100vh otherwise
+        minHeight: isSmallScreen ? "300vh" : "200vh",
         display: "flex",
         bgcolor: "#ECECEC",
       }}

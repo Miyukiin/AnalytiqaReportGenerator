@@ -56,7 +56,7 @@ export default function DataReportGenerator() {
       formData.append("uuid", uuid);
       formData.append('file_name', file.name ? file.name : fileData.name)
 
-      const response = await fetch("https://miyukiin.pythonanywhere.com/api/csv-upload/", { // pass to api
+      const response = await fetch("http://127.0.0.1:8000/api/csv-upload/", { // pass to api
         method: "PUT",
         headers: {
           "X-CSRFToken": await fetchCsrfToken() || "", // 
@@ -147,9 +147,9 @@ export default function DataReportGenerator() {
             aria-label="File upload input"
           />
           <div className="flex items-center justify-center bg-transparent text-white px-4 py-3 rounded-md">
-            <div className="flex items-center h-[40px] px-4 rounded-l-lg bg-mainblue-default mr-[1px] hover:bg-[#2c5056] transition">
+          <div className="flex items-center h-[40px] px-4 rounded-l-lg bg-mainblue-default mr-[1px] hover:bg-[#2c5056] transition w-[150px]">
               <FilePlusIcon className="w-5 h-5 mr-3" />
-              <span>{fileData.name || "Choose File"}</span>
+              <span className="truncate break-words w-full">{fileData.name || "Choose File"}</span>
             </div>
             <div className="flex items-center h-[40px] px-2 rounded-r-lg bg-mainblue-default hover:bg-[#2c5056] transition">
               <ChevronDownIcon className="w-5 h-5" />
