@@ -1,4 +1,5 @@
 import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 const VisitorIdContext = createContext<string | undefined>(undefined);
 
@@ -9,7 +10,8 @@ export const VisitorIdProvider: React.FC<{ children: ReactNode }> = ({ children 
     let storedVisitorId = localStorage.getItem("visitorId");
 
     if (!storedVisitorId) {
-      storedVisitorId = crypto.randomUUID();
+      //storedVisitorId = crypto.randomUUID(); // Does not work on mobile versions of localhost.
+      storedVisitorId = uuidv4(); 
       localStorage.setItem("visitorId", storedVisitorId);
     } else {
       console.log("Existing Visitor ID:", storedVisitorId);
