@@ -102,7 +102,7 @@ export default function CleanPreviewPage() {
   const get_preview_data = async (uuid: string) => {
     setStatus({ error: '', success: '' }); 
     const csrfToken = await fetchCsrfToken();
-    const data = await fetchData("http://127.0.0.1:8000/api/csv/get-table-preview-data/", uuid, csrfToken, setStatus);
+    const data = await fetchData("https://miyukiin.pythonanywhere.com/api/csv/get-table-preview-data/", uuid, csrfToken, setStatus);
     // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-table-preview-data/`, uuid, csrfToken, setStatus);
     if (data) {
       setOrigPreviewData(data);
@@ -114,7 +114,7 @@ export default function CleanPreviewPage() {
   const get_clean_preview_data = async (uuid: string) => {
     setStatus({ error: '', success: '' }); 
     const csrfToken = await fetchCsrfToken();
-    const data = await fetchData("http://127.0.0.1:8000/api/csv/get-cleaned-table-preview-data/", uuid, csrfToken, setStatus);
+    const data = await fetchData("https://miyukiin.pythonanywhere.com/api/csv/get-cleaned-table-preview-data/", uuid, csrfToken, setStatus);
     // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-table-preview-data/`, uuid, csrfToken, setStatus);
     if (data) {
       setCleanedPreviewData(data);
@@ -128,7 +128,7 @@ export default function CleanPreviewPage() {
     setStatus({ error: '', success: '' }); 
     try {
       const csrfToken = await fetchCsrfToken();
-      const response = await fetch(`http://127.0.0.1:8000/api/csv/download-cleaned-csv/?uuid=${uuid}`, {
+      const response = await fetch(`https://miyukiin.pythonanywhere.com/api/csv/download-cleaned-csv/?uuid=${uuid}`, {
         method: 'GET',
         headers: {
           'X-CSRFToken': csrfToken,
@@ -169,7 +169,7 @@ export default function CleanPreviewPage() {
     setStatus({ error: '', success: '' }); 
     try {
       const csrfToken = await fetchCsrfToken();
-      const response = await fetch(`http://127.0.0.1:8000/api/csv/get-summary-changes/?uuid=${uuid}`, {
+      const response = await fetch(`https://miyukiin.pythonanywhere.com/api/csv/get-summary-changes/?uuid=${uuid}`, {
         method: 'GET',
         headers: {
           'X-CSRFToken': csrfToken,
@@ -196,7 +196,7 @@ export default function CleanPreviewPage() {
     setStatus({ error: '', success: '' }); 
     try {
       const csrfToken = await fetchCsrfToken();
-      const response = await fetch(`http://127.0.0.1:8000/api/csv/delete-clean-csv/${uuid}/`, {
+      const response = await fetch(`https://miyukiin.pythonanywhere.com/api/csv/delete-clean-csv/${uuid}/`, {
         method: 'DELETE',
         headers: {
           'X-CSRFToken': csrfToken,

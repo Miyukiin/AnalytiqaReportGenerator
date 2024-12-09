@@ -106,7 +106,7 @@ export default function SummaryPage() {
   const get_preview_data = async (uuid: string) => {
     setStatus({ error: '', success: '' }); 
     const csrfToken = await fetchCsrfToken();
-    const data = await fetchData("http://127.0.0.1:8000/api/csv/get-table-preview-data/", uuid, csrfToken, setStatus);
+    const data = await fetchData("https://miyukiin.pythonanywhere.com/api/csv/get-table-preview-data/", uuid, csrfToken, setStatus);
     // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-table-preview-data/`, uuid, csrfToken, setStatus);
     if (data) {
       setPreviewData(data);
@@ -119,7 +119,7 @@ export default function SummaryPage() {
   const get_summary_statistics = async (uuid: string) => {
     setStatus({ error: '', success: '' });
     const csrfToken = await fetchCsrfToken(); 
-    const data = await fetchData("http://127.0.0.1:8000/api/csv/get-summary-statistics/", uuid, csrfToken, setStatus);
+    const data = await fetchData("https://miyukiin.pythonanywhere.com/api/csv/get-summary-statistics/", uuid, csrfToken, setStatus);
 
     // const data = await fetchData(`${process.env.NEXT_PUBLIC_API_URL}/api/get-summary-statistics/`, uuid, csrfToken, setStatus);
     if (data) {
@@ -144,7 +144,7 @@ export default function SummaryPage() {
 
     // Make the API request
     const data = await fetchData(
-      "http://127.0.0.1:8000/api/csv/clean/",
+      "https://miyukiin.pythonanywhere.com/api/csv/clean/",
       uuid,
       csrfToken,
       setStatus,

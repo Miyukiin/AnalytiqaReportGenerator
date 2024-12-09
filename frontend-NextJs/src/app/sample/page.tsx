@@ -13,7 +13,7 @@ export default function SamplePage() {
 
   useEffect(() => {
     axios
-      .get<SampleData>('http://127.0.0.1:8000/api/sample/')
+      .get<SampleData>('https://miyukiin.pythonanywhere.com/api/sample/')
       .then((response) => {
         setData(response.data);
       })
