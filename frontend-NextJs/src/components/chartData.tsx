@@ -232,7 +232,7 @@ const constructRadialBarData = async (
 
     if(RadialColumn && dataset){
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/report/calculate-radial-data/", {
+        const response = await fetch("https://miyukiin.pythonanywhere.com/api/report/calculate-radial-data/", {
           method: 'POST',
           headers: {
             'X-CSRFToken': await fetchCsrfToken(),
