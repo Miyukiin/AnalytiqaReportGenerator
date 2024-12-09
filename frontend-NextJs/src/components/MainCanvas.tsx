@@ -40,7 +40,8 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
           onResizeStop={onResizeStop}
           onSelectChart={onSelectChart}
           isSelected={selectedChartId === chart.id}
-          xAxisColor={chart.xAxisColor || ""} // Add a default value for xAxisColor
+          xAxisColor={chart?.xAxisColor || ""} // If xAxisColor is undefined, add default
+          yAxisColor={chart?.yAxisColor || ""} // If xAxisColor is undefined, add default
         />
       ))}
     </Box>

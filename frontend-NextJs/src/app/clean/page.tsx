@@ -12,11 +12,10 @@ import DataTable from "@/components/DataTable";
 import SummaryChanges from "@/components/summaryChanges"
 import FullscreenModal from "@/components/FullscreenModal";
 import ManageColumnsDialog from "@/components/ManageColumnsDialog";
-import Link from 'next/link';
 
 
 // Shared fetch function
-const fetchData = async (url: string, uuid: string, csrfToken: string, setStatus: React.Dispatch<any>,  method: string = 'GET', body: any = null) => {
+const fetchData = async (url: string, uuid: string, csrfToken: string, setStatus: React.Dispatch<any>,  method: string = 'GET') => {
   try {
     const fullUrl = new URL(url);
     fullUrl.searchParams.append('uuid', uuid);
