@@ -56,7 +56,7 @@ export default function DataReportGenerator() {
       formData.append("uuid", uuid);
       formData.append('file_name', file.name ? file.name : fileData.name)
 
-      const response = await fetch("http://127.0.0.1:8000/api/csv-upload/", { // pass to api
+      const response = await fetch("https://miyukiin.pythonanywhere.com/api/csv-upload/", { // pass to api
         method: "PUT",
         headers: {
           "X-CSRFToken": await fetchCsrfToken() || "", // 
