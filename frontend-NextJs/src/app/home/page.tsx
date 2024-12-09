@@ -147,9 +147,9 @@ export default function DataReportGenerator() {
             aria-label="File upload input"
           />
           <div className="flex items-center justify-center bg-transparent text-white px-4 py-3 rounded-md">
-            <div className="flex items-center h-[40px] px-4 rounded-l-lg bg-mainblue-default mr-[1px] hover:bg-[#2c5056] transition">
+          <div className="flex items-center h-[40px] px-4 rounded-l-lg bg-mainblue-default mr-[1px] hover:bg-[#2c5056] transition w-[150px]">
               <FilePlusIcon className="w-5 h-5 mr-3" />
-              <span>{fileData.name || "Choose File"}</span>
+              <span className="truncate break-words w-full">{fileData.name || "Choose File"}</span>
             </div>
             <div className="flex items-center h-[40px] px-2 rounded-r-lg bg-mainblue-default hover:bg-[#2c5056] transition">
               <ChevronDownIcon className="w-5 h-5" />
