@@ -470,12 +470,6 @@ def delete_clean_csv(request: HttpRequest, uuid: str):
         except Exception as e:
             return Response({"error": str(e)}, status=500)
         
-        
-import pandas as pd
-import numpy as np
-import logging
-
-logger = logging.getLogger(__name__)
 
 @api_view(['POST'])
 def calculate_radial_data(request: HttpRequest):
