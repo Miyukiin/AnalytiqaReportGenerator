@@ -15,7 +15,7 @@ class Visitors(models.Model):
     file_name = models.CharField(
                             max_length=50 ,
                             verbose_name="CSV File Name",
-                            unique=True, 
+                            unique=False, 
                             blank=False, 
                             null=False, 
                             )
