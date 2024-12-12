@@ -145,22 +145,22 @@ To get a local copy up and running follow these simple example steps.
    cd Frontend
    ```
 10. Install the required dependencies.
-   ```sh
-   npm install
-   ```
+     ```sh
+     npm install
+     ```
 11. Verify that everything is working. Create a terminal for Backend and Frontend. Navigate them to:
-   ```sh
-   cd Backend
-   cd Frontend
-   ```
+     ```sh
+     cd Backend
+     cd Frontend
+     ```
 12. Now, with both the Django and Next.js servers running, you should be able to:
-    ```sh
-    py manage.py runserver # In backend terminal
-    npm run dev # In frontend terminal
-    ```
-    Access the Django API via http://127.0.0.1:8000.
-    Access the Next.js frontend via http://localhost:3000.
-    Test the communication between the frontend and backend by accessing http://localhost:3000/api/sample.
+      ```sh
+      py manage.py runserver # In backend terminal
+      npm run dev # In frontend terminal
+      ```
+      Access the Django API via http://127.0.0.1:8000.
+      Access the Next.js frontend via http://localhost:3000.
+      Test the communication between the frontend and backend by accessing http://localhost:3000/api/sample.
 
 
 Note: You may need to update your mariaDB version to work with Django if you use XAMPP out of the box.
