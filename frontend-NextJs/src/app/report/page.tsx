@@ -713,7 +713,6 @@ const sendChartData = async () => {
                 <MenuItem value="DefaultScatter">
                   <em>Select Y-axis field</em>
                 </MenuItem>
-
                 {Object.keys(menuItemsData).map((key) =>
                   // Check if the values in the menuItemsData[key] array are numeric
                   menuItemsData[key].every((item) => typeof item === 'number') ? (
@@ -724,8 +723,17 @@ const sendChartData = async () => {
                 )}
               </Select>
             </Box>
+            {/* Chart Description and Name */}
+            <Box sx={{ mt: 1, textAlign: "center" }}>
+              <Typography variant="h6" fontWeight="bold">
+                Scatter Plot
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                A scatter plot visualizes relationships between two numeric variables. It uses Cartesian coordinates to display data points. Choose X-axis and Y-axis fields to generate the plot.
+              </Typography>
+            </Box>
           </>
-        );
+        );      
       case "Radar":
         return (
           <>
@@ -898,7 +906,15 @@ const sendChartData = async () => {
                   ))
                 }
               </Select>
-
+            </Box>
+            {/* Chart Description and Name */}
+            <Box sx={{ mt: 1, textAlign: "center" }}>
+              <Typography variant="h6" fontWeight="bold">
+                Radar Chart
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                A radar chart displays multivariate data in the form of a two-dimensional chart of three or more quantitative variables. Each variable is represented on its own axis, which starts from the same central point. Use this chart to compare data across multiple categories.
+              </Typography>
             </Box>
           </>
         );
@@ -939,6 +955,15 @@ const sendChartData = async () => {
                   ) : null
                 )}
               </Select>         
+            </Box>
+            {/* Chart Description and Name */}            
+            <Box sx={{ mt: 1, textAlign: "center" }}>
+              <Typography variant="h6" fontWeight="bold">
+                Radial Bar
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                A radial bar represents data in circular bars, illustrating comparisons between categories or progress toward a goal. It provides a visually engaging way to display proportions or metrics in a radial format.
+              </Typography>
             </Box>
           </>
         );
@@ -1222,7 +1247,16 @@ const sendChartData = async () => {
                   ))
                 }
               </Select>
-            </Box>                
+            </Box>
+            {/* Chart Description and Name */}
+            <Box sx={{ mt: 1, textAlign: "center" }}>
+              <Typography variant="h6" fontWeight="bold">
+                Positive - Negative Bar
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                A positive-negative bar highlights data with both positive and negative values, making it ideal for visualizing contrasts or changes. This chart helps in understanding trends, differences, or comparisons across categories.
+              </Typography>
+            </Box>               
           </>
         );
       case "StackedLine":
@@ -1505,7 +1539,16 @@ const sendChartData = async () => {
                   ))
                 }
               </Select>
-            </Box>                
+            </Box>
+            {/* Chart Description and Name */}
+            <Box sx={{ mt: 1, textAlign: "center" }}>
+              <Typography variant="h6" fontWeight="bold">
+                Stacked Line Chart
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                A stacked line chart visualizes data trends across multiple categories by stacking lines on top of each other. This chart is useful for comparing cumulative changes and understanding the contributions of individual segments.
+              </Typography>
+            </Box>               
           </>
         );
     
